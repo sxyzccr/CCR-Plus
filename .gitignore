@@ -1,3 +1,16 @@
+# Build directory
+[Bb]uild/
+
+# Qt Creator user files
+*.user*
+
+# *nix related
+# Common convention for backup or temporary files
+*~
+
+# Windows global filetypes
+Thumbs.db
+
 # Compiled Object files
 *.slo
 *.lo

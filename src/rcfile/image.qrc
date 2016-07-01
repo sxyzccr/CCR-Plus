@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file>../../image/CCR.ico</file>
+        <file>../../image/folder.png</file>
+        <file>../../image/logo.png</file>
+        <file>../../image/logo1.png</file>
+    </qresource>
+    <qresource prefix="/trans">
+        <file>qt_zh_CN.qm</file>
+    </qresource>
+</RCC>
