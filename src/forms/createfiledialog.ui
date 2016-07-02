@@ -13,6 +13,12 @@
   <property name="windowTitle">
    <string>创建源代码</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QDialog
+{
+	background-color:rgb(250,250,250);
+}</string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="label">

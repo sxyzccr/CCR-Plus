@@ -38,13 +38,24 @@
     <normaloff>:/icon/image/CCR.ico</normaloff>:/icon/image/CCR.ico</iconset>
   </property>
   <property name="styleSheet">
-   <string notr="true">font-family: &quot;微软雅黑&quot;</string>
+   <string notr="true">QWidget
+{
+	font-family: &quot;微软雅黑&quot;;
+}
+QMainWindow
+{
+	background-color:rgb(250,250,250);
+}
+</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="font">
     <font>
      <family>微软雅黑</family>
     </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
@@ -73,6 +84,9 @@
          <font>
           <family>微软雅黑</family>
          </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
         </property>
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;&lt;img src=&quot;:/icon/image/logo1.png&quot;/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; color:#505050;&quot;&gt;最近打开的竞赛列表:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -128,6 +142,9 @@
       </item>
       <item>
        <widget class="QLabel" name="label_2">
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -146,7 +163,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>21</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
