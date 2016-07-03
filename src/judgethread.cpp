@@ -168,6 +168,49 @@ bool JudgeThread::runProgram(double timeLim,double memLim,QString&note,QString&s
         CloseHandle(pi.hProcess);
     };
 
+    auto CheckTimeLimit=[&]()->bool
+    {
+        FILETIME ct,et,kt,ut;
+        SYSTEMTIME st;
+        GetProcessTimes(pi.hProcess,&ct,&et,&kt,&ut);
+        FileTimeToSystemTime(&ut,&st);
+        usedTime=st.wHour*3600+st.wMinute*60+st.wSecond+st.wMilliseconds/1000.0;
+        if (usedTime>timeLim)
+        {
+            TerminateProcess(pi.hProcess,0);
+            EndProcess(pi);
+            note="超过时间限制",state='T';
+            return false;
+        }
+        return true;
+    };
+
+    auto CheckMemoryLimit=[&]()->bool
+    {
+        GetProcessMemoryInfo(pi.hProcess,&pmc,sizeof(pmc));
+        if (pmc.PeakPagefileUsage>memLim*(1<<20))
+        {
+            TerminateProcess(pi.hProcess,0);
+            EndProcess(pi);
+            note="超过内存限制",state='M';
+            return false;
+        }
+        return true;
+    };
+
+    auto CheckRuntimeError=[&]()->bool
+    {
+        DWORD exitCode;
+        GetExitCodeProcess(pi.hProcess,&exitCode);
+        if (exitCode&&exitCode!=STILL_ACTIVE)
+        {
+            EndProcess(pi);
+            note=QString("运行时错误: %1").arg(exitCode),state='R';
+            return false;
+        }
+        return true;
+    };
+
     usedTime=0;
     memset(&si,0,sizeof(si));
     si.cb=sizeof(si);
@@ -178,14 +221,10 @@ bool JudgeThread::runProgram(double timeLim,double memLim,QString&note,QString&s
         return 0;
     }
 
-    bool ok=false;
-    QElapsedTimer timer;
-    timer.start();
-    for (;timer.elapsed()<=timeLim*1000+10;)
+    for (;;)
     {
-        if (WaitForSingleObject(pi.hProcess,0)==WAIT_OBJECT_0)
+        if (WaitForSingleObject(pi.hProcess,10)==WAIT_OBJECT_0)
         {
-            ok=true;
             break;
         }
         if (judgeStoped)
@@ -194,48 +233,14 @@ bool JudgeThread::runProgram(double timeLim,double memLim,QString&note,QString&s
             EndProcess(pi);
             return 0;
         }
-        GetProcessMemoryInfo(pi.hProcess,&pmc,sizeof(pmc));
-        if (pmc.PeakPagefileUsage>memLim*(1<<20))
-        {
-            TerminateProcess(pi.hProcess,0);
-            EndProcess(pi);
-            note="超过内存限制",state='M';
+        if(!CheckRuntimeError()||!CheckTimeLimit()||!CheckMemoryLimit())
             return 0;
-        }
         QCoreApplication::processEvents();
-        QThread::msleep(10);
     }
 
-    DWORD exitCode;
-    GetExitCodeProcess(pi.hProcess,&exitCode);
-    if (exitCode&&exitCode!=STILL_ACTIVE)
-    {
-        EndProcess(pi);
-        note=QString("运行时错误: %1").arg((int)exitCode),state='R';
+    if(!CheckRuntimeError()||!CheckTimeLimit()||!CheckMemoryLimit())
         return 0;
-    }
-
-    if (!ok)
-    {
-        TerminateProcess(pi.hProcess,0);
-        EndProcess(pi);
-        note="超过时间限制",state='T',usedTime=timeLim;
-        return 0;
-    }
-
-    FILETIME ct,et,kt,ut;
-    SYSTEMTIME st;
-    GetProcessTimes(pi.hProcess,&ct,&et,&kt,&ut);
-    GetProcessMemoryInfo(pi.hProcess,&pmc,sizeof(pmc));
     EndProcess(pi);
-
-    FileTimeToSystemTime(&ut,&st);
-    usedTime=st.wHour*3600+st.wMinute*60+st.wSecond+st.wMilliseconds/1000.0;
-    if (usedTime>timeLim)
-    {
-        note="超过时间限制",state='T',usedTime=timeLim;
-        return 0;
-    }
     note=QString("时间: %1s 内存: %2MB").arg(usedTime,0,'f',2).arg(pmc.PeakPagefileUsage/1024.0/1024.0,0,'f',2);
     return 1;
 }
