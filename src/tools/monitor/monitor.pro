@@ -2,7 +2,7 @@ CONFIG -= qt
 TARGET = monitor
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -static
+QMAKE_LFLAGS += -static
 
 SOURCES += monitor.c
 

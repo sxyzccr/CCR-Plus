@@ -2,7 +2,7 @@ CONFIG -= qt
 TARGET = fulltext
 TEMPLATE = app
 
-QMAKE_CXXFLAGS += -static
+QMAKE_LFLAGS += -static
 
 win32 {
     SOURCES += fulltext_gbk.cpp
