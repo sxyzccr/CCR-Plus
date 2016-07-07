@@ -9,14 +9,14 @@ class BoardTable : public QTableWidget
 {
     Q_OBJECT
 public:
-    explicit BoardTable(QWidget *parent = 0);
+    explicit BoardTable(QWidget* parent = 0);
     ~BoardTable();
 
     void clearBoard();
     void showResult();
     void clearHighlighted(int c);
-    int showProblemSumResult(QLabel *tmp, Player::Result *res, int sum, int Highlighted); //return style
-    int showProblemResult(QLabel *tmp, Player::Result *res, int sum, int Highlighted); //return style
+    int showProblemSumResult(QLabel* tmp, Player::Result* res, int sum, int Highlighted); //return style
+    int showProblemResult(QLabel* tmp, Player::Result* res, int sum, int Highlighted); //return style
 
     int preHeaderClicked;
 

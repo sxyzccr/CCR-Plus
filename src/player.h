@@ -9,7 +9,7 @@
 class Player
 {
 public:
-    Player(const QString &na="",int x=0);
+    Player(const QString& na = "", int x = 0);
     ~Player();
     void calcSum();
     void clear();
@@ -17,7 +17,7 @@ public:
     class Result
     {
     public:
-        Result() {score=0,usedTime=0,state=0,detail="";}
+        Result() { score = 0, usedTime = 0, state = 0, detail = ""; }
 
         double usedTime;
         int score;
@@ -32,19 +32,19 @@ public:
          * : 未测评
          */
 
-        bool operator <(const Result&B) const
+        bool operator <(const Result& B) const
         {
-            return score<B.score||(score==B.score&&usedTime>B.usedTime);
+            return score < B.score || (score == B.score && usedTime > B.usedTime);
         }
 
-        bool operator ==(const Result&B) const
+        bool operator ==(const Result& B) const
         {
-            return score==B.score&&usedTime==B.usedTime;
+            return score == B.score && usedTime == B.usedTime;
         }
     } sum;
 
-    int id,type; //type =  0:normal; -1:std; -2:jyk; 1:bogang;
-    QString name,name_list;
+    int id, type; //type =  0:normal; -1:std; -2:jyk; 1:bogang;
+    QString name, name_list;
     vector<Result> problem;
     vector<int> style;
     vector<QLabel*> label;

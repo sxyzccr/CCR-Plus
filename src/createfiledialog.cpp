@@ -1,18 +1,18 @@
 #include "createfiledialog.h"
 #include "ui_createfiledialog.h"
 
-CreateFileDialog::CreateFileDialog(QWidget *parent, Player *ply, Problem *prob) :
+CreateFileDialog::CreateFileDialog(QWidget* parent, Player* ply, Problem* prob) :
     QDialog(parent),
     ui(new Ui::CreateFileDialog)
 {
     ui->setupUi(this);
 
-    player=ply;
-    problem=prob;
-    this->setWindowFlags(Qt::Dialog|Qt::WindowCloseButtonHint);
+    player = ply;
+    problem = prob;
+    this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
-    int t=0;
-    for (auto i:problem->compilers)
+    int t = 0;
+    for (auto i : problem->compilers)
     {
         ui->listWidget->addItem(i.file);
         ui->listWidget->item(t++)->setToolTip(i.file);
@@ -27,11 +27,11 @@ CreateFileDialog::~CreateFileDialog()
 
 void CreateFileDialog::accept()
 {
-    selectedFile=ui->listWidget->currentItem()->text();
+    selectedFile = ui->listWidget->currentItem()->text();
     return QDialog::accept();
 }
 
-void CreateFileDialog::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
+void CreateFileDialog::on_listWidget_itemDoubleClicked(QListWidgetItem* item)
 {
     accept();
 }

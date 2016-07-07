@@ -1,17 +1,17 @@
 #include "global.h"
 
-int Global::playerNum=0,Global::problemNum=0,Global::sumScore=0;
-vector<Player> Global::players=vector<Player>();
-vector<Problem> Global::problems=vector<Problem>();
-QList<int> Global::problemOrder=QList<int>();
-QString Global::testPath="",Global::srcPath="",Global::dataPath="",Global::resultPath="",Global::testName="";
-bool Global::alreadyJudging=false,Global::isListUsed=false;
-Qt::SortOrder Global::preSortOrder=Qt::AscendingOrder;
-QFont Global::font=QFont("微软雅黑",9),Global::boldFont=QFont("微软雅黑",9,75);
-QElapsedTimer Global::clickTimer=QElapsedTimer();
-QList<pair<int,int>> Global::judgeList=QList<pair<int,int>>();
+int Global::playerNum = 0, Global::problemNum = 0, Global::sumScore = 0;
+vector<Player> Global::players = vector<Player>();
+vector<Problem> Global::problems = vector<Problem>();
+QList<int> Global::problemOrder = QList<int>();
+QString Global::testPath = "", Global::srcPath = "", Global::dataPath = "", Global::resultPath = "", Global::testName = "";
+bool Global::alreadyJudging = false, Global::isListUsed = false;
+Qt::SortOrder Global::preSortOrder = Qt::AscendingOrder;
+QFont Global::font = QFont("微软雅黑", 9), Global::boldFont = QFont("微软雅黑", 9, 75);
+QElapsedTimer Global::clickTimer = QElapsedTimer();
+QList<pair<int, int>> Global::judgeList = QList<pair<int, int>>();
 
-QString Global::labelStyle1[]=
+QString Global::labelStyle1[] =
 {
     "QLabel"
     "{"
@@ -99,7 +99,7 @@ QString Global::labelStyle1[]=
     "   background:rgba(227,58,218,192);"
     "}" //16 E
 };
-QString Global::labelStyle2[]=
+QString Global::labelStyle2[] =
 {
     "QLabel"
     "{"
@@ -190,11 +190,11 @@ QString Global::labelStyle2[]=
 
 void Global::clear()
 {
-    playerNum=problemNum=0;
-    sumScore=0;
+    playerNum = problemNum = 0;
+    sumScore = 0;
 
-    for (auto i:problems) i.clear();
-    for (auto i:players) i.clear();
+    for (auto i : problems) i.clear();
+    for (auto i : players) i.clear();
 
     problems.clear();
     players.clear();
@@ -203,36 +203,36 @@ void Global::clear()
 
 int Global::logicalRow(int visualRow)
 {
-    return preSortOrder==Qt::DescendingOrder?playerNum-visualRow-1:visualRow;
+    return preSortOrder == Qt::DescendingOrder ? playerNum - visualRow - 1 : visualRow;
 }
 
-QColor Global::ratioColor(int rl,int gl,int bl,int rr,int gr,int br,int x,int y)
+QColor Global::ratioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int y)
 {
-    x=min(x,y);
-    if (!y) return QColor(rl,gl,bl);
-    int r=rl+1.0*(rr-rl)*x/y+0.5;
-    int g=gl+1.0*(gr-gl)*x/y+0.5;
-    int b=bl+1.0*(br-bl)*x/y+0.5;
-    return QColor(r,g,b);
+    x = min(x, y);
+    if (!y) return QColor(rl, gl, bl);
+    int r = rl + 1.0 * (rr - rl) * x / y + 0.5;
+    int g = gl + 1.0 * (gr - gl) * x / y + 0.5;
+    int b = bl + 1.0 * (br - bl) * x / y + 0.5;
+    return QColor(r, g, b);
 }
 
-Problem::CompilerInfo Global::getCompiler(Player*player,Problem*problem)
+Problem::CompilerInfo Global::getCompiler(Player* player, Problem* problem)
 {
-    for (auto i:problem->compilers) if (QFile(Global::srcPath+player->name+"/"+problem->dir+"/"+i.file).exists()) return i;
+    for (auto i : problem->compilers) if (QFile(Global::srcPath + player->name + "/" + problem->dir + "/" + i.file).exists()) return i;
     return Problem::CompilerInfo();
 }
 
-void Global::saveProblemOrder(const QStringList &list)
+void Global::saveProblemOrder(const QStringList& list)
 {
-    QFile file(testPath+".ccr");
-    if (!file.open(QIODevice::WriteOnly|QIODevice::Text)) return;
+    QFile file(testPath + ".ccr");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
     QTextStream out(&file);
     out.setCodec("UTF-8");
-    out<<"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    out<<"<contest>\n";
-    out<<"    <order>\n";
-    for (auto i:list) out<<QString("        <problem>%1</problem>\n").arg(i);
-    out<<"    </order>\n";
-    out<<"</contest>\n";
+    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    out << "<contest>\n";
+    out << "    <order>\n";
+    for (auto i : list) out << QString("        <problem>%1</problem>\n").arg(i);
+    out << "    </order>\n";
+    out << "</contest>\n";
     file.close();
 }

@@ -7,7 +7,8 @@
 #include <itemdelegate.h>
 #include <QStandardItemModel>
 
-namespace Ui {
+namespace Ui
+{
 class ConfigDialog;
 }
 
@@ -16,15 +17,15 @@ class ConfigDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit ConfigDialog(QWidget *parent = 0);
+    explicit ConfigDialog(QWidget* parent = 0);
     ~ConfigDialog();
 
 private slots:
-    void dataChangedEvent(const QModelIndex &tl, const QModelIndex &br);
+    void dataChangedEvent(const QModelIndex& tl, const QModelIndex& br);
     void on_pushButton_clicked();
 
 private:
-    Ui::ConfigDialog *ui;
+    Ui::ConfigDialog* ui;
 
     QStringList problemList;
     QStandardItemModel model;
