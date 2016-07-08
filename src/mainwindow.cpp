@@ -334,7 +334,7 @@ void MainWindow::cleanRecent_action()
 
 void MainWindow::editFile_action()
 {
-    QDesktopServices::openUrl(QUrl("file:///"+dir_action+file_action));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir_action+file_action));
 }
 
 void MainWindow::createFile_action()
@@ -348,19 +348,19 @@ void MainWindow::createFile_action()
         QFile file(dir_action+s);
         file.open(QIODevice::WriteOnly);
         file.close();
-        QDesktopServices::openUrl(QUrl("file:///"+dir_action+s));
+        QDesktopServices::openUrl(QUrl::fromLocalFile(dir_action+s));
     }
 }
 
 void MainWindow::openDir_action()
 {
-    QDesktopServices::openUrl(QUrl("file:///"+dir_action));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir_action));
 }
 
 void MainWindow::createDir_action()
 {
     QDir().mkpath(dir_action);
-    QDesktopServices::openUrl(QUrl("file:///"+dir_action));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir_action));
 }
 
 void MainWindow::removeDir_action()
