@@ -37,6 +37,7 @@ private slots:
 
     void removeRecent_action();
     void cleanRecent_action();
+    void openFile(const QString &dir);
     void editFile_action();
     void createFile_action();
     void openDir_action();
