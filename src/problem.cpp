@@ -262,7 +262,7 @@ void Problem::configureNew(const QString &typ, double timeLim, double memLim, co
         Info x(timeLim,memLim);
         x.in=list[i].first;
         x.out=list[i].second;
-        if (type==ProblemType::AnswersOnly) x.sub=/*QString("%1%2.out").arg(name).arg(i+1)*/x.out;
+        if (type==ProblemType::AnswersOnly) x.sub=x.out;
         sub.point.push_back(que.size());
         que.push_back(x);
         tasks.push_back(sub);
