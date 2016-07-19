@@ -1,7 +1,7 @@
 #ifndef BOARDTABLE_H
 #define BOARDTABLE_H
 
-#include "global.h"
+#include "player.h"
 
 #include <QTableWidget>
 

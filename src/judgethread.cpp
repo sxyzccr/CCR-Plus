@@ -1,4 +1,8 @@
+#include "status.h"
 #include "judgethread.h"
+#include "contestinfo.h"
+
+using namespace std;
 
 JudgeThread::JudgeThread(QObject* parent) : QThread(parent)
 {
@@ -10,22 +14,16 @@ JudgeThread::~JudgeThread()
 
 }
 
-void JudgeThread::stopJudging()
+void JudgeThread::setup(int r, int c, const QString& dir)
 {
-    judgeStoped = true;
-    emit stopJudgingSignal();
-}
-
-void JudgeThread::setDir(const QString& dir)
-{
+    this->r = r, this->c = c;
     testDir = dir;
     tmpDir = dir + ".tmp/";
-    judgeStoped = false;
+    judgeList.clear();
 }
 
 void JudgeThread::initialize(const QString& name, Problem* prob)
 {
-    judgeStoped = false;
     notCleared.clear();
     problem = prob;
     playerName = name;
@@ -44,7 +42,7 @@ bool JudgeThread::waitForMadeTmpDir(int ms)
     for (; timer.elapsed() <= ms;)
     {
         if (dir.mkdir(".tmp")) return true;
-        if (judgeStoped) break;
+        if (Status::JudgeStoped) break;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -59,7 +57,7 @@ bool JudgeThread::waitForClearedTmpDir(int ms)
     for (; dir.exists() && timer.elapsed() <= ms;)
     {
         if (dir.removeRecursively()) return true;
-        if (judgeStoped) break;
+        if (Status::JudgeStoped) break;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -73,7 +71,7 @@ bool JudgeThread::makeJudgeDir(int num)
     judgeDir = tmpDir + str + "/";
     if (!dir.exists()) return false;
     if (!dir.mkdir(str)) return false;
-    if (problem->type == Traditional)
+    if (problem->type == ProblemType::Traditional)
     {
         QFile exe(tmpDir + problem->exe);
         if (!exe.copy(judgeDir + problem->exe)) return false;
@@ -89,7 +87,7 @@ bool JudgeThread::waitForClearJudgeDir(int num, int ms)
     for (; dir.exists() && timer.elapsed() <= ms;)
     {
         if (dir.removeRecursively()) return true;
-        if (judgeStoped) break;
+        if (Status::JudgeStoped) break;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -103,7 +101,7 @@ bool JudgeThread::monitorProcess(QProcess* process, int ms)
     for (; timer.elapsed() <= ms;)
     {
         if (process->state() != QProcess::Running) return true;
-        if (judgeStoped) return false;
+        if (Status::JudgeStoped) return false;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -124,7 +122,7 @@ CompileResult JudgeThread::compile(const Problem::CompilerInfo& compiler, QStrin
     {
         note = "无效的编译器";
         delete process;
-        return InvalidCompiler;
+        return CompileResult::InvalidCompiler;
     }
 
     bool ok = monitorProcess(process, compiler.timeLim * 1000);
@@ -132,9 +130,9 @@ CompileResult JudgeThread::compile(const Problem::CompilerInfo& compiler, QStrin
     {
         process->kill();
         delete process;
-        if (judgeStoped) return CompileKilled;
+        if (Status::JudgeStoped) return CompileResult::CompileKilled;
         note = "编译超时";
-        return CompileTimeLimitExceeded;
+        return CompileResult::CompileTimeLimitExceeded;
     }
     if (process->exitCode())
     {
@@ -142,10 +140,10 @@ CompileResult JudgeThread::compile(const Problem::CompilerInfo& compiler, QStrin
         //qDebug()<<note.length();
         if (note.length() > 51200) note = "编译错误过多";
         delete process;
-        return CompileError;
+        return CompileResult::CompileError;
     }
     delete process;
-    return CompileSuccessfully;
+    return CompileResult::CompileSuccessfully;
 }
 
 int pid;
@@ -188,7 +186,7 @@ bool JudgeThread::runProgram(double timeLim, double memLim, QString& note, QStri
             ok = true;
             break;
         }
-        if (judgeStoped)
+        if (Status::JudgeStoped)
         {
             TerminateProcess(pi.hProcess, 0);
             EndProcess(pi);
@@ -270,7 +268,7 @@ double JudgeThread::judgeOutput(const QString& inFile, const QString& ansFile, c
     {
         process->kill();
         delete process;
-        if (judgeStoped) return 0;
+        if (Status::JudgeStoped) return 0;
         note = "校验器超时或崩溃", state = "E";
         return 0;
     }
@@ -301,7 +299,7 @@ double JudgeThread::judgeOutput(const QString& inFile, const QString& ansFile, c
     s = in.readLine().trimmed();
     file.close();
 
-    if (problem->type == Traditional && ratio == 1.0) s += (s.size() ? " " : "") + note;
+    if (problem->type == ProblemType::Traditional && ratio == 1.0) s += (s.size() ? " " : "") + note;
     if (ratio == 0) state = "W", note = s == "" ? "答案错误" : s;
     else if (ratio == 1.0) state = "A", note = s == "" ? "答案正确" : s;
     else state = "P", note = s == "" ? "部分正确" : s;
@@ -335,7 +333,7 @@ double JudgeThread::judgeTraditionalTask(Problem::Info* info, QString& note, QSt
     {
         process->kill();
         delete process;
-        if (judgeStoped) return 0;
+        if (Status::JudgeStoped) return 0;
         note = "超过时间限制", state = "T";
         return 0;
     }
@@ -380,17 +378,17 @@ double JudgeThread::judgeAnswersOnlyTask(Problem::Info* info, QString& note, QSt
 
 double JudgeThread::judgeTask(Problem::Info* info, QString& note, QString& state, double& usedTime, int testNum)
 {
-    if (judgeStoped) return 0;
+    if (Status::JudgeStoped) return 0;
     //qDebug()<<testNum<<info->in<<info->out;
     double res = 0;
     if (!makeJudgeDir(testNum)) note = "无法创建临时文件", state = "E";
-    else if (problem->type == Traditional) res = judgeTraditionalTask(info, note, state, usedTime);
-    else if (problem->type == AnswersOnly) res = judgeAnswersOnlyTask(info, note, state);
+    else if (problem->type == ProblemType::Traditional) res = judgeTraditionalTask(info, note, state, usedTime);
+    else if (problem->type == ProblemType::AnswersOnly) res = judgeAnswersOnlyTask(info, note, state);
 
     //QCoreApplication::processEvents();
     //msleep(10);
 
-    if (!waitForClearJudgeDir(testNum, 2000) && problem->type == Traditional) notCleared.insert(testNum); //note="运行时错误: 未知",state="R",,res=0;
+    if (!waitForClearJudgeDir(testNum, 2000) && problem->type == ProblemType::Traditional) notCleared.insert(testNum); //note="运行时错误: 未知",state="R",,res=0;
     for (auto i : notCleared) if (waitForClearJudgeDir(i, 2000)) notCleared.erase(i);
 
     return res;
@@ -402,7 +400,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
     //int row=detailTable->rowCount()-1;
     //qDebug()<<row<<player->name<<problem->name;
     QString title = player->name;
-    if (Global::isListUsed && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
+    if (ContestInfo::info.isListUsed && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
     if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name);
     else title += +" - " + problem->name;
     emit sig3(rows, title);
@@ -420,10 +418,10 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
 
     auto endXml = [&]()
     {
-        if (judgeStoped) return;
-        QFile file(Global::resultPath + problem->name + "/" + player->name + ".res");
-        if (!QDir(Global::resultPath).exists()) QDir(Global::testPath).mkpath("result");
-        if (!QDir(Global::resultPath + problem->name).exists()) QDir(Global::resultPath).mkdir(problem->name);
+        if (Status::JudgeStoped) return;
+        QFile file(ContestInfo::info.resultPath + problem->name + "/" + player->name + ".res");
+        if (!QDir(ContestInfo::info.resultPath).exists()) QDir(ContestInfo::info.testPath).mkpath("result");
+        if (!QDir(ContestInfo::info.resultPath + problem->name).exists()) QDir(ContestInfo::info.resultPath).mkdir(problem->name);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         {
             emit sig4(rows, "无法写入结果文件", "E"); rows++;
@@ -454,11 +452,11 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         endXml();
         return;
     }*/
-    if (judgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
-    if (problem->type == Traditional)
+    if (Status::JudgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
+    if (problem->type == ProblemType::Traditional)
     {
         QString note;
-        Problem::CompilerInfo compiler = Global::getCompiler(player, problem);
+        Problem::CompilerInfo compiler = problem->getCompiler(player->name);
         if (compiler.file == "")
         {
             //detailTable->addNoteDetail(row,"找不到文件");
@@ -492,8 +490,8 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         if (this->waitForMadeTmpDir(2000)) res = this->compile(compiler, note);
         else res = OtherError, note = "无法创建临时文件";
 
-        if (res == CompileKilled) return;
-        else if (res == OtherError || res == InvalidCompiler)
+        if (res == CompileResult::CompileKilled) return;
+        else if (res == CompileResult::OtherError || res == CompileResult::InvalidCompiler)
         {
             //detailTable->addNoteDetail(row,note,"E");
             //detailTable->adjustScrollbar();
@@ -505,7 +503,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
             endXml();
             return;
         }
-        else if (res == CompileError || res == CompileTimeLimitExceeded)
+        else if (res == CompileResult::CompileError || res == CompileResult::CompileTimeLimitExceeded)
         {
             //detailTable->addNoteDetail(row,note);
             //detailTable->adjustScrollbar();
@@ -518,7 +516,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
             return;
         }
     }
-    else if (problem->type == AnswersOnly)
+    else if (problem->type == ProblemType::AnswersOnly)
     {
         if (!this->waitForMadeTmpDir(2000))
         {
@@ -546,7 +544,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         return;
     }
 
-    if (judgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
+    if (Status::JudgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
     int num = 0;
     //bool isPackage=false;
     for (auto i : problem->tasks)
@@ -580,7 +578,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
             QString sta, note;
             double t = 0;
             double ratio = this->judgeTask(&problem->que[j], note, sta, t, num);
-            if (judgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
+            if (Status::JudgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
             //detailTable->addPointDetail(row,j+1,note,sta,problem->que[j].in+"/"+problem->que[j].out);
             //if (len>1) detailTable->setSpan(row-len+1,0,len,1),isPackage=true;
             //detailTable->adjustScrollbar();
@@ -651,13 +649,13 @@ void JudgeThread::saveHTMLResult(Player* player)
 
     addRow(QString("总分: %1").arg(player->sum.score), "sum");
 
-    for (auto p : Global::problemOrder)
+    for (auto p : ContestInfo::info.problemOrder)
     {
-        QString name = Global::problems[p].name;
-        QFile file(Global::resultPath + name + "/" + player->name + ".res");
+        QString name = ContestInfo::info.problems[p].name;
+        QFile file(ContestInfo::info.resultPath + name + "/" + player->name + ".res");
         //qDebug()<<file.fileName();
 
-        addRow(QString("%1: %2").arg(Global::problems[p].name).arg(player->problem[p].score), "title");
+        addRow(QString("%1: %2").arg(ContestInfo::info.problems[p].name).arg(player->problem[p].score), "title");
 
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
@@ -700,13 +698,14 @@ void JudgeThread::saveHTMLResult(Player* player)
                             td.setAttribute("width", 50);
                             td.setAttribute("rowspan", kk);
                             td.setAttribute("align", "center");
-                            td.setAttribute("style", QString("background-color:%1").arg(Global::ratioColor(235, 235, 235, 0, 161, 241, a.attribute("score").toInt(), tasktot < Global::problems[p].tasks.size() ? Global::problems[p].tasks[tasktot].score : 0).name()));
+                            td.setAttribute("style", QString("background-color:%1").arg(GetRatioColor(235, 235, 235, 0, 161, 241, a.attribute("score").toInt(), tasktot < ContestInfo::info.problems[p].tasks.size() ? ContestInfo::info.problems[p].tasks[tasktot].score : 0).name()));
                             td.appendChild(doc.createTextNode(a.attribute("score")));
                             tr.appendChild(td);
                         }
 
                         QColor o(255, 255, 255);
-                        if (b.attribute("state").length() == 1) switch (b.attribute("state")[0].toLatin1())
+                        if (b.attribute("state").length() == 1)
+                            switch (b.attribute("state")[0].toLatin1())
                             {
                             case 'A':
                                 o.setRgb(51, 185, 6); //AC
@@ -767,7 +766,7 @@ void JudgeThread::saveHTMLResult(Player* player)
     p.appendChild(doc.createTextNode("绍兴一中 贾越凯"));
     head.appendChild(p);
 
-    QFile file(Global::srcPath + player->name + "/result.html");
+    QFile file(ContestInfo::info.srcPath + player->name + "/result.html");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
     QTextStream out(&file);
     doc.save(out, 4);
@@ -793,60 +792,63 @@ void JudgeThread::run()
         ply->label[c]->setToolTip("未测评");
         ply->label[c]->setStyleSheet("");*/
 
-        QFile(Global::resultPath + Global::problems[c - 2].name + "/" + ply->name + ".res").remove();
+        QFile(ContestInfo::info.resultPath + ContestInfo::info.problems[c - 2].name + "/" + ply->name + ".res").remove();
     };
     auto work = [&](int c)
     {
         Player::Result* res = &ply->problem[c - 2];
 
         ply->style[c] = 15;
-        emit sig1(ply->label[c], "~", "正在测评...", Global::labelStyle1[15]);
+        emit sig1(ply->label[c], "~", "正在测评...", LABEL_STYLE_SOFT[15]);
 //        ply->label[c]->setText("~");
 //        ply->label[c]->setToolTip("正在测评...");
 //        ply->label[c]->setStyleSheet(boardTable->preHeaderClicked==c?Global::labelStyle2[15]+"QLabel{border-width:1px;}":Global::labelStyle1[15]);
 
-        judgeProblem(ply, &Global::problems[c - 2], res->state, res->score, res->usedTime, res->detail);
+        judgeProblem(ply, &ContestInfo::info.problems[c - 2], res->state, res->score, res->usedTime, res->detail);
         //QCoreApplication::processEvents();
         msleep(50);
 
         ply->sum.score += res->score;
         ply->sum.usedTime += res->usedTime;
-        emit sig2(ply, c, res, Global::problems[c - 2].sumScore);
-        emit sig2(ply, 1, &ply->sum, Global::sumScore);
+        emit sig2(ply, c, res, ContestInfo::info.problems[c - 2].sumScore);
+        emit sig2(ply, 1, &ply->sum, ContestInfo::info.sumScore);
 //       ply->style[c]=boardTable->showProblemResult(ply->label[c],res,Global::problems[c-2].sumScore,c);
         //      ply->style[1]=boardTable->showProblemSumResult(ply->label[1],&ply->sum,Global::sumScore,1);
         saveHTMLResult(ply);
     };
 
 
-    if (!c || c == 1)
+    if (!c || c == 1) // Judge one player's all problems
     {
-        int t = Global::logicalRow(r);
-        ply = &Global::players[t];
-        for (auto i : Global::problemOrder) clear(i + 2);
+        int t = GetLogicalRow(r);
+        ply = &ContestInfo::info.players[t];
+        for (auto i : ContestInfo::info.problemOrder) clear(i + 2);
         //ply->style[1]=boardTable->showProblemSumResult(ply->label[1],&ply->sum,Global::sumScore,1);
-        emit sig2(ply, 1, &ply->sum, Global::sumScore);
-        for (auto i : Global::problemOrder)
+        emit sig2(ply, 1, &ply->sum, ContestInfo::info.sumScore);
+        for (auto i : ContestInfo::info.problemOrder)
         {
             //boardTable->setCurrentItem(boardTable->item(r,i+2));
             emit sig7(r, i + 2);
             work(i + 2);
-            if (judgeStoped) break;
+            if (Status::JudgeStoped) break;
         }
     }
-    else for (auto i : Global::judgeList)
+    else // Judge problems in judgeList
+    {
+        for (auto i : judgeList)
         {
-            int t = Global::logicalRow(i.first);
-            ply = &Global::players[t];
+            int t = GetLogicalRow(i.first);
+            ply = &ContestInfo::info.players[t];
             clear(i.second);
             //boardTable->setCurrentItem(boardTable->item(i.first,i.second));
             //ply->style[1]=boardTable->showProblemSumResult(ply->label[1],&ply->sum,Global::sumScore,1);
-            emit sig2(ply, 1, &ply->sum, Global::sumScore);
+            emit sig2(ply, 1, &ply->sum, ContestInfo::info.sumScore);
             emit sig7(i.first, i.second);
             work(i.second);
-            if (judgeStoped) break;
+            if (Status::JudgeStoped) break;
             if (r == -1) emit sig8(i.first, i.second); //boardTable->item(i.first,i.second)->setSelected(false);
         }
+    }
 
-    emit sig4(rows, judgeStoped ? "- 测评终止 -" : "- 测评结束 -", " ");
+    emit sig4(rows, Status::JudgeStoped ? "- 测评终止 -" : "- 测评结束 -", " ");
 }

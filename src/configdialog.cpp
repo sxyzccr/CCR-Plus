@@ -1,9 +1,12 @@
+#include "contestinfo.h"
 #include "configdialog.h"
 #include "ui_configdialog.h"
 
 #include <QVector>
 #include <QCheckBox>
 #include <QMessageBox>
+
+using namespace std;
 
 ConfigDialog::ConfigDialog(QWidget* parent) :
     QDialog(parent),
@@ -32,7 +35,7 @@ ConfigDialog::~ConfigDialog()
 void ConfigDialog::setModelData(int c)
 {
     Problem* problem = NULL;
-    if (c < Global::problemNum) problem = &Global::problems[c];
+    if (c < ContestInfo::info.problemNum) problem = &ContestInfo::info.problems[c];
 
     auto configNew = [&]()
     {
@@ -43,11 +46,11 @@ void ConfigDialog::setModelData(int c)
         model.item(4, c)->setData(2, Qt::EditRole);
         model.item(4, c)->setToolTip("true");
 
-        for (int i = 0; i < 4; i++) model.item(i, c)->setFont(Global::boldFont);
-        model.horizontalHeaderItem(c)->setFont(Global::boldFont);
+        for (int i = 0; i < 4; i++) model.item(i, c)->setFont(BOLD_FONT);
+        model.horizontalHeaderItem(c)->setFont(BOLD_FONT);
     };
 
-    if (!problem || !problem->que.size()) {configNew(); return;}
+    if (!problem || !problem->que.size()) { configNew(); return; }
 
     model.item(4, c)->setToolTip("false");
     model.item(3, c)->setData((problem->checker == "fulltext" || problem->checker == "fulltext.exe") ? "全文比较" : problem->checker == ".exe" ? "" : problem->checker, Qt::EditRole);
@@ -66,7 +69,7 @@ void ConfigDialog::setModelData(int c)
         else
         {
             model.item(1, c)->setData(QString("无效"), Qt::EditRole);
-            model.item(1, c)->setFont(Global::boldFont);
+            model.item(1, c)->setFont(BOLD_FONT);
         }
 
         if (minM == maxM) model.item(2, c)->setData(minM, Qt::EditRole);
@@ -74,7 +77,7 @@ void ConfigDialog::setModelData(int c)
         else
         {
             model.item(2, c)->setData(QString("无效"), Qt::EditRole);
-            model.item(2, c)->setFont(Global::boldFont);
+            model.item(2, c)->setFont(BOLD_FONT);
         }
     }
     else if (problem->type == ProblemType::AnswersOnly)
@@ -88,7 +91,7 @@ void ConfigDialog::setModelData(int c)
     else
     {
         model.item(0, c)->setData("无效", Qt::EditRole);
-        model.item(0, c)->setFont(Global::boldFont);
+        model.item(0, c)->setFont(BOLD_FONT);
         model.item(1, c)->setText("");
         model.item(1, c)->setEditable(false);
         model.item(2, c)->setText("");
@@ -98,8 +101,8 @@ void ConfigDialog::setModelData(int c)
 
 void ConfigDialog::loadProblems()
 {
-    for (auto i : Global::problemOrder) problemList.append(Global::problems[i].name);
-    QStringList tmp = QDir(Global::dataPath).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (auto i : ContestInfo::info.problemOrder) problemList.append(ContestInfo::info.problems[i].name);
+    QStringList tmp = QDir(ContestInfo::info.dataPath).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (auto i : tmp) if (!problemList.count(i)) problemList.append(i);
     num = problemList.size();
 
@@ -143,13 +146,13 @@ void ConfigDialog::dataChangedEvent(const QModelIndex& tl, const QModelIndex& br
 
     int r = tl.row(), c = tl.column();
     QString text = model.item(r, c)->text();
-    model.item(r, c)->setFont(Global::boldFont);
+    model.item(r, c)->setFont(BOLD_FONT);
     model.item(r, c)->setToolTip(text);
-    model.horizontalHeaderItem(c)->setFont(Global::boldFont);
+    model.horizontalHeaderItem(c)->setFont(BOLD_FONT);
 
     if (r == 4)
     {
-        if (c >= Global::problemNum) model.item(r, c)->setData(2, Qt::EditRole);
+        if (c >= ContestInfo::info.problemNum) model.item(r, c)->setData(2, Qt::EditRole);
         else if (model.item(r, c)->data(Qt::EditRole).toBool())
         {
             for (int i = 0; i <= 3; i++)
@@ -158,7 +161,7 @@ void ConfigDialog::dataChangedEvent(const QModelIndex& tl, const QModelIndex& br
                 else if (i == 3) model.item(i, c)->setData("全文比较", Qt::EditRole);
                 else model.item(i, c)->setData(i == 1 ? 1 : 128, Qt::EditRole);
                 model.item(i, c)->setToolTip(model.item(i, c)->text());
-                model.item(i, c)->setFont(Global::boldFont);
+                model.item(i, c)->setFont(BOLD_FONT);
                 model.item(i, c)->setEditable(true);
             }
         }
@@ -180,7 +183,7 @@ void ConfigDialog::dataChangedEvent(const QModelIndex& tl, const QModelIndex& br
             {
                 model.item(i, c)->setData(i == 1 ? 1 : 128, Qt::EditRole);
                 model.item(i, c)->setToolTip(model.item(i, c)->text());
-                model.item(i, c)->setFont(Global::boldFont);
+                model.item(i, c)->setFont(BOLD_FONT);
                 model.item(i, c)->setEditable(true);
             }
         }
@@ -221,7 +224,7 @@ void ConfigDialog::accept()
             if (model.item(4, t)->data(Qt::EditRole).toBool()) prob.configureNew(type, tim, mem, checker);
             else
             {
-                prob = Global::problems[t];
+                prob = ContestInfo::info.problems[t];
                 prob.configure(type, tim, mem, checker);
             }
             if (!prob.saveConfig())
@@ -233,6 +236,6 @@ void ConfigDialog::accept()
         list.append(problemList[t]);
     }
     //qDebug()<<list;
-    Global::saveProblemOrder(list);
+    ContestInfo::info.saveProblemOrder(list);
     QDialog::accept();
 }

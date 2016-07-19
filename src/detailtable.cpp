@@ -1,7 +1,11 @@
+#include "status.h"
+#include "contestinfo.h"
 #include "detailtable.h"
 
 #include <QScrollBar>
 #include <QHeaderView>
+
+using namespace std;
 
 DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent)
 {
@@ -95,7 +99,8 @@ void DetailTable::addPointDetail(int& row, int num, const QString& note, const Q
 
     QColor o(255, 255, 255);
     if (state == "conf") o.setRgb(0, 161, 241); //Config
-    if (state.length() == 1) switch (state[0].toLatin1())
+    if (state.length() == 1)
+        switch (state[0].toLatin1())
         {
         case 'A':
             o.setRgb(51, 185, 6); //AC
@@ -140,7 +145,7 @@ void DetailTable::addScoreDetail(int row, int len, int score, int sumScore)
     QTableWidgetItem* tmp = new QTableWidgetItem(QString::number(score));
     tmp->setTextAlignment(Qt::AlignCenter);
     tmp->setToolTip(tmp->text());
-    tmp->setBackgroundColor(Global::ratioColor(235, 235, 235, 0, 161, 241, score, sumScore));
+    tmp->setBackgroundColor(GetRatioColor(235, 235, 235, 0, 161, 241, score, sumScore));
     this->setItem(row - len + 1, 0, tmp);
 }
 
@@ -148,12 +153,12 @@ void DetailTable::showProblemDetail(Player* player, Problem* problem)
 {
     int row = this->rowCount() - 1;
     QString title = player->name;
-    if (Global::isListUsed && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
+    if (ContestInfo::info.isListUsed && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
     if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name);
     else title += +" - " + problem->name;
     addTitleDetail(row, title);
 
-    QFile file(Global::resultPath + problem->name + "/" + player->name + ".res");
+    QFile file(ContestInfo::info.resultPath + problem->name + "/" + player->name + ".res");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         addNoteDetail(row, "无测评结果", " ");
@@ -202,9 +207,9 @@ void DetailTable::showProblemDetail(Player* player, Problem* problem)
 void DetailTable::showConfigDetail()
 {
     int row = this->rowCount() - 1;
-    for (auto i : Global::problemOrder)
+    for (auto i : ContestInfo::info.problemOrder)
     {
-        Problem* prob = &Global::problems[i];
+        Problem* prob = &ContestInfo::info.problems[i];
         addTitleDetail(row, QString("\"%1\" 的配置结果").arg(prob->name));
 
         int t = 0;
@@ -227,11 +232,11 @@ void DetailTable::showConfigDetail()
 
 void DetailTable::showDetailEvent(int r, int c)
 {
-    if (Global::alreadyJudging || (Global::clickTimer.isValid() && Global::clickTimer.elapsed() < 1000)) return;
+    if (Status::IsJudging || (lastJudgeTimer.isValid() && lastJudgeTimer.elapsed() < 1000)) return;
     clearDetail();
-    r = Global::logicalRow(r);
-    if (c > 1) showProblemDetail(&Global::players[r], &Global::problems[c - 2]);
-    else for (auto i : Global::problemOrder) showProblemDetail(&Global::players[r], &Global::problems[i]);
+    r = GetLogicalRow(r);
+    if (c > 1) showProblemDetail(&ContestInfo::info.players[r], &ContestInfo::info.problems[c - 2]);
+    else for (auto i : ContestInfo::info.problemOrder) showProblemDetail(&ContestInfo::info.players[r], &ContestInfo::info.problems[i]);
 }
 
 void DetailTable::adjustScrollbar()

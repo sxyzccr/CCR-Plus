@@ -1,7 +1,7 @@
 #ifndef PROBLEM_H
 #define PROBLEM_H
 
-#include "header.h"
+#include "const.h"
 //#include "global.h"
 
 #include <QtXml>
@@ -45,15 +45,16 @@ public:
         ~Subtask() { point.clear(); }
 
         int score;
-        vector<int> point;
+        std::vector<int> point;
     };
-    vector<Subtask> tasks;
-    vector<Info> que;
-    vector<CompilerInfo> compilers;
+    std::vector<Subtask> tasks;
+    std::vector<Info> que;
+    std::vector<CompilerInfo> compilers;
 
     QList<QPair<QString, QString>> getInAndOutFile();
-private:
+    CompilerInfo getCompiler(const QString& playerName);
 
+private:
     QString addSuff(QString file);
     QString removeSuff(QString file);
 };

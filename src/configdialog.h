@@ -1,8 +1,6 @@
 #ifndef CONFIGDIALOG_H
 #define CONFIGDIALOG_H
 
-#include "global.h"
-
 #include <QDialog>
 #include <itemdelegate.h>
 #include <QStandardItemModel>

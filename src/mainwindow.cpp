@@ -1,4 +1,6 @@
+#include "status.h"
 #include "version.h"
+#include "contestinfo.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -8,6 +10,8 @@
 #include <QCloseEvent>
 #include <QFileDialog>
 #include <QDesktopServices>
+
+using namespace std;
 
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
@@ -77,14 +81,14 @@ MainWindow::~MainWindow()
 
 void MainWindow::clear() //清空结构
 {
-    Global::clear();
+    ContestInfo::info.clear();
     boardTable->clearBoard();
     detailTable->clearDetail();
 }
 
 void MainWindow::openRecentContest()
 {
-    if (Global::alreadyJudging)
+    if (Status::IsJudging)
     {
         stopEvent();
         QMessageBox::warning(this, "", QString("测评被终止！"));
@@ -118,7 +122,7 @@ void MainWindow::updateRecentContest(bool loadRecentList)
     QSettings set("ccr.ini", QSettings::IniFormat);
     QStringList list = set.value("RecentContestList").toStringList();
     lastContest = set.value("LastContest").toString();
-    int n = min(list.size(), 20);
+    int n = min(list.size(), MAX_RECENT_CONTEST);
     for (int i = 0; i < n; i++)
     {
         QString s = QString("&%1 %2").arg(i + 1).arg(list[i]);
@@ -126,7 +130,7 @@ void MainWindow::updateRecentContest(bool loadRecentList)
         actionR[i]->setData(list[i]);
         actionR[i]->setVisible(true);
     }
-    for (int i = n; i < 20; i++) actionR[i]->setVisible(false);
+    for (int i = n; i < MAX_RECENT_CONTEST; i++) actionR[i]->setVisible(false);
     ui->menuRecent->setEnabled(n);
 
     if (!loadRecentList) return;
@@ -176,13 +180,8 @@ void MainWindow::loadContestEvent(const QString& path)
     //qDebug()<<"  && BG "<<path;
 
     if (ui->actionClose->isEnabled()) closeContestEvent();
-    Global::testPath = path + "/";
-    judger->setDir(Global::testPath);
-    Global::dataPath = path + "/data/";
-    Global::srcPath = path + "/src/";
-    Global::resultPath = path + "/result/";
-    Global::testName = QDir(path).dirName();
     lastContest = path;
+    ContestInfo::info.setPath(path);
 
     //qDebug()<<"  && BG 2 "<<path;
 
@@ -211,9 +210,8 @@ void MainWindow::loadContestEvent(const QString& path)
     ui->actionJudgeAll->setEnabled(true);
     ui->actionStop->setEnabled(false);
 
-    judgeStoped = false;
-    contestClosed = false;
-    Global::alreadyJudging = false;
+    Status::JudgeStoped = false;
+    Status::ContestClosed = false;
 
     //boardTable->setup();
     //detailTable->setup();
@@ -223,11 +221,11 @@ void MainWindow::loadContestEvent(const QString& path)
 
 void MainWindow::loadBoardEvent()
 {
-    if (Global::alreadyJudging) return;
+    if (Status::IsJudging) return;
 
-    if (!QDir(Global::testPath).exists())
+    if (!QDir(ContestInfo::info.testPath).exists())
     {
-        QString path = QDir(Global::testPath).path();
+        QString path = QDir(ContestInfo::info.testPath).path();
         QMessageBox::critical(this, "无法打开竞赛", QString("%1\n路径不存在或已被移除。").arg(path));
         QSettings set("ccr.ini", QSettings::IniFormat);
         QStringList list = set.value("RecentContestList").toStringList();
@@ -243,17 +241,17 @@ void MainWindow::loadBoardEvent()
     splitter->show();
 
     //读取.list文件
-    QFile file(Global::testPath + ".list");
+    QFile file(ContestInfo::info.testPath + ".list");
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        Global::isListUsed = true;
+        ContestInfo::info.isListUsed = true;
         ui->actionList->setChecked(true);
         readPlayerList(file, 0);
         file.close();
     }
     else
     {
-        Global::isListUsed = false;
+        ContestInfo::info.isListUsed = false;
         ui->actionList->setChecked(false);
     }
 }
@@ -261,14 +259,14 @@ void MainWindow::loadBoardEvent()
 void MainWindow::stopEvent()
 {
     //qDebug()<<"STOP";
-    judgeStoped = true;
+    Status::JudgeStoped = true;
     emit stopJudgingSignal();
     //judger->stop();
 }
 
 void MainWindow::closeContestEvent()
 {
-    contestClosed = true;
+    Status::ContestClosed = true;
     stopEvent();
     saveResultList();
     splitter->hide();
@@ -306,7 +304,7 @@ void MainWindow::dropEvent(QDropEvent* event)
         if (path.size() >= 2 && path[0] == '/' && path[1] == '/') path.remove(0, 1);
         if (QDir(path).exists())
         {
-            if (Global::alreadyJudging)
+            if (Status::IsJudging)
             {
                 stopEvent();
                 QMessageBox::warning(this, "", QString("测评被终止！"));
@@ -366,19 +364,19 @@ void MainWindow::createDir_action()
 void MainWindow::removeDir_action()
 {
     QString t1, t2;
-    if (dir_action == Global::srcPath + file_action + "/") t1 = "删除选手", t2 = QString("确实要删除选手 \"%1\" 及其目录中的所有文件吗？").arg(file_action);
-    else if (dir_action == Global::dataPath + file_action + "/") t1 = "删除试题", t2 = QString("确实要删除试题 \"%1\" 及其目录中的所有文件吗？").arg(file_action);
+    if (dir_action == ContestInfo::info.srcPath + file_action + "/") t1 = "删除选手", t2 = QString("确实要删除选手 \"%1\" 及其目录中的所有文件吗？").arg(file_action);
+    else if (dir_action == ContestInfo::info.dataPath + file_action + "/") t1 = "删除试题", t2 = QString("确实要删除试题 \"%1\" 及其目录中的所有文件吗？").arg(file_action);
     if (QMessageBox::question(this, t1, t2) == QMessageBox::Yes)
     {
         QDir(dir_action).removeRecursively();
-        if (t1 == "删除试题") QDir(Global::resultPath + file_action).removeRecursively();
+        if (t1 == "删除试题") QDir(ContestInfo::info.resultPath + file_action).removeRecursively();
         loadBoardEvent();
     }
 }
 
 void MainWindow::createActions()
 {
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < MAX_RECENT_CONTEST; i++)
     {
         actionR[i] = new QAction(this);
         actionR[i]->setVisible(false);
@@ -442,9 +440,9 @@ void MainWindow::headerMenuEvent(const QPoint& pos)
         actionOpenDir->setEnabled(true);
         actionCreateDir->setEnabled(true);
 
-        if (!c) dir_action = Global::srcPath;
-        else if (c == 1) dir_action = Global::dataPath;
-        else dir_action = Global::dataPath + Global::problems[c - 2].name + "/";
+        if (!c) dir_action = ContestInfo::info.srcPath;
+        else if (c == 1) dir_action = ContestInfo::info.dataPath;
+        else dir_action = ContestInfo::info.dataPath + ContestInfo::info.problems[c - 2].name + "/";
 
         if (QDir(dir_action).exists())
         {
@@ -454,7 +452,7 @@ void MainWindow::headerMenuEvent(const QPoint& pos)
             headerMenu->addAction(actionOpenDir);
             if (c > 1)
             {
-                file_action = Global::problems[c - 2].name;
+                file_action = ContestInfo::info.problems[c - 2].name;
                 headerMenu->addSeparator();
                 actionRemoveDir->setText(QString("删除试题 \"%1\"(&R)").arg(file_action));
                 headerMenu->addAction(actionRemoveDir);
@@ -478,18 +476,18 @@ void MainWindow::tableMenuEvent(const QPoint& pos)
     {
         int r = item->row(), c = item->column();
         detailTable->showDetailEvent(r, c);
-        r = Global::logicalRow(r);
-        Player* player = &Global::players[r];
+        r = GetLogicalRow(r);
+        Player* player = &ContestInfo::info.players[r];
         if (c > 1)
         {
-            Problem* problem = &Global::problems[c - 2];
-            dir_action = Global::srcPath + player->name + "/" + problem->dir + "/";
-            file_action = Global::getCompiler(player, problem).file;
+            Problem* problem = &ContestInfo::info.problems[c - 2];
+            dir_action = ContestInfo::info.srcPath + player->name + "/" + problem->dir + "/";
+            file_action = problem->getCompiler(player->name).file;
 
             if (file_action == "")
             {
                 player_action = player, problem_action = problem;
-                if (problem->type == AnswersOnly || !problem->compilers.size()) actionCreateFile->setEnabled(false);
+                if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size()) actionCreateFile->setEnabled(false);
                 tableMenu->addAction(actionCreateFile);
             }
             else
@@ -501,7 +499,7 @@ void MainWindow::tableMenuEvent(const QPoint& pos)
             tableMenu->addSeparator();
 
             if (QDir(dir_action).exists()) tableMenu->addAction(actionOpenDir);
-            else if (problem->type == AnswersOnly || !problem->compilers.size()) tableMenu->addAction(actionCreateDir);
+            else if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size()) tableMenu->addAction(actionCreateDir);
             else
             {
                 actionOpenDir->setEnabled(false);
@@ -510,7 +508,7 @@ void MainWindow::tableMenuEvent(const QPoint& pos)
         }
         else
         {
-            dir_action = Global::srcPath + player->name + "/";
+            dir_action = ContestInfo::info.srcPath + player->name + "/";
             file_action = player->name;
 
             if (QDir(dir_action).exists())
@@ -540,7 +538,7 @@ void MainWindow::prepare() //初始化
 {
     //读取src文件夹, data文件夹与.ccr文件
 
-    QStringList playerName = readFolders(Global::srcPath), problemName = readFolders(Global::dataPath), order = readProblemOrder(Global::testPath);
+    QStringList playerName = readFolders(ContestInfo::info.srcPath), problemName = readFolders(ContestInfo::info.dataPath), order = readProblemOrder(ContestInfo::info.testPath);
     map<QString, int> playerID, problemID;
     problemID.clear();
     playerID.clear();
@@ -549,39 +547,39 @@ void MainWindow::prepare() //初始化
     for (auto i : order) if (problemName.count(i)) tmp.append(i);
     for (auto i : problemName) if (!tmp.count(i)) tmp.append(i);
     problemName = tmp;
-    Global::saveProblemOrder(problemName);
+    ContestInfo::info.saveProblemOrder(problemName);
     for (auto i : problemName)
     {
         Problem tp(i);
-        problemID[i] = Global::problemNum;
-        Global::problemOrder.push_back(Global::problemNum++);
-        Global::problems.push_back(tp);
+        problemID[i] = ContestInfo::info.problemNum;
+        ContestInfo::info.problemOrder.push_back(ContestInfo::info.problemNum++);
+        ContestInfo::info.problems.push_back(tp);
     }
 
     playerLabelLength = 75;
     for (auto i : playerName)
     {
-        playerLabelLength = max(playerLabelLength, QFontMetrics(Global::font).width(i) + 30);
+        playerLabelLength = max(playerLabelLength, QFontMetrics(FONT).width(i) + 30);
 
-        Player tp(i, Global::playerNum);
-        playerID[i] = Global::playerNum;
-        Global::playerNum++;
+        Player tp(i, ContestInfo::info.playerNum);
+        playerID[i] = ContestInfo::info.playerNum;
+        ContestInfo::info.playerNum++;
 
-        for (int j = 0; j < Global::problemNum; j++) tp.problem.push_back(Player::Result());
-        Global::players.push_back(tp);
+        for (int j = 0; j < ContestInfo::info.problemNum; j++) tp.problem.push_back(Player::Result());
+        ContestInfo::info.players.push_back(tp);
     }
 
     //qDebug()<<playerLabelLength;
 
     boardTable->horizontalHeader()->resizeSection(0, playerLabelLength);
     boardTable->setRowCount(playerName.size());
-    boardTable->setColumnCount(Global::problemNum + 2);
+    boardTable->setColumnCount(ContestInfo::info.problemNum + 2);
     boardTable->setHorizontalHeaderLabels(QStringList({"选手", "总分"}) + problemName);
-    for (int i = 0; i < Global::problemNum + 2; i++)  boardTable->horizontalHeaderItem(i)->setToolTip(boardTable->horizontalHeaderItem(i)->text());
+    for (int i = 0; i < ContestInfo::info.problemNum + 2; i++) boardTable->horizontalHeaderItem(i)->setToolTip(boardTable->horizontalHeaderItem(i)->text());
 
     //读取result文件夹
 
-    QFile file(Global::resultPath + ".reslist");
+    QFile file(ContestInfo::info.resultPath + ".reslist");
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&file);
@@ -600,16 +598,16 @@ void MainWindow::prepare() //初始化
             if (c == 'R') c = 'N';
             if (c == 'O') c = 'N';
             if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
-            Global::players[x].problem[y].state = c;
-            Global::players[x].problem[y].score = s;
-            Global::players[x].problem[y].usedTime = t;
+            ContestInfo::info.players[x].problem[y].state = c;
+            ContestInfo::info.players[x].problem[y].score = s;
+            ContestInfo::info.players[x].problem[y].usedTime = t;
         }
         file.close();
     }
     for (auto i : problemID)
-        for (auto j : playerID) if (!Global::players[j.second].problem[i.second].state)
+        for (auto j : playerID) if (!ContestInfo::info.players[j.second].problem[i.second].state)
             {
-                file.setFileName(Global::resultPath + i.first + "/" + j.first + ".res");
+                file.setFileName(ContestInfo::info.resultPath + i.first + "/" + j.first + ".res");
                 if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
                 QDomDocument doc;
                 if (!doc.setContent(&file)) {file.close(); continue;}
@@ -625,19 +623,19 @@ void MainWindow::prepare() //初始化
                 if (c == 'R') c = 'N';
                 if (c == 'O') c = 'N';
                 if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
-                Global::players[x].problem[y].state = c;
-                Global::players[x].problem[y].score = s;
-                Global::players[x].problem[y].usedTime = t;
+                ContestInfo::info.players[x].problem[y].state = c;
+                ContestInfo::info.players[x].problem[y].score = s;
+                ContestInfo::info.players[x].problem[y].usedTime = t;
 
                 file.close();
             }
 
     //读取.prb文件
 
-    for (auto& i : Global::problems) i.readConfig();
+    for (auto& i : ContestInfo::info.problems) i.readConfig();
 
-    for (auto i : Global::problems) Global::sumScore += i.sumScore;
-    for (auto& i : Global::players) i.calcSum();
+    for (auto i : ContestInfo::info.problems) ContestInfo::info.sumScore += i.sumScore;
+    for (auto& i : ContestInfo::info.players) i.calcSum();
 
     saveResultList();
 }
@@ -646,10 +644,10 @@ QStringList MainWindow::readFolders(const QString& path)
 {
     QDir dir(path);
     QStringList list = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    if (path == Global::dataPath)
+    if (path == ContestInfo::info.dataPath)
     {
         QStringList tmp;
-        for (auto i : list) if (QFile::exists(Global::dataPath + i + "/.prb")) tmp.append(i);
+        for (auto i : list) if (QFile::exists(ContestInfo::info.dataPath + i + "/.prb")) tmp.append(i);
         return tmp;
     }
     else return list;
@@ -667,7 +665,6 @@ QStringList MainWindow::readProblemOrder(const QString& path)
             QDomElement root = doc.documentElement();
             if (root.isNull() || root.tagName() != "contest") {file.close(); return problem;}
             QDomNodeList list = root.childNodes();
-            int t = 0;
             for (int i = 0; i < list.count(); i++)
             {
                 QDomElement a = list.item(i).toElement();
@@ -689,19 +686,19 @@ QStringList MainWindow::readProblemOrder(const QString& path)
 
 void MainWindow::saveResultList()
 {
-    QFile file(Global::resultPath + ".reslist");
+    QFile file(ContestInfo::info.resultPath + ".reslist");
     if (file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QTextStream out(&file);
         out.setCodec("UTF-8");
-        for (int i = 0; i < Global::players.size(); i++)
+        for (int i = 0; i < ContestInfo::info.players.size(); i++)
         {
-            int t = Global::logicalRow(i);
-            Player* p = &Global::players[t];
-            for (auto j : Global::problemOrder)
+            int t = GetLogicalRow(i);
+            Player* p = &ContestInfo::info.players[t];
+            for (auto j : ContestInfo::info.problemOrder)
             {
                 Player::Result* r = &p->problem[j];
-                out << p->name << '/' << Global::problems[j].name << '/' << r->score << '/' << r->usedTime << '/' << r->state << '/' << endl;
+                out << p->name << '/' << ContestInfo::info.problems[j].name << '/' << r->score << '/' << r->usedTime << '/' << r->state << '/' << endl;
             }
         }
         file.close();
@@ -711,10 +708,10 @@ void MainWindow::saveResultList()
 void MainWindow::judgeEvent(int r, int c)
 {
     //qDebug()<<r<<c;
-    if (Global::alreadyJudging) return;
+    if (Status::IsJudging) return;
 
-    Global::alreadyJudging = true;
-    Global::clickTimer.start();
+    Status::IsJudging = true;
+    detailTable->startLastJudgeTimer();
 
     boardTable->clearHighlighted(boardTable->preHeaderClicked);
     boardTable->preHeaderClicked = -1;
@@ -732,30 +729,34 @@ void MainWindow::judgeEvent(int r, int c)
     ui->actionStop->setEnabled(true);
 
     detailTable->clearDetail();
-    judgeStoped = false;
+    Status::JudgeStoped = false;
 
-    Global::judgeList.clear();
-    if (r == -1)
-    {
-        for (int i = 0; i < Global::playerNum; i++)
-            for (auto j : Global::problemOrder) if (boardTable->item(i, j + 2)->isSelected()) Global::judgeList.append(make_pair(i, j + 2));
-    }
-    else if (r == -2)
-    {
-        for (int i = 0; i < Global::playerNum; i++)
-            for (auto j : Global::problemOrder) if (Global::players[Global::logicalRow(i)].problem[j].state == ' ') Global::judgeList.append(make_pair(i, j + 2));
-    }
-    else if (c > 1) Global::judgeList.append(make_pair(r, c));
+    judger->setup(r, c, ContestInfo::info.testPath);
 
-    judger->r = r;
-    judger->c = c;
+    if (r == -1) // Judge selected
+    {
+        for (int i = 0; i < ContestInfo::info.playerNum; i++)
+            for (auto j : ContestInfo::info.problemOrder)
+                if (boardTable->item(i, j + 2)->isSelected())
+                    judger->appendProblem(qMakePair(i, j + 2));
+    }
+    else if (r == -2) // Judge unjudged
+    {
+        for (int i = 0; i < ContestInfo::info.playerNum; i++)
+            for (auto j : ContestInfo::info.problemOrder)
+                if (ContestInfo::info.players[GetLogicalRow(i)].problem[j].state == ' ')
+                    judger->appendProblem(qMakePair(i, j + 2));
+    }
+    else if (c > 1) // Judge one
+        judger->appendProblem(qMakePair(r, c));
+
     QEventLoop* eventLoop = new QEventLoop(this);
     connect(judger, SIGNAL(finished()), eventLoop, SLOT(quit()));
     judger->start();
     eventLoop->exec();
     delete eventLoop;
 
-    Global::alreadyJudging = false;
+    Status::IsJudging = false;
     ui->actionConfig->setEnabled(true);
     ui->actionList->setEnabled(true);
     ui->actionExport->setEnabled(true);
@@ -775,7 +776,7 @@ void MainWindow::judgeEvent(int r, int c)
 
 void MainWindow::solt1(QLabel* label, const QString& s1, const QString& s2, const QString& s3)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     label->setText(s1);
     label->setToolTip(s2);
     label->setStyleSheet(s3);
@@ -783,21 +784,21 @@ void MainWindow::solt1(QLabel* label, const QString& s1, const QString& s2, cons
 
 void MainWindow::solt2(Player* ply, int c, Player::Result* res, int sum)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     if (c == 1) ply->style[1] = boardTable->showProblemSumResult(ply->label[1], res, sum, 1);
     else ply->style[c] = boardTable->showProblemResult(ply->label[c], res, sum, c);
 }
 
 void MainWindow::slot3(int row, const QString& title)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     detailTable->addTitleDetail(row, title);
     detailTable->adjustScrollbar();
 }
 
 void MainWindow::slot4(int row, const QString& note, const QString& state)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     detailTable->addNoteDetail(row, note, state);
     if (state == " ") detailTable->item(row, 0)->setTextAlignment(Qt::AlignCenter);
     detailTable->adjustScrollbar();
@@ -805,7 +806,7 @@ void MainWindow::slot4(int row, const QString& note, const QString& state)
 
 void MainWindow::slot5(int row, int num, const QString& note, const QString& state, const QString& file, int len)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     detailTable->addPointDetail(row, num, note, state, file);
     if (len > 1) detailTable->setSpan(row - len + 1, 0, len, 1);
     detailTable->adjustScrollbar();
@@ -813,19 +814,19 @@ void MainWindow::slot5(int row, int num, const QString& note, const QString& sta
 
 void MainWindow::slot6(int row, int len, int score, int sumScore)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     detailTable->addScoreDetail(row, len, score, sumScore);
 }
 
 void MainWindow::slot7(int r, int c)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     boardTable->setCurrentItem(boardTable->item(r, c));
 }
 
 void MainWindow::slot8(int r, int c)
 {
-    if (contestClosed) return;
+    if (Status::ContestClosed) return;
     boardTable->item(r, c)->setSelected(false);
 }
 
@@ -845,7 +846,7 @@ void MainWindow::readPlayerList(QFile& file, bool isCSV)
 
     if (isCSV)
     {
-        QFile f(Global::testPath + ".list");
+        QFile f(ContestInfo::info.testPath + ".list");
         if (f.open(QIODevice::WriteOnly | QIODevice::Text))
         {
             QTextStream out(&f);
@@ -856,7 +857,8 @@ void MainWindow::readPlayerList(QFile& file, bool isCSV)
     }
 
     int len = 75;
-    for (auto& i : Global::players) if (!i.type)
+    for (auto& i : ContestInfo::info.players)
+        if (!i.type)
         {
             QLabel* tmp = i.label[0];
             if (list.count(i.name))
@@ -868,26 +870,26 @@ void MainWindow::readPlayerList(QFile& file, bool isCSV)
                 tmp->setStyleSheet("");
             }
             else tmp->setStyleSheet("QLabel{color:rgb(120,120,120);}");
-            len = max(len, QFontMetrics(Global::font).width(tmp->text()) + 30);
+            len = max(len, QFontMetrics(FONT).width(tmp->text()) + 30);
         }
     boardTable->horizontalHeader()->resizeSection(0, len);
 }
 
 void MainWindow::on_actionList_triggered()
 {
-    if (Global::isListUsed)
+    if (ContestInfo::info.isListUsed)
     {
         if (QMessageBox::question(this, "移除选手名单", "确实要移除选手名单吗？") == QMessageBox::No)
         {
-            Global::isListUsed = true;
+            ContestInfo::info.isListUsed = true;
             ui->actionList->setChecked(true);
             return;
         }
-        Global::isListUsed = false;
+        ContestInfo::info.isListUsed = false;
         ui->actionList->setChecked(false);
-        QFile(Global::testPath + ".list").remove();
+        QFile(ContestInfo::info.testPath + ".list").remove();
 
-        for (auto& i : Global::players) if (!i.type)
+        for (auto& i : ContestInfo::info.players) if (!i.type)
             {
                 QLabel* tmp = i.label[0];
                 i.name_list = "", tmp->setText(i.name);
@@ -898,10 +900,10 @@ void MainWindow::on_actionList_triggered()
     }
     else
     {
-        QString fileName = QFileDialog::getOpenFileName(this, "导入选手名单", Global::testPath, "CSV (逗号分隔) (*.csv)");
+        QString fileName = QFileDialog::getOpenFileName(this, "导入选手名单", ContestInfo::info.testPath, "CSV (逗号分隔) (*.csv)");
         if (!fileName.size())
         {
-            Global::isListUsed = false;
+            ContestInfo::info.isListUsed = false;
             ui->actionList->setChecked(false);
             return;
         }
@@ -910,7 +912,7 @@ void MainWindow::on_actionList_triggered()
             QMessageBox::critical(this, "导入名单失败", file.errorString());
         else
         {
-            Global::isListUsed = true;
+            ContestInfo::info.isListUsed = true;
             ui->actionList->setChecked(true);
             readPlayerList(file, 1);
             file.close();
@@ -921,7 +923,7 @@ void MainWindow::on_actionList_triggered()
 
 void MainWindow::on_actionExport_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(this, "导出成绩", Global::testPath + Global::testName + ".csv", "CSV (逗号分隔) (*.csv)");
+    QString fileName = QFileDialog::getSaveFileName(this, "导出成绩", ContestInfo::info.testPath + ContestInfo::info.testName + ".csv", "CSV (逗号分隔) (*.csv)");
     if (!fileName.size()) return;
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -930,18 +932,18 @@ void MainWindow::on_actionExport_triggered()
     {
         QTextStream out(&file);
         //out.setCodec("UTF-8");
-        if (Global::isListUsed) out << tr("编号,") << tr("姓名,"); else out << tr("选手,");
+        if (ContestInfo::info.isListUsed) out << tr("编号,") << tr("姓名,"); else out << tr("选手,");
         out << tr("总分,");
-        for (auto j : Global::problemOrder) out << QString("\"%1\",").arg(Global::problems[j].name);
+        for (auto j : ContestInfo::info.problemOrder) out << QString("\"%1\",").arg(ContestInfo::info.problems[j].name);
         out << endl;
-        for (int i = 0; i < Global::players.size(); i++)
+        for (int i = 0; i < ContestInfo::info.players.size(); i++)
         {
-            int t = Global::logicalRow(i);
-            Player* p = &Global::players[t];
+            int t = GetLogicalRow(i);
+            Player* p = &ContestInfo::info.players[t];
             out << QString("\"%1\",").arg(p->name);
-            if (Global::isListUsed) out << QString("\"%1\",").arg(p->name_list);
+            if (ContestInfo::info.isListUsed) out << QString("\"%1\",").arg(p->name_list);
             out << p->sum.score << ",";
-            for (auto j : Global::problemOrder) out << p->problem[j].score << ",";
+            for (auto j : ContestInfo::info.problemOrder) out << p->problem[j].score << ",";
             out << endl;
         }
         file.close();
@@ -977,7 +979,7 @@ void MainWindow::on_actionStop_triggered()
 
 void MainWindow::on_actionOpen_triggered()
 {
-    if (Global::alreadyJudging)
+    if (Status::IsJudging)
     {
         stopEvent();
         QMessageBox::warning(this, "", QString("测评被终止！"));

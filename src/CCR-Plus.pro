@@ -9,26 +9,29 @@ SOURCES += boardtable.cpp \
     configdialog.cpp \
     createfiledialog.cpp \
     detailtable.cpp \
-    global.cpp \
     itemdelegate.cpp \
     judgethread.cpp \
     main.cpp\
     mainwindow.cpp \
     player.cpp \
-    problem.cpp
+    problem.cpp \
+    contestinfo.cpp \
+    const.cpp \
+    status.cpp
 
 HEADERS += boardtable.h \
     configdialog.h \
     createfiledialog.h \
     detailtable.h \
-    global.h \
-    header.h \
     itemdelegate.h \
     judgethread.h \
     mainwindow.h \
     player.h \
     problem.h \
-    version.h
+    version.h \
+    const.h \
+    contestinfo.h \
+    status.h
 
 UI_DIR = forms
 RCC_DIR = rcfile

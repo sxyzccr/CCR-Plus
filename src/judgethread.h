@@ -1,7 +1,6 @@
 #ifndef JUDGETHREAD_H
 #define JUDGETHREAD_H
 
-#include "global.h"
 #include "player.h"
 #include "problem.h"
 #include "detailtable.h"
@@ -18,15 +17,16 @@ public:
 
     int r, c;
 
-    void setDir(const QString& dir);
+    void setup(int r, int c, const QString& dir);
     bool waitForClearedTmpDir(int ms);  //return:   1:success 0:fail
+    void appendProblem(const QPair<int, int>& p) { judgeList.append(p); }
     void run();
 
 private:
     QString testDir, srcDir, dataDir, tmpDir, judgeDir, playerName;
     Problem* problem;
-    set<int> notCleared;
-    bool judgeStoped;
+    std::set<int> notCleared;
+    QList<QPair<int, int>> judgeList;
     int rows;
 
     bool makeJudgeDir(int num); //return:   1:success 0:fail
@@ -43,11 +43,7 @@ private:
     void saveHTMLResult(Player* player);
     CompileResult compile(const Problem::CompilerInfo& compiler, QString& note);
 
-public slots:
-    void stopJudging();
-
 signals:
-    void stopJudgingSignal();
     void sig1(QLabel* label, const QString& s1, const QString& s2, const QString& s3);
     void sig2(Player* ply, int c, Player::Result* res, int sum);
 

@@ -1,7 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "global.h"
 #include "player.h"
 #include "problem.h"
 #include "boardtable.h"
@@ -90,9 +89,8 @@ private:
     DetailTable* detailTable;
     int playerLabelLength;
     JudgeThread* judger;
-    bool judgeStoped, contestClosed;
     QMenu* tableMenu, *headerMenu, *recentListMenu;
-    QAction* actionEditFile, *actionOpenDir, *actionCreateFile, *actionRemoveDir, *actionCreateDir, *actionRemove, *actionClean, *actionR[20];
+    QAction* actionEditFile, *actionOpenDir, *actionCreateFile, *actionRemoveDir, *actionCreateDir, *actionRemove, *actionClean, *actionR[MAX_RECENT_CONTEST];
     QString dir_action, file_action, path_action, lastContest;
     Player* player_action;
     Problem* problem_action;

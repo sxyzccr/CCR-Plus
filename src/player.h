@@ -1,7 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "header.h"
+#include "const.h"
 #include "problem.h"
 
 #include <QLabel>
@@ -45,9 +45,9 @@ public:
 
     int id, type; //type =  0:normal; -1:std; -2:jyk; 1:bogang;
     QString name, name_list;
-    vector<Result> problem;
-    vector<int> style;
-    vector<QLabel*> label;
+    std::vector<Result> problem;
+    std::vector<int> style;
+    std::vector<QLabel*> label;
 };
 
 #endif // PLAYER_H

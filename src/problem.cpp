@@ -1,5 +1,7 @@
 #include "problem.h"
-#include "global.h"
+#include "contestinfo.h"
+
+using namespace std;
 
 Problem::Problem(const QString& na)
 {
@@ -43,7 +45,7 @@ QString Problem::removeSuff(QString file)
 void Problem::readConfig()
 {
     sumScore = 0;
-    QFile file(Global::dataPath + name + "/.prb");
+    QFile file(ContestInfo::info.dataPath + name + "/.prb");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
     QDomDocument doc;
     if (!doc.setContent(&file)) {file.close(); return;}
@@ -173,7 +175,7 @@ bool Problem::saveConfig()
         }
     }
 
-    QFile file(Global::dataPath + name + "/.prb");
+    QFile file(ContestInfo::info.dataPath + name + "/.prb");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return false;
     QTextStream out(&file);
     doc.save(out, 4);
@@ -185,7 +187,7 @@ typedef QPair<QString, QString> Pair;
 
 QList<QPair<QString, QString>> Problem::getInAndOutFile()
 {
-    QString dir = Global::dataPath + name;
+    QString dir = ContestInfo::info.dataPath + name;
     QStringList list = QDir(dir).entryList(QDir::Files);
     const QStringList in({".in", ".inp", "in", "inp"}), out({".out", ".ans", ".ou", ".an", ".sol", ".res", ".std", "out", "ans", "ou", "an", "sol", "res", "std"});
     QList<Pair> Q[in.size()][out.size()];
@@ -202,11 +204,21 @@ QList<QPair<QString, QString>> Problem::getInAndOutFile()
                 if (p != -1) F[Pair(s.left(p), s.right(s.length() - a.length() - p))]++;
                 if (q != -1) F[Pair(s.left(q), s.right(s.length() - b.length() - q))]++;
             }
-            for (auto k = F.constBegin(); k != F.constEnd(); k++) if (k.value() == 2) Q[i][j].append(Pair(k.key().first + a + k.key().second, k.key().first + b + k.key().second));
+            for (auto k = F.constBegin(); k != F.constEnd(); k++)
+                if (k.value() == 2) Q[i][j].append(Pair(k.key().first + a + k.key().second, k.key().first + b + k.key().second));
             ma = max(ma, Q[i][j].size());
         }
     for (int i = 0; i < in.size(); i++)
-        for (int j = 0; j < out.size(); j++) if (ma - Q[i][j].size() <= 3) return Q[i][j];
+        for (int j = 0; j < out.size(); j++)
+            if (ma - Q[i][j].size() <= 3) return Q[i][j];
+    return QList<Pair>();
+}
+
+Problem::CompilerInfo Problem::getCompiler(const QString& playerName)
+{
+    for (auto i : compilers)
+        if (QFile(ContestInfo::info.srcPath + playerName + "/" + dir + "/" + i.file).exists()) return i;
+    return CompilerInfo();
 }
 
 void Problem::configure(const QString& typ, double timeLim, double memLim, const QString& check)

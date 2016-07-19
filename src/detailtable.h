@@ -1,7 +1,8 @@
 #ifndef DETAILTABLE_H
 #define DETAILTABLE_H
 
-#include "global.h"
+#include "player.h"
+#include "problem.h"
 
 #include <QTableWidget>
 
@@ -11,6 +12,8 @@ class DetailTable : public QTableWidget
 public:
     explicit DetailTable(QWidget* parent = 0);
     ~DetailTable();
+
+    void startLastJudgeTimer() { lastJudgeTimer.start(); }
 
 public slots:
     void showDetailEvent(int, int);
@@ -27,6 +30,7 @@ private:
     void showProblemDetail(Player* player, Problem* problem);
 
     bool isScrollBarAtBottom;
+    QElapsedTimer lastJudgeTimer;
 };
 
 #endif // DETAILTABLE_H
