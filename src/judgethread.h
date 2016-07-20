@@ -3,10 +3,12 @@
 
 #include "player.h"
 #include "problem.h"
-#include "detailtable.h"
 #include "boardtable.h"
+#include "detailtable.h"
 
 #include <set>
+#include <QThread>
+#include <QProcess>
 
 class JudgeThread: public QThread
 {
@@ -44,16 +46,14 @@ private:
     CompileResult compile(const Problem::CompilerInfo& compiler, QString& note);
 
 signals:
-    void sig1(QLabel* label, const QString& s1, const QString& s2, const QString& s3);
-    void sig2(Player* ply, int c, Player::Result* res, int sum);
+    void titleDetailFinished(int rows, const QString& title);
+    void noteDetailFinished(int rows, const QString& note, const QString& state);
+    void pointDetailFinished(int rows, int num, const QString& note, const QString& state, const QString& file, int len);
+    void scoreDetailFinished(int rows, int len, int score, int sumScore);
 
-    void sig3(int rows, const QString& title);
-    void sig4(int rows, const QString& note, const QString& state);
-    void sig5(int rows, int num, const QString& note, const QString& state, const QString& file, int len);
-    void sig6(int rows, int len, int score, int sumScore);
-
-    void sig7(int r, int c);
-    void sig8(int r, int c);
+    void itemJudgeFinished(int r, int c);
+    void playerLabelChanged(QLabel* label, const QString& s1, const QString& s2, const QString& s3);
+    void problemLabelChanged(Player* ply, int c, Player::Result* res, int sum);
 };
 
 #endif // JUDGETHREAD_H

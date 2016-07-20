@@ -3,12 +3,11 @@
 
 CreateFileDialog::CreateFileDialog(QWidget* parent, Player* ply, Problem* prob) :
     QDialog(parent),
-    ui(new Ui::CreateFileDialog)
+    ui(new Ui::CreateFileDialog),
+    player(ply), problem(prob)
 {
     ui->setupUi(this);
 
-    player = ply;
-    problem = prob;
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
     int t = 0;
@@ -31,7 +30,7 @@ void CreateFileDialog::accept()
     return QDialog::accept();
 }
 
-void CreateFileDialog::on_listWidget_itemDoubleClicked(QListWidgetItem* item)
+void CreateFileDialog::on_listWidget_itemDoubleClicked(QListWidgetItem*)
 {
-    accept();
+    this->accept();
 }

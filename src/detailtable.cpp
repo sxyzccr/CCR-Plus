@@ -2,22 +2,13 @@
 #include "contestinfo.h"
 #include "detailtable.h"
 
+#include <QtXml>
 #include <QScrollBar>
 #include <QHeaderView>
 
 using namespace std;
 
 DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent)
-{
-    setup();
-}
-
-DetailTable::~DetailTable()
-{
-
-}
-
-void DetailTable::setup()
 {
     this->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
     this->setColumnCount(2);
@@ -48,6 +39,11 @@ void DetailTable::setup()
     this->verticalHeader()->setMinimumWidth(22);
 }
 
+DetailTable::~DetailTable()
+{
+
+}
+
 void DetailTable::clearDetail()
 {
     this->clear();
@@ -56,8 +52,10 @@ void DetailTable::clearDetail()
     this->verticalScrollBar()->setValue(0);
 }
 
-void DetailTable::addTitleDetail(int& row, const QString& title)
+void DetailTable::addTitleDetail(int row, const QString& title)
 {
+    if (Status::g_contest_closed) return;
+
     isScrollBarAtBottom = this->verticalScrollBar()->value() >= this->verticalScrollBar()->maximum() - 5;
 
     QTableWidgetItem* tmp = new QTableWidgetItem(title);
@@ -69,10 +67,14 @@ void DetailTable::addTitleDetail(int& row, const QString& title)
     this->setItem(row, 0, tmp);
     this->setSpan(row, 0, 1, 2);
     this->setVerticalHeaderItem(row, new QTableWidgetItem);
+
+    if (Status::g_is_judging) this->adjustScrollbar();
 }
 
-void DetailTable::addNoteDetail(int& row, const QString& note, const QString& state)
+void DetailTable::addNoteDetail(int row, const QString& note, const QString& state)
 {
+    if (Status::g_contest_closed) return;
+
     isScrollBarAtBottom = this->verticalScrollBar()->value() >= this->verticalScrollBar()->maximum() - 5;
 
     QTableWidgetItem* tmp = new QTableWidgetItem(note);
@@ -80,7 +82,8 @@ void DetailTable::addNoteDetail(int& row, const QString& note, const QString& st
     tmp->setTextColor(QColor(80, 80, 80));
     tmp->setBackgroundColor(QColor(180, 180, 180));
     if (state == "E") tmp->setTextColor(QColor(0, 0, 0)), tmp->setBackgroundColor(QColor(227, 58, 218));
-    if (state == " ") tmp->setTextColor(QColor(100, 100, 100)), tmp->setBackgroundColor(QColor(235, 235, 235));
+    if (state == " " || state == "") tmp->setTextColor(QColor(100, 100, 100)), tmp->setBackgroundColor(QColor(235, 235, 235));
+    if (state == "") tmp->setTextAlignment(Qt::AlignCenter);
 
     int a = tmp->text().split('\n').count(), b = min(a, 4) * 17 + 5;
     this->insertRow(++row);
@@ -88,10 +91,14 @@ void DetailTable::addNoteDetail(int& row, const QString& note, const QString& st
     this->setSpan(row, 0, 1, 2);
     this->setVerticalHeaderItem(row, new QTableWidgetItem);
     this->verticalHeader()->resizeSection(row, b);
+
+    if (Status::g_is_judging) this->adjustScrollbar();
 }
 
-void DetailTable::addPointDetail(int& row, int num, const QString& note, const QString& state, const QString& file)
+void DetailTable::addPointDetail(int row, int num, const QString& note, const QString& state, const QString& file, int len)
 {
+    if (Status::g_contest_closed) return;
+
     isScrollBarAtBottom = this->verticalScrollBar()->value() >= this->verticalScrollBar()->maximum() - 5;
 
     QTableWidgetItem* tmp = new QTableWidgetItem(note);
@@ -138,10 +145,16 @@ void DetailTable::addPointDetail(int& row, int num, const QString& note, const Q
     QTableWidgetItem* t = new QTableWidgetItem(QString::number(num));
     t->setToolTip(file);
     this->setVerticalHeaderItem(row, t);
+
+    if (len > 1) this->setSpan(row - len + 1, 0, len, 1);
+
+    if (Status::g_is_judging) this->adjustScrollbar();
 }
 
 void DetailTable::addScoreDetail(int row, int len, int score, int sumScore)
 {
+    if (Status::g_contest_closed) return;
+
     QTableWidgetItem* tmp = new QTableWidgetItem(QString::number(score));
     tmp->setTextAlignment(Qt::AlignCenter);
     tmp->setToolTip(tmp->text());
@@ -156,22 +169,33 @@ void DetailTable::showProblemDetail(Player* player, Problem* problem)
     if (ContestInfo::info.isListUsed && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
     if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name);
     else title += +" - " + problem->name;
-    addTitleDetail(row, title);
+    addTitleDetail(row++, title);
 
     QFile file(ContestInfo::info.resultPath + problem->name + "/" + player->name + ".res");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        addNoteDetail(row, "无测评结果", " ");
+        addNoteDetail(row++, "无测评结果", " ");
+        return;
+    }
+    QDomDocument doc;
+    if (!doc.setContent(&file))
+    {
+        file.close();
+        addNoteDetail(row++, "无效的测评结果", " ");
+        return;
+    }
+    QDomElement root = doc.documentElement();
+    if (root.isNull() || root.tagName() != "task")
+    {
+        file.close();
+        addNoteDetail(row++, "无效的测评结果", " ");
         return;
     }
 
-    QDomDocument doc;
-    if (!doc.setContent(&file)) {file.close(), addNoteDetail(row, "无效的测评结果", " "); return;}
-    QDomElement root = doc.documentElement();
-    if (root.isNull() || root.tagName() != "task") {file.close(), addNoteDetail(row, "无效的测评结果", " "); return;}
-
     QDomNodeList list = root.childNodes();
-    for (int i = 0; i < list.count(); i++) if (list.item(i).toElement().tagName() == "note") addNoteDetail(row, list.item(i).toElement().text(), root.attribute("state"));
+    for (int i = 0; i < list.count(); i++)
+        if (list.item(i).toElement().tagName() == "note")
+            addNoteDetail(row++, list.item(i).toElement().text(), root.attribute("state"));
 
     for (int i = 0, tot = 0, tasktot = 0; i < list.count(); i++)
     {
@@ -179,7 +203,7 @@ void DetailTable::showProblemDetail(Player* player, Problem* problem)
         if (a.tagName() == "subtask")
         {
             QDomNodeList l = a.childNodes();
-            int k = 0;
+            int len = 0;
             for (int j = 0; j < l.count(); j++)
             {
                 QDomElement b = l.item(j).toElement();
@@ -191,13 +215,12 @@ void DetailTable::showProblemDetail(Player* player, Problem* problem)
                         inout = QString("标准输入:\"%1\" 标准输出:\"%2\"").arg(problem->que[tot].in).arg(problem->que[tot].out);
                         if (problem->type == ProblemType::AnswersOnly) inout += QString(" 选手提交:\"%1\"").arg(problem->que[tot].sub);
                     }
-                    addPointDetail(row, tot + 1, b.attribute("note"), b.attribute("state"), inout);
-                    if (k) this->setSpan(row - k, 0, k + 1, 1);
-                    tot++, k++;
+                    tot++, len++;
+                    addPointDetail(row++, tot + 1, b.attribute("note"), b.attribute("state"), inout, len);
                 }
             }
 
-            if (k) addScoreDetail(row, k, a.attribute("score").toInt(), tasktot < problem->tasks.size() ? problem->tasks[tasktot].score : 0);
+            if (len) addScoreDetail(row, len, a.attribute("score").toInt(), tasktot < problem->tasks.size() ? problem->tasks[tasktot].score : 0);
             tasktot++;
         }
     }
@@ -210,20 +233,18 @@ void DetailTable::showConfigDetail()
     for (auto i : ContestInfo::info.problemOrder)
     {
         Problem* prob = &ContestInfo::info.problems[i];
-        addTitleDetail(row, QString("\"%1\" 的配置结果").arg(prob->name));
+        addTitleDetail(row++, QString("\"%1\" 的配置结果").arg(prob->name));
 
         int t = 0;
         for (auto i : prob->tasks)
         {
-            int k = 0;
+            int len = 0;
             for (auto j : i.point)
             {
                 Problem::Info* x = &prob->que[j];
                 QString inout = QString("标准输入:\"%1\" 标准输出:\"%2\"").arg(x->in).arg(x->out);
                 if (prob->type == ProblemType::AnswersOnly) inout += QString(" 选手提交:\"%1\"").arg(x->sub);
-                addPointDetail(row, ++t, inout, "conf", inout);
-                if (k) this->setSpan(row - k, 0, k + 1, 1);
-                k++;
+                addPointDetail(row++, ++t, inout, "conf", inout, ++len);
             }
             addScoreDetail(row, i.point.size(), i.score, i.score);
         }
@@ -232,7 +253,7 @@ void DetailTable::showConfigDetail()
 
 void DetailTable::showDetailEvent(int r, int c)
 {
-    if (Status::IsJudging || (lastJudgeTimer.isValid() && lastJudgeTimer.elapsed() < 1000)) return;
+    if (Status::g_is_judging || (lastJudgeTimer.isValid() && lastJudgeTimer.elapsed() < 1000)) return;
     clearDetail();
     r = GetLogicalRow(r);
     if (c > 1) showProblemDetail(&ContestInfo::info.players[r], &ContestInfo::info.problems[c - 2]);

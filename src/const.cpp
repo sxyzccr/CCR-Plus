@@ -14,5 +14,5 @@ QColor GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int 
 
 int GetLogicalRow(int visualRow)
 {
-    return Status::PreSortOrder == Qt::DescendingOrder ? ContestInfo::info.playerNum - visualRow - 1 : visualRow;
+    return Status::g_pre_sort_order == Qt::DescendingOrder ? ContestInfo::info.playerNum - visualRow - 1 : visualRow;
 }

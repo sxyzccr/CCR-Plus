@@ -20,16 +20,18 @@ public:
     explicit CreateFileDialog(QWidget* parent = 0, Player* ply = 0, Problem* prob = 0);
     ~CreateFileDialog();
 
-    QString selectedFile;
+    QString getSelectedFile() const { return selectedFile; }
 
 private slots:
-    void on_listWidget_itemDoubleClicked(QListWidgetItem* item);
+    void on_listWidget_itemDoubleClicked(QListWidgetItem*);
 
 private:
     Ui::CreateFileDialog* ui;
     Player* player;
     Problem* problem;
-    void accept();
+    QString selectedFile;
+
+    void accept() override;
 };
 
 #endif // CREATEFILEDIALOG_H

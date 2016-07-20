@@ -1,8 +1,9 @@
 #ifndef CONFIGDIALOG_H
 #define CONFIGDIALOG_H
 
+#include "itemdelegate.h"
+
 #include <QDialog>
-#include <itemdelegate.h>
 #include <QStandardItemModel>
 
 namespace Ui

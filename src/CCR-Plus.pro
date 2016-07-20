@@ -6,7 +6,6 @@ TEMPLATE = app
 CONFIG += c++11
 
 SOURCES += boardtable.cpp \
-    configdialog.cpp \
     createfiledialog.cpp \
     detailtable.cpp \
     itemdelegate.cpp \
@@ -17,10 +16,10 @@ SOURCES += boardtable.cpp \
     problem.cpp \
     contestinfo.cpp \
     const.cpp \
-    status.cpp
+    status.cpp \
+    configuredialog.cpp
 
 HEADERS += boardtable.h \
-    configdialog.h \
     createfiledialog.h \
     detailtable.h \
     itemdelegate.h \
@@ -31,13 +30,14 @@ HEADERS += boardtable.h \
     version.h \
     const.h \
     contestinfo.h \
-    status.h
+    status.h \
+    configuredialog.h
 
 UI_DIR = forms
 RCC_DIR = rcfile
 
 FORMS += forms/mainwindow.ui \
-    forms/configdialog.ui \
+    forms/configuredialog.ui \
     forms/createfiledialog.ui
 
 RESOURCES = rcfile/image.qrc

@@ -79,7 +79,7 @@ QMainWindow
        <number>0</number>
       </property>
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="label_top">
         <property name="font">
          <font>
           <family>微软雅黑</family>
@@ -97,7 +97,7 @@ QMainWindow
        </widget>
       </item>
       <item>
-       <widget class="QListWidget" name="recentList">
+       <widget class="QListWidget" name="listWidget_recent">
         <property name="contextMenuPolicy">
          <enum>Qt::CustomContextMenu</enum>
         </property>
@@ -141,7 +141,7 @@ QMainWindow
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="label_bottom">
         <property name="styleSheet">
          <string notr="true"/>
         </property>
@@ -163,14 +163,14 @@ QMainWindow
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>23</height>
+     <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu">
+   <widget class="QMenu" name="menuContest">
     <property name="title">
      <string>竞赛(&amp;C)</string>
     </property>
-    <widget class="QMenu" name="menuRecent">
+    <widget class="QMenu" name="menu_recent">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -178,41 +178,41 @@ QMainWindow
       <string>最近打开的竞赛(&amp;R)</string>
      </property>
     </widget>
-    <addaction name="actionOpen"/>
-    <addaction name="actionClose"/>
-    <addaction name="menuRecent"/>
+    <addaction name="action_open"/>
+    <addaction name="action_close"/>
+    <addaction name="menu_recent"/>
     <addaction name="separator"/>
-    <addaction name="actionConfig"/>
+    <addaction name="action_configure"/>
     <addaction name="separator"/>
-    <addaction name="actionList"/>
-    <addaction name="actionExport"/>
+    <addaction name="action_set_list"/>
+    <addaction name="action_export"/>
     <addaction name="separator"/>
-    <addaction name="actionExit"/>
+    <addaction name="action_exit"/>
    </widget>
-   <widget class="QMenu" name="menu2">
+   <widget class="QMenu" name="menuTest">
     <property name="title">
      <string>测评(&amp;T)</string>
     </property>
-    <addaction name="actionRefresh"/>
+    <addaction name="action_refresh"/>
     <addaction name="separator"/>
-    <addaction name="actionJudgeSelect"/>
-    <addaction name="actionJudgeUnjudged"/>
-    <addaction name="actionJudgeAll"/>
-    <addaction name="actionStop"/>
+    <addaction name="action_judge_selected"/>
+    <addaction name="action_judge_unjudged"/>
+    <addaction name="action_judge_all"/>
+    <addaction name="action_stop"/>
    </widget>
-   <widget class="QMenu" name="menu3">
+   <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>帮助(&amp;H)</string>
     </property>
-    <addaction name="actionHelp"/>
+    <addaction name="action_help"/>
     <addaction name="separator"/>
-    <addaction name="actionAbout"/>
+    <addaction name="action_about"/>
    </widget>
-   <addaction name="menu"/>
-   <addaction name="menu2"/>
-   <addaction name="menu3"/>
+   <addaction name="menuContest"/>
+   <addaction name="menuTest"/>
+   <addaction name="menuHelp"/>
   </widget>
-  <action name="actionOpen">
+  <action name="action_open">
    <property name="text">
     <string>新建或打开竞赛(&amp;O)...</string>
    </property>
@@ -220,7 +220,7 @@ QMainWindow
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionClose">
+  <action name="action_close">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -231,7 +231,7 @@ QMainWindow
     <string>Ctrl+W</string>
    </property>
   </action>
-  <action name="actionRefresh">
+  <action name="action_refresh">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -242,7 +242,7 @@ QMainWindow
     <string>F5</string>
    </property>
   </action>
-  <action name="actionStop">
+  <action name="action_stop">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -253,7 +253,7 @@ QMainWindow
     <string>Esc</string>
    </property>
   </action>
-  <action name="actionJudgeSelect">
+  <action name="action_judge_selected">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -264,7 +264,7 @@ QMainWindow
     <string>F8</string>
    </property>
   </action>
-  <action name="actionJudgeUnjudged">
+  <action name="action_judge_unjudged">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -275,7 +275,7 @@ QMainWindow
     <string>F9</string>
    </property>
   </action>
-  <action name="actionJudgeAll">
+  <action name="action_judge_all">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -286,7 +286,7 @@ QMainWindow
     <string>Ctrl+F9</string>
    </property>
   </action>
-  <action name="actionConfig">
+  <action name="action_configure">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -297,7 +297,7 @@ QMainWindow
     <string>F4</string>
    </property>
   </action>
-  <action name="actionList">
+  <action name="action_set_list">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -311,7 +311,7 @@ QMainWindow
     <string>F2</string>
    </property>
   </action>
-  <action name="actionExport">
+  <action name="action_export">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -322,12 +322,12 @@ QMainWindow
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="actionAbout">
+  <action name="action_about">
    <property name="text">
     <string>关于 CCR Plus(&amp;A)...</string>
    </property>
   </action>
-  <action name="actionExit">
+  <action name="action_exit">
    <property name="text">
     <string>退出(&amp;X)</string>
    </property>
@@ -335,7 +335,7 @@ QMainWindow
     <string>Alt+F4</string>
    </property>
   </action>
-  <action name="actionHelp">
+  <action name="action_help">
    <property name="text">
     <string>查看帮助(&amp;H)...</string>
    </property>

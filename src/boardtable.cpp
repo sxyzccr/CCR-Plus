@@ -9,18 +9,6 @@ using namespace std;
 
 BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent)
 {
-    setup();
-}
-
-BoardTable::~BoardTable()
-{
-
-}
-
-void BoardTable::setup()
-{
-    alreadyMovingSection = false;
-
     this->setColumnCount(2);
     this->setMinimumSize(QSize(140, 250));
     this->setFocusPolicy(Qt::NoFocus);
@@ -82,6 +70,13 @@ void BoardTable::setup()
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
     this->verticalHeader()->setMinimumWidth(22);
+
+    alreadyMovingSection = false;
+}
+
+BoardTable::~BoardTable()
+{
+
 }
 
 void BoardTable::clearBoard()
@@ -205,10 +200,21 @@ void BoardTable::showResult()
             this->setItem(r, c, bg);
             this->item(r, c)->setData(Qt::DisplayRole, r);
         }
-    sortEvent(1);
+    onSortTable(1);
 }
 
-void BoardTable::sectionMoveEvent(int i, int oldV, int newV)
+void BoardTable::resizePlayerLabel()
+{
+    int len = 75;
+    for (auto& i : ContestInfo::info.players)
+    {
+        QLabel* tmp = i.label[0];
+        len = max(len, QFontMetrics(FONT).width(tmp->text()) + 30);
+    }
+    horizontalHeader()->resizeSection(0, len);
+}
+
+void BoardTable::onSectionMove(int i, int oldV, int newV)
 {
     //qDebug()<<i<<oldV<<newV;
     if (alreadyMovingSection) return;
@@ -218,7 +224,7 @@ void BoardTable::sectionMoveEvent(int i, int oldV, int newV)
         ContestInfo::info.problemOrder.move(oldV - 2, newV - 2);
         QStringList list;
         for (auto i : ContestInfo::info.problemOrder) list.append(ContestInfo::info.problems[i].name);
-        ContestInfo::info.saveProblemOrder(list);
+        ContestInfo::info.SaveProblemOrder(list);
     }
 }
 
@@ -257,15 +263,17 @@ void BoardTable::setHighlighted(int c)
         {
             int t = GetLogicalRow(i);
             Player* p = &ContestInfo::info.players[t];
-            if (p->style[c] >= 0) p->label[c]->setStyleSheet(LABEL_STYLE_HARD[p->style[c]] + "QLabel{border-width:1px;}");
-            else if (c) p->label[c]->setStyleSheet("");
+            if (p->style[c] >= 0)
+                p->label[c]->setStyleSheet(LABEL_STYLE_HARD[p->style[c]] + "QLabel{border-width:1px;}");
+            else if (c)
+                p->label[c]->setStyleSheet("");
             //if (c>1) setSelected(t,c,p->selected[c-2]);
         }
 }
 
-void BoardTable::sortEvent(int c)
+void BoardTable::onSortTable(int c)
 {
-    if (Status::IsJudging) return;
+    if (Status::g_is_judging) return;
 
     if (preHeaderClicked != c)
     {
@@ -275,7 +283,7 @@ void BoardTable::sortEvent(int c)
 
     this->horizontalHeader()->setSortIndicatorShown(true);
     if (preHeaderClicked != c && c) this->horizontalHeader()->setSortIndicator(c, Qt::DescendingOrder);
-    Status::PreSortOrder = this->horizontalHeader()->sortIndicatorOrder();
+    Status::g_pre_sort_order = this->horizontalHeader()->sortIndicatorOrder();
 
     if (!c) sortByName();
     else if (c == 1) sortBySumScore();
@@ -293,4 +301,27 @@ void BoardTable::sortEvent(int c)
     //  for (int i=0; i<playerNum; i++) qDebug()<<ui->tableWidget->item(i,c)->data(Qt::DisplayRole);
 
     preHeaderClicked = c;
+}
+
+void BoardTable::onSetItemUnselected(int r, int c)
+{
+    if (Status::g_contest_closed) return;
+    this->item(r, c)->setSelected(false);
+}
+
+void BoardTable::onUpdatePlayerLabel(QLabel* label, const QString& text, const QString& toolTip, const QString& styleSheet)
+{
+    if (Status::g_contest_closed) return;
+    label->setText(text);
+    label->setToolTip(toolTip);
+    label->setStyleSheet(styleSheet);
+}
+
+void BoardTable::onUpdateProblemLabel(Player* ply, int c, Player::Result* res, int sum)
+{
+    if (Status::g_contest_closed) return;
+    if (c == 1)
+        ply->style[1] = this->showProblemSumResult(ply->label[1], res, sum, 1);
+    else
+        ply->style[c] = this->showProblemResult(ply->label[c], res, sum, c);
 }

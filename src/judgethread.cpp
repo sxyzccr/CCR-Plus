@@ -2,6 +2,9 @@
 #include "judgethread.h"
 #include "contestinfo.h"
 
+#include <QtXml>
+#include <QCoreApplication>
+
 using namespace std;
 
 JudgeThread::JudgeThread(QObject* parent) : QThread(parent)
@@ -42,7 +45,7 @@ bool JudgeThread::waitForMadeTmpDir(int ms)
     for (; timer.elapsed() <= ms;)
     {
         if (dir.mkdir(".tmp")) return true;
-        if (Status::JudgeStoped) break;
+        if (Status::g_judge_stoped) break;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -57,7 +60,7 @@ bool JudgeThread::waitForClearedTmpDir(int ms)
     for (; dir.exists() && timer.elapsed() <= ms;)
     {
         if (dir.removeRecursively()) return true;
-        if (Status::JudgeStoped) break;
+        if (Status::g_judge_stoped) break;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -87,7 +90,7 @@ bool JudgeThread::waitForClearJudgeDir(int num, int ms)
     for (; dir.exists() && timer.elapsed() <= ms;)
     {
         if (dir.removeRecursively()) return true;
-        if (Status::JudgeStoped) break;
+        if (Status::g_judge_stoped) break;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -101,7 +104,7 @@ bool JudgeThread::monitorProcess(QProcess* process, int ms)
     for (; timer.elapsed() <= ms;)
     {
         if (process->state() != QProcess::Running) return true;
-        if (Status::JudgeStoped) return false;
+        if (Status::g_judge_stoped) return false;
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -130,7 +133,7 @@ CompileResult JudgeThread::compile(const Problem::CompilerInfo& compiler, QStrin
     {
         process->kill();
         delete process;
-        if (Status::JudgeStoped) return CompileResult::CompileKilled;
+        if (Status::g_judge_stoped) return CompileResult::CompileKilled;
         note = "编译超时";
         return CompileResult::CompileTimeLimitExceeded;
     }
@@ -186,7 +189,7 @@ bool JudgeThread::runProgram(double timeLim, double memLim, QString& note, QStri
             ok = true;
             break;
         }
-        if (Status::JudgeStoped)
+        if (Status::judge_stoped)
         {
             TerminateProcess(pi.hProcess, 0);
             EndProcess(pi);
@@ -268,7 +271,7 @@ double JudgeThread::judgeOutput(const QString& inFile, const QString& ansFile, c
     {
         process->kill();
         delete process;
-        if (Status::JudgeStoped) return 0;
+        if (Status::g_judge_stoped) return 0;
         note = "校验器超时或崩溃", state = "E";
         return 0;
     }
@@ -333,7 +336,7 @@ double JudgeThread::judgeTraditionalTask(Problem::Info* info, QString& note, QSt
     {
         process->kill();
         delete process;
-        if (Status::JudgeStoped) return 0;
+        if (Status::g_judge_stoped) return 0;
         note = "超过时间限制", state = "T";
         return 0;
     }
@@ -378,7 +381,7 @@ double JudgeThread::judgeAnswersOnlyTask(Problem::Info* info, QString& note, QSt
 
 double JudgeThread::judgeTask(Problem::Info* info, QString& note, QString& state, double& usedTime, int testNum)
 {
-    if (Status::JudgeStoped) return 0;
+    if (Status::g_judge_stoped) return 0;
     //qDebug()<<testNum<<info->in<<info->out;
     double res = 0;
     if (!makeJudgeDir(testNum)) note = "无法创建临时文件", state = "E";
@@ -403,10 +406,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
     if (ContestInfo::info.isListUsed && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
     if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name);
     else title += +" - " + problem->name;
-    emit sig3(rows, title);
-    rows++;
-    //detailTable->addTitleDetail(row,Global::isListUsed&&!player->type&&player->name_list.size()?QString("%1 [%2]").arg(player->name,player->name_list):player->name,problem->name);
-    //detailTable->adjustScrollbar();
+    emit titleDetailFinished(rows++, title);
     sumTime = 0, sumScore = 0, state = ' ', detail = "";
     bool error = false;
 
@@ -418,15 +418,13 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
 
     auto endXml = [&]()
     {
-        if (Status::JudgeStoped) return;
+        if (Status::g_judge_stoped) return;
         QFile file(ContestInfo::info.resultPath + problem->name + "/" + player->name + ".res");
-        if (!QDir(ContestInfo::info.resultPath).exists()) QDir(ContestInfo::info.testPath).mkpath("result");
+        if (!QDir(ContestInfo::info.resultPath).exists()) QDir(ContestInfo::info.contestPath).mkpath("result");
         if (!QDir(ContestInfo::info.resultPath + problem->name).exists()) QDir(ContestInfo::info.resultPath).mkdir(problem->name);
         if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         {
-            emit sig4(rows, "无法写入结果文件", "E"); rows++;
-            //detailTable->addNoteDetail(row,"无法写入结果文件","E");
-            //detailTable->adjustScrollbar();
+            emit noteDetailFinished(rows++, "无法写入结果文件", "E");
             state = 'E', detail = "?";
             return;
         }
@@ -444,7 +442,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
     {
         //detailTable->addNoteDetail(row,"临时目录无法清空","E");
         //detailTable->adjustScrollbar();
-        emit sig4(rows,"临时目录无法清空","E"); rows++;
+        emit noteDetailFinished(rows++,"临时目录无法清空","E");
         state='E',detail="?";
         QDomElement no=doc.createElement("note");
         no.appendChild(doc.createTextNode("临时目录无法清空"));
@@ -452,16 +450,14 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         endXml();
         return;
     }*/
-    if (Status::JudgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
+    if (Status::g_judge_stoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
     if (problem->type == ProblemType::Traditional)
     {
         QString note;
         Problem::CompilerInfo compiler = problem->getCompiler(player->name);
         if (compiler.file == "")
         {
-            //detailTable->addNoteDetail(row,"找不到文件");
-            //detailTable->adjustScrollbar();
-            emit sig4(rows, "找不到文件", "N"); rows++;
+            emit noteDetailFinished(rows++, "找不到文件", "N");
             state = 'F', detail = "-";
             QDomElement no = doc.createElement("note");
             no.appendChild(doc.createTextNode("找不到文件"));
@@ -475,9 +471,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         {
             QString s = QString("超过代码长度限制:\n文件大小 = %1 KB > %2 KB").arg(size / 1024.0, 0, 'f', 2).arg(problem->codeLim, 0, 'f', 2);
             //qDebug()<<s;
-            emit sig4(rows, s, "N"); rows++;
-            //detailTable->addNoteDetail(row,QString("超过代码长度限制:\n文件大小 = %1 KB > %2 KB").arg(size/1024.0,0,'f',2).arg(problem->codeLim,0,'f',2));
-            //detailTable->adjustScrollbar();
+            emit noteDetailFinished(rows++, s, "N");
             state = 'S', detail = "=";
             QDomElement no = doc.createElement("note");
             no.appendChild(doc.createTextNode(s));
@@ -493,9 +487,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         if (res == CompileResult::CompileKilled) return;
         else if (res == CompileResult::OtherError || res == CompileResult::InvalidCompiler)
         {
-            //detailTable->addNoteDetail(row,note,"E");
-            //detailTable->adjustScrollbar();
-            emit sig4(rows, note, "E"); rows++;
+            emit noteDetailFinished(rows++, note, "E");
             state = 'E', detail = "?";
             QDomElement no = doc.createElement("note");
             no.appendChild(doc.createTextNode(note));
@@ -505,9 +497,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         }
         else if (res == CompileResult::CompileError || res == CompileResult::CompileTimeLimitExceeded)
         {
-            //detailTable->addNoteDetail(row,note);
-            //detailTable->adjustScrollbar();
-            emit sig4(rows, note, "N"); rows++;
+            emit noteDetailFinished(rows++, note, "N");
             state = 'C', detail = "+";
             QDomElement no = doc.createElement("note");
             no.appendChild(doc.createTextNode(note));
@@ -520,9 +510,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
     {
         if (!this->waitForMadeTmpDir(2000))
         {
-            //detailTable->addNoteDetail(row,"无法创建临时文件","E");
-            //detailTable->adjustScrollbar();
-            emit sig4(rows, "无法创建临时文件", "E"); rows++;
+            emit noteDetailFinished(rows++, "无法创建临时文件", "E");
             state = 'E', detail = "?";
             QDomElement no = doc.createElement("note");
             no.appendChild(doc.createTextNode("无法创建临时文件"));
@@ -533,9 +521,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
     }
     else
     {
-        //detailTable->addNoteDetail(row,"无效的试题类型","E");
-        //detailTable->adjustScrollbar();
-        emit sig4(rows, "无效的试题类型", "E"); rows++;
+        emit noteDetailFinished(rows++, "无效的试题类型", "E");
         state = 'E', detail = "?";
         QDomElement no = doc.createElement("note");
         no.appendChild(doc.createTextNode("无效的试题类型"));
@@ -544,7 +530,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
         return;
     }
 
-    if (Status::JudgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
+    if (Status::g_judge_stoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
     int num = 0;
     //bool isPackage=false;
     for (auto i : problem->tasks)
@@ -563,12 +549,10 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
             subtask.appendChild(point);
             if (ignore)
             {
-                //detailTable->addPointDetail(row,j+1,"忽略","I",problem->que[j].in+"/"+problem->que[j].out);
-                //if (len>1) detailTable->setSpan(row-len+1,0,len,1);
-                //detailTable->adjustScrollbar();
+                if (Status::g_judge_stoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
                 QString inout = QString("标准输入:\"%1\" 标准输出:\"%2\"").arg(problem->que[j].in).arg(problem->que[j].out);
                 if (problem->type == ProblemType::AnswersOnly) inout += QString(" 选手提交:\"%1\"").arg(problem->que[j].sub);
-                emit sig5(rows, j + 1, "忽略", "I", inout, len); rows++;
+                emit pointDetailFinished(rows++, j + 1, "忽略", "I", inout, len);
                 detail += "I";
                 point.setAttribute("ratio", 0);
                 point.setAttribute("note", "忽略");
@@ -578,13 +562,10 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
             QString sta, note;
             double t = 0;
             double ratio = this->judgeTask(&problem->que[j], note, sta, t, num);
-            if (Status::JudgeStoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
-            //detailTable->addPointDetail(row,j+1,note,sta,problem->que[j].in+"/"+problem->que[j].out);
-            //if (len>1) detailTable->setSpan(row-len+1,0,len,1),isPackage=true;
-            //detailTable->adjustScrollbar();
+            if (Status::g_judge_stoped) {state = ' ', sumScore = 0, sumTime = 0; return;}
             QString inout = QString("标准输入:\"%1\" 标准输出:\"%2\"").arg(problem->que[j].in).arg(problem->que[j].out);
             if (problem->type == ProblemType::AnswersOnly) inout += QString(" 选手提交:\"%1\"").arg(problem->que[j].sub);
-            emit sig5(rows, j + 1, note, sta, inout, len); rows++;
+            emit pointDetailFinished(rows++, j + 1, note, sta, inout, len);
             point.setAttribute("ratio", ratio);
             point.setAttribute("note", note);
             point.setAttribute("state", sta);
@@ -593,8 +574,7 @@ void JudgeThread::judgeProblem(Player* player, Problem* problem, char& state, in
             if (ratioMin == 0) ignore = true;
         }
         int score = ratioMin * i.score + 0.5;
-        //detailTable->addScoreDetail(row,i.point.size(),score,i.score);
-        emit sig6(rows, i.point.size(), score, i.score);
+        emit scoreDetailFinished(rows, i.point.size(), score, i.score);
         sumScore += score, detail += "|";
         subtask.setAttribute("score", score);
     }
@@ -786,11 +766,7 @@ void JudgeThread::run()
 
         ply->style[c] = -1;
 
-        emit sig1(ply->label[c], "", "未测评", "");
-        /*
-        ply->label[c]->setText("");
-        ply->label[c]->setToolTip("未测评");
-        ply->label[c]->setStyleSheet("");*/
+        emit playerLabelChanged(ply->label[c], "", "未测评", "");
 
         QFile(ContestInfo::info.resultPath + ContestInfo::info.problems[c - 2].name + "/" + ply->name + ".res").remove();
     };
@@ -799,10 +775,7 @@ void JudgeThread::run()
         Player::Result* res = &ply->problem[c - 2];
 
         ply->style[c] = 15;
-        emit sig1(ply->label[c], "~", "正在测评...", LABEL_STYLE_SOFT[15]);
-//        ply->label[c]->setText("~");
-//        ply->label[c]->setToolTip("正在测评...");
-//        ply->label[c]->setStyleSheet(boardTable->preHeaderClicked==c?Global::labelStyle2[15]+"QLabel{border-width:1px;}":Global::labelStyle1[15]);
+        emit playerLabelChanged(ply->label[c], "~", "正在测评...", LABEL_STYLE_SOFT[15]);
 
         judgeProblem(ply, &ContestInfo::info.problems[c - 2], res->state, res->score, res->usedTime, res->detail);
         //QCoreApplication::processEvents();
@@ -810,10 +783,8 @@ void JudgeThread::run()
 
         ply->sum.score += res->score;
         ply->sum.usedTime += res->usedTime;
-        emit sig2(ply, c, res, ContestInfo::info.problems[c - 2].sumScore);
-        emit sig2(ply, 1, &ply->sum, ContestInfo::info.sumScore);
-//       ply->style[c]=boardTable->showProblemResult(ply->label[c],res,Global::problems[c-2].sumScore,c);
-        //      ply->style[1]=boardTable->showProblemSumResult(ply->label[1],&ply->sum,Global::sumScore,1);
+        emit problemLabelChanged(ply, c, res, ContestInfo::info.problems[c - 2].sumScore);
+        emit problemLabelChanged(ply, 1, &ply->sum, ContestInfo::info.sumScore);
         saveHTMLResult(ply);
     };
 
@@ -823,32 +794,26 @@ void JudgeThread::run()
         int t = GetLogicalRow(r);
         ply = &ContestInfo::info.players[t];
         for (auto i : ContestInfo::info.problemOrder) clear(i + 2);
-        //ply->style[1]=boardTable->showProblemSumResult(ply->label[1],&ply->sum,Global::sumScore,1);
-        emit sig2(ply, 1, &ply->sum, ContestInfo::info.sumScore);
+        emit problemLabelChanged(ply, 1, &ply->sum, ContestInfo::info.sumScore);
         for (auto i : ContestInfo::info.problemOrder)
         {
-            //boardTable->setCurrentItem(boardTable->item(r,i+2));
-            emit sig7(r, i + 2);
             work(i + 2);
-            if (Status::JudgeStoped) break;
+            if (Status::g_judge_stoped) break;
         }
     }
-    else // Judge problems in judgeList
+    else // Judge tasks in judgeList
     {
         for (auto i : judgeList)
         {
             int t = GetLogicalRow(i.first);
             ply = &ContestInfo::info.players[t];
             clear(i.second);
-            //boardTable->setCurrentItem(boardTable->item(i.first,i.second));
-            //ply->style[1]=boardTable->showProblemSumResult(ply->label[1],&ply->sum,Global::sumScore,1);
-            emit sig2(ply, 1, &ply->sum, ContestInfo::info.sumScore);
-            emit sig7(i.first, i.second);
+            emit problemLabelChanged(ply, 1, &ply->sum, ContestInfo::info.sumScore);
             work(i.second);
-            if (Status::JudgeStoped) break;
-            if (r == -1) emit sig8(i.first, i.second); //boardTable->item(i.first,i.second)->setSelected(false);
+            if (Status::g_judge_stoped) break;
+            if (r == -1) emit itemJudgeFinished(i.first, i.second);
         }
     }
 
-    emit sig4(rows, Status::JudgeStoped ? "- 测评终止 -" : "- 测评结束 -", " ");
+    emit noteDetailFinished(rows, Status::g_judge_stoped ? "- 测评终止 -" : "- 测评结束 -", "");
 }

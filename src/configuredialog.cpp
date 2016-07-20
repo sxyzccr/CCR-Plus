@@ -1,6 +1,6 @@
 #include "contestinfo.h"
-#include "configdialog.h"
-#include "ui_configdialog.h"
+#include "configuredialog.h"
+#include "ui_configuredialog.h"
 
 #include <QVector>
 #include <QCheckBox>
@@ -236,6 +236,6 @@ void ConfigDialog::accept()
         list.append(problemList[t]);
     }
     //qDebug()<<list;
-    ContestInfo::info.saveProblemOrder(list);
+    ContestInfo::info.SaveProblemOrder(list);
     QDialog::accept();
 }

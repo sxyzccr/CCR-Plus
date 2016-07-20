@@ -2,15 +2,13 @@
 #define PROBLEM_H
 
 #include "const.h"
-//#include "global.h"
-
-#include <QtXml>
 
 class Problem
 {
 public:
-    Problem(const QString& na = "");
+    explicit Problem(const QString& na = "");
     ~Problem();
+
     void clear();
     void readConfig();
     bool saveConfig();

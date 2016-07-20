@@ -2,15 +2,15 @@
 #define PLAYER_H
 
 #include "const.h"
-#include "problem.h"
 
 #include <QLabel>
 
 class Player
 {
 public:
-    Player(const QString& na = "", int x = 0);
+    explicit Player(const QString& na = "", int x = 0);
     ~Player();
+
     void calcSum();
     void clear();
 

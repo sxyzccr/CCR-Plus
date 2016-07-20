@@ -6,10 +6,10 @@
 namespace Status
 {
 
-extern bool IsJudging;
-extern bool JudgeStoped;
-extern bool ContestClosed;
-extern Qt::SortOrder PreSortOrder;
+extern bool g_is_judging;
+extern bool g_judge_stoped;
+extern bool g_contest_closed;
+extern Qt::SortOrder g_pre_sort_order;
 
 }
 

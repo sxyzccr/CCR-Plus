@@ -5,6 +5,7 @@
 #include "problem.h"
 
 #include <QTableWidget>
+#include <QElapsedTimer>
 
 class DetailTable : public QTableWidget
 {
@@ -19,14 +20,13 @@ public slots:
     void showDetailEvent(int, int);
     void adjustScrollbar();
     void clearDetail();
-    void addTitleDetail(int& row, const QString& title);
-    void addNoteDetail(int& row, const QString& note, const QString& state = "N");
-    void addPointDetail(int& row, int num, const QString& note, const QString& state, const QString& file);
+    void addTitleDetail(int row, const QString& title);
+    void addNoteDetail(int row, const QString& note, const QString& state = "N");
+    void addPointDetail(int row, int num, const QString& note, const QString& state, const QString& file, int len);
     void addScoreDetail(int row, int len, int score, int sumScore);
     void showConfigDetail();
 
 private:
-    void setup();
     void showProblemDetail(Player* player, Problem* problem);
 
     bool isScrollBarAtBottom;

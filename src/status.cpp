@@ -3,9 +3,9 @@
 namespace Status
 {
 
-bool IsJudging;
-bool JudgeStoped;
-bool ContestClosed;
-Qt::SortOrder PreSortOrder = Qt::AscendingOrder;
+bool g_is_judging;
+bool g_judge_stoped;
+bool g_contest_closed;
+Qt::SortOrder g_pre_sort_order = Qt::AscendingOrder;
 
 }

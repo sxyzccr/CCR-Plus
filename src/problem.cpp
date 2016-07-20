@@ -1,6 +1,8 @@
 #include "problem.h"
 #include "contestinfo.h"
 
+#include <QtXml>
+
 using namespace std;
 
 Problem::Problem(const QString& na)

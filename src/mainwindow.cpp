@@ -1,11 +1,14 @@
 #include "status.h"
 #include "version.h"
 #include "contestinfo.h"
+#include "configuredialog.h"
+#include "createfiledialog.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-//#include <QDebug>
-#include <QPainter>
+#include <QSettings>
+#include <QMimeData>
+#include <QTextStream>
 #include <QMessageBox>
 #include <QCloseEvent>
 #include <QFileDialog>
@@ -18,57 +21,56 @@ MainWindow::MainWindow(QWidget* parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    splitter = new QSplitter(ui->centralWidget);
-    detailTable = new DetailTable(splitter);
-    boardTable = new BoardTable(splitter);
-    judger = new JudgeThread();
-    closeButton = new QToolButton();
 
-    closeButton->setIcon(style()->standardPixmap(QStyle::SP_TitleBarCloseButton));
-    closeButton->setToolTip("关闭当前竞赛");
-    closeButton->setStyleSheet("background-color:transparent");
-    closeButton->setFocusPolicy(Qt::NoFocus);
-
-    ui->menuBar->setCornerWidget(closeButton);
-    ui->label_2->setText(QString(
+    ui->label_bottom->setText(QString(
                              "<p align=\"right\">"
                              "<span style=\"font-size:11pt; color:#505050;\">版本 </span>"
                              "<span style=\"font-size:11pt; color:#00a1f1;\">%1</span>"
                              "</p>").arg(VERSION));
 
+    splitter = new QSplitter(ui->centralWidget);
+    close_button = new QToolButton();
+    detail_table = new DetailTable(splitter);
+    board_table = new BoardTable(splitter);
+    judger = new JudgeThread();
+
+    close_button->setIcon(style()->standardPixmap(QStyle::SP_TitleBarCloseButton));
+    close_button->setToolTip("关闭当前竞赛");
+    close_button->setStyleSheet("background-color:transparent");
+    close_button->setFocusPolicy(Qt::NoFocus);
+    close_button->hide();
+    ui->menuBar->setCornerWidget(close_button);
+
     splitter->setStretchFactor(1, 1);
     splitter->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
     splitter->setOrientation(Qt::Horizontal);
     splitter->setChildrenCollapsible(false);
-    splitter->addWidget(detailTable);
-    splitter->addWidget(boardTable);
+    splitter->addWidget(detail_table);
+    splitter->addWidget(board_table);
+    splitter->hide();
     ui->verticalLayout->addWidget(splitter);
 
-    splitter->hide();
-    closeButton->hide();
+    CreateActions();
+    UpdateRecentContest(true);
 
-    connect(closeButton, SIGNAL(clicked()), this, SLOT(on_actionClose_triggered()));
+    // Set connect
+    connect(close_button, &QToolButton::clicked, this, &MainWindow::on_action_close_triggered);
 
-    connect(this, SIGNAL(stopJudgingSignal()), judger, SLOT(stopJudging()), Qt::DirectConnection);
-    connect(judger, SIGNAL(sig1(QLabel*, QString, QString, QString)), this, SLOT(solt1(QLabel*, QString, QString, QString)));
-    connect(judger, SIGNAL(sig2(Player*, int, Player::Result*, int)), this, SLOT(solt2(Player*, int, Player::Result*, int)));
+    connect(board_table, &QTableWidget::cellClicked,       detail_table, &DetailTable::showDetailEvent);
+    connect(board_table, &QTableWidget::cellDoubleClicked, this,         &MainWindow::StartJudging);
 
-    connect(judger, SIGNAL(sig3(int, QString)), this, SLOT(slot3(int, QString)));
-    connect(judger, SIGNAL(sig4(int, QString, QString)), this, SLOT(slot4(int, QString, QString)));
-    connect(judger, SIGNAL(sig5(int, int, QString, QString, QString, int)), this, SLOT(slot5(int, int, QString, QString, QString, int)));
-    connect(judger, SIGNAL(sig6(int, int, int, int)), this, SLOT(slot6(int, int, int, int)));
+    connect(board_table->horizontalHeader(), &QHeaderView::sectionClicked, board_table, &BoardTable::onSortTable);
+    connect(board_table->horizontalHeader(), &QHeaderView::sectionMoved,   board_table, &BoardTable::onSectionMove);
 
-    connect(judger, SIGNAL(sig7(int, int)), this, SLOT(slot7(int, int)));
-    connect(judger, SIGNAL(sig8(int, int)), this, SLOT(slot8(int, int)));
+    connect(judger, &JudgeThread::titleDetailFinished, detail_table, &DetailTable::addTitleDetail);
+    connect(judger, &JudgeThread::noteDetailFinished,  detail_table, &DetailTable::addNoteDetail);
+    connect(judger, &JudgeThread::pointDetailFinished, detail_table, &DetailTable::addPointDetail);
+    connect(judger, &JudgeThread::scoreDetailFinished, detail_table, &DetailTable::addScoreDetail);
 
-    connect(boardTable->horizontalHeader(), SIGNAL(sectionClicked(int)), boardTable, SLOT(sortEvent(int)));
-    connect(boardTable->horizontalHeader(), SIGNAL(sectionMoved(int, int, int)), boardTable, SLOT(sectionMoveEvent(int, int, int)));
+    connect(judger, &JudgeThread::itemJudgeFinished,   board_table, &BoardTable::onSetItemUnselected);
+    connect(judger, &JudgeThread::playerLabelChanged,  board_table, &BoardTable::onUpdatePlayerLabel);
+    connect(judger, &JudgeThread::problemLabelChanged, board_table, &BoardTable::onUpdateProblemLabel);
 
-    connect(boardTable, SIGNAL(cellClicked(int, int)), detailTable, SLOT(showDetailEvent(int, int)));
-    connect(boardTable, SIGNAL(cellDoubleClicked(int, int)), this, SLOT(judgeEvent(int, int)));
-
-    createActions();
-    updateRecentContest(true);
     this->activateWindow();
 }
 
@@ -76,80 +78,42 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete judger;
-    //QMainWindow.setWindowFlags
 }
 
-void MainWindow::clear() //清空结构
-{
-    ContestInfo::info.clear();
-    boardTable->clearBoard();
-    detailTable->clearDetail();
-}
+// Last contest path
+static QString last_contest;
 
-void MainWindow::openRecentContest()
-{
-    if (Status::IsJudging)
-    {
-        stopEvent();
-        QMessageBox::warning(this, "", QString("测评被终止！"));
-    }
-
-    QAction* action = dynamic_cast<QAction*>(sender());
-    if (action) loadContestEvent(action->data().toString());
-}
-
-QPixmap MainWindow::createIcon(const QString& path)
-{
-    QStringList list = readProblemOrder(path);
-    QImage image = QPixmap(":/icon/image/folder.png").toImage();
-    QPainter painter(&image);
-    painter.setFont(QFont("Times New Roman", 15, 0, true));
-    QFontMetrics fm = painter.fontMetrics();
-    pair<int, int> pos[3] = {{15, 38}, {15, 60}, {15, 82}};
-    int n = min(list.size(), 3);
-    for (int i = 0; i < n; i++)
-    {
-        QString text = QString(" %1 ").arg(list[i]);
-        int width = min(fm.width(text), 109 - pos[i].first);
-        int height = fm.height();
-        painter.drawText(QRectF(pos[i].first, pos[i].second, width, height), text);
-    }
-    return QPixmap::fromImage(image);
-}
-
-void MainWindow::updateRecentContest(bool loadRecentList)
+void MainWindow::UpdateRecentContest(bool updateRecentListWidget)
 {
     QSettings set("ccr.ini", QSettings::IniFormat);
     QStringList list = set.value("RecentContestList").toStringList();
-    lastContest = set.value("LastContest").toString();
+    last_contest = set.value("LastContest").toString();
     int n = min(list.size(), MAX_RECENT_CONTEST);
     for (int i = 0; i < n; i++)
     {
         QString s = QString("&%1 %2").arg(i + 1).arg(list[i]);
-        actionR[i]->setText(s);
-        actionR[i]->setData(list[i]);
-        actionR[i]->setVisible(true);
+        action_recent_list[i]->setText(s);
+        action_recent_list[i]->setData(list[i]);
+        action_recent_list[i]->setVisible(true);
     }
-    for (int i = n; i < MAX_RECENT_CONTEST; i++) actionR[i]->setVisible(false);
-    ui->menuRecent->setEnabled(n);
+    for (int i = n; i < MAX_RECENT_CONTEST; i++) action_recent_list[i]->setVisible(false);
+    ui->menu_recent->setEnabled((bool)n);
 
-    if (!loadRecentList) return;
-    ui->recentList->clear();
+    if (!updateRecentListWidget) return;
+    ui->listWidget_recent->clear();
     for (auto i : list)
     {
-        QPixmap icon = createIcon(i + "/");
+        QPixmap icon = ContestInfo::Info::CreateIcon(i + "/");
         QListWidgetItem* item = new QListWidgetItem(QIcon(icon), i);
         item->setToolTip(item->text());
         item->setFlags(item->flags()^Qt::ItemIsDragEnabled);
-        ui->recentList->addItem(item);
-        if (i == lastContest) ui->recentList->setCurrentItem(item);
+        ui->listWidget_recent->addItem(item);
+        if (i == last_contest) ui->listWidget_recent->setCurrentItem(item);
     }
 }
 
-void MainWindow::loadContestEvent(const QString& path)
+void MainWindow::LoadContest(const QString& path)
 {
-    //qDebug()<<"  && BG 0"<<path;
-
     if (!QDir(path).exists())
     {
         QMessageBox::critical(this, "无法打开竞赛", QString("%1\n路径不存在或已被移除。").arg(path));
@@ -157,11 +121,9 @@ void MainWindow::loadContestEvent(const QString& path)
         QStringList list = set.value("RecentContestList").toStringList();
         list.removeAll(path);
         set.setValue("RecentContestList", list);
-        updateRecentContest(true);
+        UpdateRecentContest(true);
         return;
     }
-
-    //qDebug()<<"  && BG xxxx"<<path;
 
     QDir dir1(path + "/src"), dir2(path + "/data");
     if ((!dir1.exists() || !dir2.exists()) && QMessageBox::question(this, "找不到试题或选手目录", "是否继续打开并创建子目录？") == QMessageBox::No) return;
@@ -177,514 +139,126 @@ void MainWindow::loadContestEvent(const QString& path)
         return;
     }
 
-    //qDebug()<<"  && BG "<<path;
-
-    if (ui->actionClose->isEnabled()) closeContestEvent();
-    lastContest = path;
-    ContestInfo::info.setPath(path);
-
-    //qDebug()<<"  && BG 2 "<<path;
+    last_contest = path;
+    ContestInfo::info.SetPath(path);
 
     QSettings set("ccr.ini", QSettings::IniFormat);
     QStringList list = set.value("RecentContestList").toStringList();
     if (!list.count(path)) list.prepend(path);
     set.setValue("RecentContestList", list);
-    set.setValue("LastContest", lastContest);
-    //qDebug()<<list;
-    updateRecentContest(false);
-    //qDebug()<<"  && BG 3 "<<path;
+    set.setValue("LastContest", last_contest);
+    UpdateRecentContest(false);
 
-    ui->label->hide();
-    ui->label_2->hide();
-    ui->recentList->hide();
-    closeButton->show();
+    ui->label_top->hide();
+    ui->label_bottom->hide();
+    ui->listWidget_recent->hide();
+    close_button->show();
+
     this->setWindowTitle(path + " - CCR Plus 测评器");
-    ui->actionClose->setEnabled(true);
+    ui->action_close->setEnabled(true);
+    ui->action_configure->setEnabled(true);
+    ui->action_set_list->setEnabled(true);
+    ui->action_export->setEnabled(true);
+    ui->action_refresh->setEnabled(true);
+    ui->action_judge_selected->setEnabled(true);
+    ui->action_judge_unjudged->setEnabled(true);
+    ui->action_judge_all->setEnabled(true);
+    ui->action_stop->setEnabled(false);
 
-    ui->actionConfig->setEnabled(true);
-    ui->actionList->setEnabled(true);
-    ui->actionExport->setEnabled(true);
-    ui->actionRefresh->setEnabled(true);
-    ui->actionJudgeSelect->setEnabled(true);
-    ui->actionJudgeUnjudged->setEnabled(true);
-    ui->actionJudgeAll->setEnabled(true);
-    ui->actionStop->setEnabled(false);
-
-    Status::JudgeStoped = false;
-    Status::ContestClosed = false;
+    Status::g_judge_stoped = false;
+    Status::g_contest_closed = false;
 
     //boardTable->setup();
     //detailTable->setup();
 
-    loadBoardEvent();
+    LoadBoard();
 }
 
-void MainWindow::loadBoardEvent()
+void MainWindow::CloseContest(bool isExit)
 {
-    if (Status::IsJudging) return;
+    Status::g_contest_closed = true;
+    StopJudging();
+    SaveResultList();
+    splitter->hide();
+    judger->waitForClearedTmpDir(2000);
+    ClearBoard();
+    ContestInfo::info.Clear();
 
-    if (!QDir(ContestInfo::info.testPath).exists())
+    if (isExit) return;
+
+    UpdateRecentContest(true);
+    ui->label_top->show();
+    ui->label_bottom->show();
+    ui->listWidget_recent->show();
+    close_button->hide();
+
+    this->setWindowTitle("CCR Plus 测评器");
+    ui->action_close->setEnabled(false);
+    ui->action_configure->setEnabled(false);
+    ui->action_set_list->setEnabled(false);
+    ui->action_export->setEnabled(false);
+    ui->action_refresh->setEnabled(false);
+    ui->action_judge_selected->setEnabled(false);
+    ui->action_judge_unjudged->setEnabled(false);
+    ui->action_judge_all->setEnabled(false);
+    ui->action_stop->setEnabled(false);
+}
+
+void MainWindow::LoadBoard()
+{
+    if (Status::g_is_judging) return;
+
+    if (!QDir(ContestInfo::info.contestPath).exists())
     {
-        QString path = QDir(ContestInfo::info.testPath).path();
+        QString path = QDir(ContestInfo::info.contestPath).path();
         QMessageBox::critical(this, "无法打开竞赛", QString("%1\n路径不存在或已被移除。").arg(path));
         QSettings set("ccr.ini", QSettings::IniFormat);
         QStringList list = set.value("RecentContestList").toStringList();
         list.removeAll(path);
         set.setValue("RecentContestList", list);
-        on_actionClose_triggered();
+        on_action_close_triggered();
         return;
     }
 
-    clear();
-    prepare();
-    boardTable->showResult();
+    ContestInfo::info.ReadContestInfo();
+    SaveResultList();
+
+    // 显示 boardTable
+    ClearBoard();
     splitter->show();
 
-    //读取.list文件
-    QFile file(ContestInfo::info.testPath + ".list");
+    board_table->setRowCount(ContestInfo::info.playerNum);
+    board_table->setColumnCount(ContestInfo::info.problemNum + 2);
+    QStringList headerLabels = {"选手", "总分"};
+    for (auto i : ContestInfo::info.problems) headerLabels.append(i.name);
+    board_table->setHorizontalHeaderLabels(headerLabels);
+    for (int i = 0; i < ContestInfo::info.problemNum + 2; i++) board_table->horizontalHeaderItem(i)->setToolTip(headerLabels[i]);
+    board_table->showResult();
+    board_table->resizePlayerLabel();
+
+    // 读取 .list 文件
+    QFile file(ContestInfo::info.contestPath + ".list");
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         ContestInfo::info.isListUsed = true;
-        ui->actionList->setChecked(true);
-        readPlayerList(file, 0);
+        ui->action_set_list->setChecked(true);
+        ReadPlayerList(file, false);
         file.close();
     }
     else
     {
         ContestInfo::info.isListUsed = false;
-        ui->actionList->setChecked(false);
+        ui->action_set_list->setChecked(false);
     }
 }
 
-void MainWindow::stopEvent()
+void MainWindow::ClearBoard()
 {
-    //qDebug()<<"STOP";
-    Status::JudgeStoped = true;
-    emit stopJudgingSignal();
-    //judger->stop();
+    board_table->clearBoard();
+    detail_table->clearDetail();
 }
 
-void MainWindow::closeContestEvent()
-{
-    Status::ContestClosed = true;
-    stopEvent();
-    saveResultList();
-    splitter->hide();
-    judger->waitForClearedTmpDir(2000);
-    clear();
-}
-
-void MainWindow::closeEvent(QCloseEvent* event)
-{
-    if (ui->actionClose->isEnabled()) closeContestEvent();
-    event->accept();
-}
-
-void MainWindow::keyPressEvent(QKeyEvent* event)
-{
-    if (!ui->actionClose->isEnabled() && (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) && ui->recentList->currentItem()->isSelected())
-        on_recentList_itemDoubleClicked(ui->recentList->currentItem());
-    else QWidget::keyPressEvent(event);
-}
-
-void MainWindow::dragEnterEvent(QDragEnterEvent* event)
-{
-    auto data = event->mimeData();
-    if (data->hasUrls() && data->urls().size() == 1 && QDir(data->urls().at(0).toLocalFile()).exists()) event->acceptProposedAction();
-    else event->ignore();
-}
-
-void MainWindow::dropEvent(QDropEvent* event)
-{
-    auto data = event->mimeData();
-    if (data->hasUrls() && data->urls().size() == 1)
-    {
-        //qDebug()<<"  GB -1 "<<data->urls().size();
-        QString path = data->urls().first().toLocalFile();
-        if (path.size() >= 2 && path[0] == '/' && path[1] == '/') path.remove(0, 1);
-        if (QDir(path).exists())
-        {
-            if (Status::IsJudging)
-            {
-                stopEvent();
-                QMessageBox::warning(this, "", QString("测评被终止！"));
-            }
-            loadContestEvent(path);
-        }
-    }
-}
-
-void MainWindow::removeRecent_action()
-{
-    QSettings set("ccr.ini", QSettings::IniFormat);
-    QStringList list = set.value("RecentContestList").toStringList();
-    list.removeAll(path_action);
-    set.setValue("RecentContestList", list);
-    updateRecentContest(true);
-}
-
-void MainWindow::cleanRecent_action()
-{
-    QSettings set("ccr.ini", QSettings::IniFormat);
-    set.clear();
-    updateRecentContest(true);
-}
-
-void MainWindow::editFile_action()
-{
-    QDesktopServices::openUrl(QUrl("file:///" + dir_action + file_action));
-}
-
-void MainWindow::createFile_action()
-{
-    CreateFileDialog dialog(this, player_action, problem_action);
-    //dialog.ui.
-    if (dialog.exec())
-    {
-        if (!QDir(dir_action).exists()) QDir().mkpath(dir_action);
-        QString s = dialog.selectedFile;
-        QFile file(dir_action + s);
-        file.open(QIODevice::WriteOnly);
-        file.close();
-        QDesktopServices::openUrl(QUrl("file:///" + dir_action + s));
-    }
-}
-
-void MainWindow::openDir_action()
-{
-    QDesktopServices::openUrl(QUrl("file:///" + dir_action));
-}
-
-void MainWindow::createDir_action()
-{
-    QDir().mkpath(dir_action);
-    QDesktopServices::openUrl(QUrl("file:///" + dir_action));
-}
-
-void MainWindow::removeDir_action()
-{
-    QString t1, t2;
-    if (dir_action == ContestInfo::info.srcPath + file_action + "/") t1 = "删除选手", t2 = QString("确实要删除选手 \"%1\" 及其目录中的所有文件吗？").arg(file_action);
-    else if (dir_action == ContestInfo::info.dataPath + file_action + "/") t1 = "删除试题", t2 = QString("确实要删除试题 \"%1\" 及其目录中的所有文件吗？").arg(file_action);
-    if (QMessageBox::question(this, t1, t2) == QMessageBox::Yes)
-    {
-        QDir(dir_action).removeRecursively();
-        if (t1 == "删除试题") QDir(ContestInfo::info.resultPath + file_action).removeRecursively();
-        loadBoardEvent();
-    }
-}
-
-void MainWindow::createActions()
-{
-    for (int i = 0; i < MAX_RECENT_CONTEST; i++)
-    {
-        actionR[i] = new QAction(this);
-        actionR[i]->setVisible(false);
-        ui->menuRecent->addAction(actionR[i]);
-        connect(actionR[i], SIGNAL(triggered()), this, SLOT(openRecentContest()));
-    }
-    ui->menuRecent->addSeparator();
-
-    recentListMenu = new QMenu(this);
-    tableMenu = new QMenu(boardTable);
-    headerMenu = new QMenu(boardTable->horizontalHeader());
-    actionClean = new QAction("清空列表(&C)", this);
-    actionRemove = new QAction("从列表中移除(&R)", this);
-    actionEditFile = new QAction("编辑源代码(&E)...", this);
-    actionCreateFile = new QAction("创建源代码(&W)...", this);
-    actionOpenDir = new QAction("打开目录(&O)...", this);
-    actionCreateDir = new QAction("创建并打开目录(&C)...", this);
-    actionRemoveDir = new QAction("删除目录(&R)...", this);
-    ui->menuRecent->addAction(actionClean);
-
-    connect(actionClean, SIGNAL(triggered()), this, SLOT(cleanRecent_action()));
-    connect(actionRemove, SIGNAL(triggered()), this, SLOT(removeRecent_action()));
-    connect(actionEditFile, SIGNAL(triggered()), this, SLOT(editFile_action()));
-    connect(actionCreateFile, SIGNAL(triggered()), this, SLOT(createFile_action()));
-    connect(actionOpenDir, SIGNAL(triggered()), this, SLOT(openDir_action()));
-    connect(actionCreateDir, SIGNAL(triggered()), this, SLOT(createDir_action()));
-    connect(actionRemoveDir, SIGNAL(triggered()), this, SLOT(removeDir_action()));
-
-    boardTable->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->recentList, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(recentListMenuEvent(const QPoint&)));
-    connect(boardTable->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(headerMenuEvent(const QPoint&)));
-    connect(boardTable, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(tableMenuEvent(const QPoint&)));
-}
-
-void MainWindow::recentListMenuEvent(const QPoint& pos)
-{
-    actionClean->setEnabled(ui->menuRecent->isEnabled());
-    actionRemove->setEnabled(true);
-
-    recentListMenu->clear();
-    QListWidgetItem* item = ui->recentList->itemAt(pos);
-    if (item)
-    {
-        dir_action = path_action = item->text();
-        actionOpenDir->setText("打开目录(&O)...");
-        recentListMenu->addAction(actionOpenDir);
-        recentListMenu->addSeparator();
-        recentListMenu->addAction(actionRemove);
-    }
-    recentListMenu->addAction(actionClean);
-    recentListMenu->popup(QCursor::pos());
-}
-
-void MainWindow::headerMenuEvent(const QPoint& pos)
-{
-    headerMenu->clear();
-    int c = boardTable->horizontalHeader()->logicalIndexAt(pos);
-    if (c >= 0)
-    {
-        actionCreateFile->setEnabled(true);
-        actionOpenDir->setEnabled(true);
-        actionCreateDir->setEnabled(true);
-
-        if (!c) dir_action = ContestInfo::info.srcPath;
-        else if (c == 1) dir_action = ContestInfo::info.dataPath;
-        else dir_action = ContestInfo::info.dataPath + ContestInfo::info.problems[c - 2].name + "/";
-
-        if (QDir(dir_action).exists())
-        {
-            if (!c) actionOpenDir->setText("打开选手目录(&O)...");
-            else if (c == 1) actionOpenDir->setText("打开试题目录(&O)...");
-            else actionOpenDir->setText("打开目录(&O)...");
-            headerMenu->addAction(actionOpenDir);
-            if (c > 1)
-            {
-                file_action = ContestInfo::info.problems[c - 2].name;
-                headerMenu->addSeparator();
-                actionRemoveDir->setText(QString("删除试题 \"%1\"(&R)").arg(file_action));
-                headerMenu->addAction(actionRemoveDir);
-            }
-        }
-        else headerMenu->addAction(actionCreateDir);
-
-        headerMenu->popup(QCursor::pos());
-    }
-}
-
-void MainWindow::tableMenuEvent(const QPoint& pos)
-{
-    actionCreateFile->setEnabled(true);
-    actionOpenDir->setEnabled(true);
-    actionCreateDir->setEnabled(true);
-    actionOpenDir->setText("打开目录(&O)...");
-    tableMenu->clear();
-    QTableWidgetItem* item = boardTable->itemAt(pos);
-    if (item)
-    {
-        int r = item->row(), c = item->column();
-        detailTable->showDetailEvent(r, c);
-        r = GetLogicalRow(r);
-        Player* player = &ContestInfo::info.players[r];
-        if (c > 1)
-        {
-            Problem* problem = &ContestInfo::info.problems[c - 2];
-            dir_action = ContestInfo::info.srcPath + player->name + "/" + problem->dir + "/";
-            file_action = problem->getCompiler(player->name).file;
-
-            if (file_action == "")
-            {
-                player_action = player, problem_action = problem;
-                if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size()) actionCreateFile->setEnabled(false);
-                tableMenu->addAction(actionCreateFile);
-            }
-            else
-            {
-                actionEditFile->setText(QString("编辑 \"%1\" (&E)...").arg(file_action));
-                tableMenu->addAction(actionEditFile);
-            }
-
-            tableMenu->addSeparator();
-
-            if (QDir(dir_action).exists()) tableMenu->addAction(actionOpenDir);
-            else if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size()) tableMenu->addAction(actionCreateDir);
-            else
-            {
-                actionOpenDir->setEnabled(false);
-                tableMenu->addAction(actionOpenDir);
-            }
-        }
-        else
-        {
-            dir_action = ContestInfo::info.srcPath + player->name + "/";
-            file_action = player->name;
-
-            if (QDir(dir_action).exists())
-            {
-                tableMenu->addAction(actionOpenDir);
-                tableMenu->addSeparator();
-                actionRemoveDir->setText(QString("删除选手 \"%1\"(&R)").arg(file_action));
-                tableMenu->addAction(actionRemoveDir);
-            }
-            else tableMenu->addAction(actionCreateDir);
-        }
-    }
-    else
-    {
-        tableMenu->addAction(ui->actionRefresh);
-        tableMenu->addSeparator();
-        tableMenu->addAction(ui->actionJudgeSelect);
-        tableMenu->addAction(ui->actionJudgeUnjudged);
-        tableMenu->addAction(ui->actionJudgeAll);
-
-        tableMenu->addAction(ui->actionStop);
-    }
-    tableMenu->popup(QCursor::pos());
-}
-
-void MainWindow::prepare() //初始化
-{
-    //读取src文件夹, data文件夹与.ccr文件
-
-    QStringList playerName = readFolders(ContestInfo::info.srcPath), problemName = readFolders(ContestInfo::info.dataPath), order = readProblemOrder(ContestInfo::info.testPath);
-    map<QString, int> playerID, problemID;
-    problemID.clear();
-    playerID.clear();
-
-    QStringList tmp;
-    for (auto i : order) if (problemName.count(i)) tmp.append(i);
-    for (auto i : problemName) if (!tmp.count(i)) tmp.append(i);
-    problemName = tmp;
-    ContestInfo::info.saveProblemOrder(problemName);
-    for (auto i : problemName)
-    {
-        Problem tp(i);
-        problemID[i] = ContestInfo::info.problemNum;
-        ContestInfo::info.problemOrder.push_back(ContestInfo::info.problemNum++);
-        ContestInfo::info.problems.push_back(tp);
-    }
-
-    playerLabelLength = 75;
-    for (auto i : playerName)
-    {
-        playerLabelLength = max(playerLabelLength, QFontMetrics(FONT).width(i) + 30);
-
-        Player tp(i, ContestInfo::info.playerNum);
-        playerID[i] = ContestInfo::info.playerNum;
-        ContestInfo::info.playerNum++;
-
-        for (int j = 0; j < ContestInfo::info.problemNum; j++) tp.problem.push_back(Player::Result());
-        ContestInfo::info.players.push_back(tp);
-    }
-
-    //qDebug()<<playerLabelLength;
-
-    boardTable->horizontalHeader()->resizeSection(0, playerLabelLength);
-    boardTable->setRowCount(playerName.size());
-    boardTable->setColumnCount(ContestInfo::info.problemNum + 2);
-    boardTable->setHorizontalHeaderLabels(QStringList({"选手", "总分"}) + problemName);
-    for (int i = 0; i < ContestInfo::info.problemNum + 2; i++) boardTable->horizontalHeaderItem(i)->setToolTip(boardTable->horizontalHeaderItem(i)->text());
-
-    //读取result文件夹
-
-    QFile file(ContestInfo::info.resultPath + ".reslist");
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QTextStream in(&file);
-        for (; !in.atEnd();)
-        {
-            QString str = in.readLine();
-            QStringList list = str.split("/");
-            QString a = list[0], b = list[1];
-            int s = list[2].toInt();
-            double t = list[3].toDouble();
-            char c = list[4][0].toLatin1();
-            if (!playerID.count(a) || !problemID.count(b)) continue;
-            int x = playerID[a], y = problemID[b];
-
-            //兼容旧版
-            if (c == 'R') c = 'N';
-            if (c == 'O') c = 'N';
-            if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
-            ContestInfo::info.players[x].problem[y].state = c;
-            ContestInfo::info.players[x].problem[y].score = s;
-            ContestInfo::info.players[x].problem[y].usedTime = t;
-        }
-        file.close();
-    }
-    for (auto i : problemID)
-        for (auto j : playerID) if (!ContestInfo::info.players[j.second].problem[i.second].state)
-            {
-                file.setFileName(ContestInfo::info.resultPath + i.first + "/" + j.first + ".res");
-                if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
-                QDomDocument doc;
-                if (!doc.setContent(&file)) {file.close(); continue;}
-                QDomElement root = doc.documentElement();
-                //qDebug()<<i.first<<i.second<<j.first<<j.second<<root.attribute("score")<<root.attribute("time")<<root.attribute("state");
-
-                int s = root.attribute("score").toInt();
-                double t = root.attribute("time").toDouble();
-                char c = root.attribute("state")[0].toLatin1();
-                int x = j.second, y = i.second;
-
-                //兼容旧版
-                if (c == 'R') c = 'N';
-                if (c == 'O') c = 'N';
-                if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
-                ContestInfo::info.players[x].problem[y].state = c;
-                ContestInfo::info.players[x].problem[y].score = s;
-                ContestInfo::info.players[x].problem[y].usedTime = t;
-
-                file.close();
-            }
-
-    //读取.prb文件
-
-    for (auto& i : ContestInfo::info.problems) i.readConfig();
-
-    for (auto i : ContestInfo::info.problems) ContestInfo::info.sumScore += i.sumScore;
-    for (auto& i : ContestInfo::info.players) i.calcSum();
-
-    saveResultList();
-}
-
-QStringList MainWindow::readFolders(const QString& path)
-{
-    QDir dir(path);
-    QStringList list = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    if (path == ContestInfo::info.dataPath)
-    {
-        QStringList tmp;
-        for (auto i : list) if (QFile::exists(ContestInfo::info.dataPath + i + "/.prb")) tmp.append(i);
-        return tmp;
-    }
-    else return list;
-}
-
-QStringList MainWindow::readProblemOrder(const QString& path)
-{
-    QFile file(path + ".ccr");
-    QStringList problem;
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QDomDocument doc;
-        if (doc.setContent(&file))
-        {
-            QDomElement root = doc.documentElement();
-            if (root.isNull() || root.tagName() != "contest") {file.close(); return problem;}
-            QDomNodeList list = root.childNodes();
-            for (int i = 0; i < list.count(); i++)
-            {
-                QDomElement a = list.item(i).toElement();
-                if (a.tagName() == "order")
-                {
-                    QDomNodeList l = a.childNodes();
-                    for (int j = 0; j < l.size(); j++)
-                    {
-                        QDomElement b = l.item(j).toElement();
-                        if (b.tagName() == "problem") problem.append(b.text());
-                    }
-                }
-            }
-        }
-        file.close();
-    }
-    return problem;
-}
-
-void MainWindow::saveResultList()
+void MainWindow::SaveResultList()
 {
     QFile file(ContestInfo::info.resultPath + ".reslist");
     if (file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -705,132 +279,7 @@ void MainWindow::saveResultList()
     }
 }
 
-void MainWindow::judgeEvent(int r, int c)
-{
-    //qDebug()<<r<<c;
-    if (Status::IsJudging) return;
-
-    Status::IsJudging = true;
-    detailTable->startLastJudgeTimer();
-
-    boardTable->clearHighlighted(boardTable->preHeaderClicked);
-    boardTable->preHeaderClicked = -1;
-    boardTable->setSelectionMode(QAbstractItemView::NoSelection);
-    boardTable->horizontalHeader()->setSectionsMovable(false);
-    boardTable->horizontalHeader()->setSortIndicatorShown(false);
-    boardTable->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
-    ui->actionConfig->setEnabled(false);
-    ui->actionList->setEnabled(false);
-    ui->actionExport->setEnabled(false);
-    ui->actionRefresh->setEnabled(false);
-    ui->actionJudgeSelect->setEnabled(false);
-    ui->actionJudgeUnjudged->setEnabled(false);
-    ui->actionJudgeAll->setEnabled(false);
-    ui->actionStop->setEnabled(true);
-
-    detailTable->clearDetail();
-    Status::JudgeStoped = false;
-
-    judger->setup(r, c, ContestInfo::info.testPath);
-
-    if (r == -1) // Judge selected
-    {
-        for (int i = 0; i < ContestInfo::info.playerNum; i++)
-            for (auto j : ContestInfo::info.problemOrder)
-                if (boardTable->item(i, j + 2)->isSelected())
-                    judger->appendProblem(qMakePair(i, j + 2));
-    }
-    else if (r == -2) // Judge unjudged
-    {
-        for (int i = 0; i < ContestInfo::info.playerNum; i++)
-            for (auto j : ContestInfo::info.problemOrder)
-                if (ContestInfo::info.players[GetLogicalRow(i)].problem[j].state == ' ')
-                    judger->appendProblem(qMakePair(i, j + 2));
-    }
-    else if (c > 1) // Judge one
-        judger->appendProblem(qMakePair(r, c));
-
-    QEventLoop* eventLoop = new QEventLoop(this);
-    connect(judger, SIGNAL(finished()), eventLoop, SLOT(quit()));
-    judger->start();
-    eventLoop->exec();
-    delete eventLoop;
-
-    Status::IsJudging = false;
-    ui->actionConfig->setEnabled(true);
-    ui->actionList->setEnabled(true);
-    ui->actionExport->setEnabled(true);
-    ui->actionRefresh->setEnabled(true);
-    ui->actionJudgeSelect->setEnabled(true);
-    ui->actionJudgeUnjudged->setEnabled(true);
-    ui->actionJudgeAll->setEnabled(true);
-    ui->actionStop->setEnabled(false);
-    boardTable->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    boardTable->horizontalHeader()->setSectionsMovable(true);
-    this->activateWindow();
-    // ui->tableWidget->horizontalHeader()->setEnabled(true);
-
-    saveResultList();
-    judger->waitForClearedTmpDir(2000);
-}
-
-void MainWindow::solt1(QLabel* label, const QString& s1, const QString& s2, const QString& s3)
-{
-    if (Status::ContestClosed) return;
-    label->setText(s1);
-    label->setToolTip(s2);
-    label->setStyleSheet(s3);
-}
-
-void MainWindow::solt2(Player* ply, int c, Player::Result* res, int sum)
-{
-    if (Status::ContestClosed) return;
-    if (c == 1) ply->style[1] = boardTable->showProblemSumResult(ply->label[1], res, sum, 1);
-    else ply->style[c] = boardTable->showProblemResult(ply->label[c], res, sum, c);
-}
-
-void MainWindow::slot3(int row, const QString& title)
-{
-    if (Status::ContestClosed) return;
-    detailTable->addTitleDetail(row, title);
-    detailTable->adjustScrollbar();
-}
-
-void MainWindow::slot4(int row, const QString& note, const QString& state)
-{
-    if (Status::ContestClosed) return;
-    detailTable->addNoteDetail(row, note, state);
-    if (state == " ") detailTable->item(row, 0)->setTextAlignment(Qt::AlignCenter);
-    detailTable->adjustScrollbar();
-}
-
-void MainWindow::slot5(int row, int num, const QString& note, const QString& state, const QString& file, int len)
-{
-    if (Status::ContestClosed) return;
-    detailTable->addPointDetail(row, num, note, state, file);
-    if (len > 1) detailTable->setSpan(row - len + 1, 0, len, 1);
-    detailTable->adjustScrollbar();
-}
-
-void MainWindow::slot6(int row, int len, int score, int sumScore)
-{
-    if (Status::ContestClosed) return;
-    detailTable->addScoreDetail(row, len, score, sumScore);
-}
-
-void MainWindow::slot7(int r, int c)
-{
-    if (Status::ContestClosed) return;
-    boardTable->setCurrentItem(boardTable->item(r, c));
-}
-
-void MainWindow::slot8(int r, int c)
-{
-    if (Status::ContestClosed) return;
-    boardTable->item(r, c)->setSelected(false);
-}
-
-void MainWindow::readPlayerList(QFile& file, bool isCSV)
+void MainWindow::ReadPlayerList(QFile& file, bool isCSV)
 {
     map<QString, QString> list;
     list.clear();
@@ -838,7 +287,7 @@ void MainWindow::readPlayerList(QFile& file, bool isCSV)
     for (; !in.atEnd();)
     {
         QString s = in.readLine();
-//        in.setCodec("UTF-8");
+        //in.setCodec("UTF-8");
         QStringList line = s.split(",");
         for (auto& i : line) i = i.trimmed(), i.remove('\"');
         if (line.size() >= 2 && line[0].size() && line[1].size()) list[line[0]] = line[1];
@@ -846,17 +295,16 @@ void MainWindow::readPlayerList(QFile& file, bool isCSV)
 
     if (isCSV)
     {
-        QFile f(ContestInfo::info.testPath + ".list");
+        QFile f(ContestInfo::info.contestPath + ".list");
         if (f.open(QIODevice::WriteOnly | QIODevice::Text))
         {
             QTextStream out(&f);
-//            out.setCodec("UTF-8");
+            //out.setCodec("UTF-8");
             for (auto i : list) out << i.first << "," << i.second << endl;
             f.close();
         }
     }
 
-    int len = 75;
     for (auto& i : ContestInfo::info.players)
         if (!i.type)
         {
@@ -870,60 +318,14 @@ void MainWindow::readPlayerList(QFile& file, bool isCSV)
                 tmp->setStyleSheet("");
             }
             else tmp->setStyleSheet("QLabel{color:rgb(120,120,120);}");
-            len = max(len, QFontMetrics(FONT).width(tmp->text()) + 30);
         }
-    boardTable->horizontalHeader()->resizeSection(0, len);
+
+    board_table->resizePlayerLabel();
 }
 
-void MainWindow::on_actionList_triggered()
+void MainWindow::ExportPlayerScore()
 {
-    if (ContestInfo::info.isListUsed)
-    {
-        if (QMessageBox::question(this, "移除选手名单", "确实要移除选手名单吗？") == QMessageBox::No)
-        {
-            ContestInfo::info.isListUsed = true;
-            ui->actionList->setChecked(true);
-            return;
-        }
-        ContestInfo::info.isListUsed = false;
-        ui->actionList->setChecked(false);
-        QFile(ContestInfo::info.testPath + ".list").remove();
-
-        for (auto& i : ContestInfo::info.players) if (!i.type)
-            {
-                QLabel* tmp = i.label[0];
-                i.name_list = "", tmp->setText(i.name);
-                tmp->setAlignment(Qt::AlignCenter);
-                tmp->setStyleSheet("");
-            }
-        boardTable->horizontalHeader()->resizeSection(0, playerLabelLength);
-    }
-    else
-    {
-        QString fileName = QFileDialog::getOpenFileName(this, "导入选手名单", ContestInfo::info.testPath, "CSV (逗号分隔) (*.csv)");
-        if (!fileName.size())
-        {
-            ContestInfo::info.isListUsed = false;
-            ui->actionList->setChecked(false);
-            return;
-        }
-        QFile file(fileName);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-            QMessageBox::critical(this, "导入名单失败", file.errorString());
-        else
-        {
-            ContestInfo::info.isListUsed = true;
-            ui->actionList->setChecked(true);
-            readPlayerList(file, 1);
-            file.close();
-        }
-    }
-    detailTable->clearDetail();
-}
-
-void MainWindow::on_actionExport_triggered()
-{
-    QString fileName = QFileDialog::getSaveFileName(this, "导出成绩", ContestInfo::info.testPath + ContestInfo::info.testName + ".csv", "CSV (逗号分隔) (*.csv)");
+    QString fileName = QFileDialog::getSaveFileName(this, "导出成绩", ContestInfo::info.contestPath + ContestInfo::info.contestName + ".csv", "CSV (逗号分隔) (*.csv)");
     if (!fileName.size()) return;
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -950,77 +352,449 @@ void MainWindow::on_actionExport_triggered()
     }
 }
 
-void MainWindow::on_actionJudgeSelect_triggered()
+void MainWindow::StopJudging()
 {
-    judgeEvent(-1, -1);
+    //qDebug()<<"STOP";
+    Status::g_judge_stoped = true;
+    //judger->stop();
 }
 
-void MainWindow::on_actionJudgeUnjudged_triggered()
+void MainWindow::StartJudging(int r, int c)
 {
-    judgeEvent(-2, -2);
-    //ui->tableWidget->setCurrentItem(ui->tableWidget->item(11,5));
-}
+    //qDebug()<<r<<c;
+    if (Status::g_is_judging) return;
 
-void MainWindow::on_actionJudgeAll_triggered()
-{
-    boardTable->selectAll();
-    judgeEvent(-1, -1);
-}
+    Status::g_is_judging = true;
+    Status::g_judge_stoped = false;
 
-void MainWindow::on_actionRefresh_triggered()
-{
-    loadBoardEvent();
-}
+    board_table->clearHighlighted(board_table->preHeaderClicked);
+    board_table->preHeaderClicked = -1;
+    board_table->setSelectionMode(QAbstractItemView::NoSelection);
+    board_table->horizontalHeader()->setSectionsMovable(false);
+    board_table->horizontalHeader()->setSortIndicatorShown(false);
+    board_table->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
 
-void MainWindow::on_actionStop_triggered()
-{
-    stopEvent();
-}
+    ui->action_configure->setEnabled(false);
+    ui->action_set_list->setEnabled(false);
+    ui->action_export->setEnabled(false);
+    ui->action_refresh->setEnabled(false);
+    ui->action_judge_selected->setEnabled(false);
+    ui->action_judge_unjudged->setEnabled(false);
+    ui->action_judge_all->setEnabled(false);
+    ui->action_stop->setEnabled(true);
 
-void MainWindow::on_actionOpen_triggered()
-{
-    if (Status::IsJudging)
+    detail_table->startLastJudgeTimer();
+    detail_table->clearDetail();
+
+    judger->setup(r, c, ContestInfo::info.contestPath);
+
+    if (r == -1) // Judge selected
     {
-        stopEvent();
+        for (int i = 0; i < ContestInfo::info.playerNum; i++)
+            for (auto j : ContestInfo::info.problemOrder)
+                if (board_table->item(i, j + 2)->isSelected())
+                    judger->appendProblem(qMakePair(i, j + 2));
+    }
+    else if (r == -2) // Judge unjudged
+    {
+        for (int i = 0; i < ContestInfo::info.playerNum; i++)
+            for (auto j : ContestInfo::info.problemOrder)
+                if (ContestInfo::info.players[GetLogicalRow(i)].problem[j].state == ' ')
+                    judger->appendProblem(qMakePair(i, j + 2));
+    }
+    else if (c > 1) // Judge one
+        judger->appendProblem(qMakePair(r, c));
+
+    QEventLoop* eventLoop = new QEventLoop(this);
+    connect(judger, SIGNAL(finished()), eventLoop, SLOT(quit()));
+    judger->start();
+    eventLoop->exec();
+    delete eventLoop;
+
+    Status::g_is_judging = false;
+
+    board_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    board_table->horizontalHeader()->setSectionsMovable(true);
+
+    ui->action_configure->setEnabled(true);
+    ui->action_set_list->setEnabled(true);
+    ui->action_export->setEnabled(true);
+    ui->action_refresh->setEnabled(true);
+    ui->action_judge_selected->setEnabled(true);
+    ui->action_judge_unjudged->setEnabled(true);
+    ui->action_judge_all->setEnabled(true);
+    ui->action_stop->setEnabled(false);
+
+    this->activateWindow();
+
+    SaveResultList();
+    judger->waitForClearedTmpDir(2000);
+}
+
+void MainWindow::CreateActions()
+{
+    for (int i = 0; i < MAX_RECENT_CONTEST; i++)
+    {
+        action_recent_list[i] = new QAction(this);
+        action_recent_list[i]->setVisible(false);
+        ui->menu_recent->addAction(action_recent_list[i]);
+        connect(action_recent_list[i], SIGNAL(triggered()), this, SLOT(onOpenRecentContest()));
+    }
+    ui->menu_recent->addSeparator();
+
+    menu_recent_list = new QMenu(this);
+    menu_table = new QMenu(board_table);
+    menu_header = new QMenu(board_table->horizontalHeader());
+    action_clean_recent = new QAction("清空列表(&C)", this);
+    action_remove_recent = new QAction("从列表中移除(&R)", this);
+    action_edit_file = new QAction("编辑源代码(&E)...", this);
+    action_create_file = new QAction("创建源代码(&W)...", this);
+    action_open_dir = new QAction("打开目录(&O)...", this);
+    action_create_dir = new QAction("创建并打开目录(&C)...", this);
+    action_remove_dir = new QAction("删除目录(&R)...", this);
+    ui->menu_recent->addAction(action_clean_recent);
+
+    connect(action_clean_recent,  &QAction::triggered, this, &MainWindow::onCleanRecentContest);
+    connect(action_remove_recent, &QAction::triggered, this, &MainWindow::onRemoveRecentContest);
+    connect(action_edit_file,     &QAction::triggered, this, &MainWindow::onEditFile);
+    connect(action_create_file,   &QAction::triggered, this, &MainWindow::onCreateFile);
+    connect(action_open_dir,      &QAction::triggered, this, &MainWindow::onOpenDir);
+    connect(action_create_dir,    &QAction::triggered, this, &MainWindow::onCreateDir);
+    connect(action_remove_dir,    &QAction::triggered, this, &MainWindow::onRemoveDir);
+
+    board_table->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->listWidget_recent,           &QWidget::customContextMenuRequested, this, &MainWindow::onMenuRecentListEvent);
+    connect(board_table->horizontalHeader(), &QWidget::customContextMenuRequested, this, &MainWindow::onMenuHeaderEvent);
+    connect(board_table,                     &QWidget::customContextMenuRequested, this, &MainWindow::onMenuTableEvent);
+}
+
+// Used by actions
+static QString dirByAction, fileByAction;
+static Player* playerByAction;
+static Problem* problemByAction;
+
+void MainWindow::onCreateFile()
+{
+    CreateFileDialog dialog(this, playerByAction, problemByAction);
+    if (dialog.exec())
+    {
+        if (!QDir(dirByAction).exists()) QDir().mkpath(dirByAction);
+        QString s = dialog.getSelectedFile();
+        QFile file(dirByAction + s);
+        file.open(QIODevice::WriteOnly);
+        file.close();
+        QDesktopServices::openUrl(QUrl("file:///" + dirByAction + s));
+    }
+}
+
+void MainWindow::onEditFile()
+{
+    QDesktopServices::openUrl(QUrl("file:///" + dirByAction + fileByAction));
+}
+
+void MainWindow::onCreateDir()
+{
+    QDir().mkpath(dirByAction);
+    QDesktopServices::openUrl(QUrl("file:///" + dirByAction));
+}
+
+void MainWindow::onOpenDir()
+{
+    QDesktopServices::openUrl(QUrl("file:///" + dirByAction));
+}
+
+void MainWindow::onRemoveDir()
+{
+    QString t1, t2;
+    if (dirByAction == ContestInfo::info.srcPath + fileByAction + "/")
+        t1 = "删除选手", t2 = QString("确实要删除选手 \"%1\" 及其目录中的所有文件吗？").arg(fileByAction);
+    else if (dirByAction == ContestInfo::info.dataPath + fileByAction + "/")
+        t1 = "删除试题", t2 = QString("确实要删除试题 \"%1\" 及其目录中的所有文件吗？").arg(fileByAction);
+    if (QMessageBox::question(this, t1, t2) == QMessageBox::Yes)
+    {
+        QDir(dirByAction).removeRecursively();
+        if (t1 == "删除试题") QDir(ContestInfo::info.resultPath + fileByAction).removeRecursively();
+        LoadBoard();
+    }
+}
+
+void MainWindow::onOpenRecentContest()
+{
+    if (Status::g_is_judging)
+    {
+        StopJudging();
         QMessageBox::warning(this, "", QString("测评被终止！"));
     }
 
-    QDir dir(lastContest);
+    QAction* action = dynamic_cast<QAction*>(sender());
+    if (action) LoadContest(action->data().toString());
+}
+
+void MainWindow::onRemoveRecentContest()
+{
+    QSettings set("ccr.ini", QSettings::IniFormat);
+    QStringList list = set.value("RecentContestList").toStringList();
+    list.removeAll(dirByAction);
+    set.setValue("RecentContestList", list);
+    UpdateRecentContest(true);
+}
+
+void MainWindow::onCleanRecentContest()
+{
+    QSettings set("ccr.ini", QSettings::IniFormat);
+    set.clear();
+    UpdateRecentContest(true);
+}
+
+void MainWindow::onMenuRecentListEvent(const QPoint& pos)
+{
+    action_open_dir->setEnabled(true);
+    action_remove_recent->setEnabled(true);
+    action_clean_recent->setEnabled(ui->menu_recent->isEnabled());
+
+    menu_recent_list->clear();
+    QListWidgetItem* item = ui->listWidget_recent->itemAt(pos);
+    if (item)
+    {
+        dirByAction = item->text();
+        action_open_dir->setText("打开目录(&O)...");
+        menu_recent_list->addAction(action_open_dir);
+        menu_recent_list->addSeparator();
+        menu_recent_list->addAction(action_remove_recent);
+    }
+    menu_recent_list->addAction(action_clean_recent);
+    menu_recent_list->popup(QCursor::pos());
+}
+
+void MainWindow::onMenuHeaderEvent(const QPoint& pos)
+{
+    menu_header->clear();
+    int c = board_table->horizontalHeader()->logicalIndexAt(pos);
+    if (c >= 0)
+    {
+        action_create_dir->setEnabled(true);
+        action_open_dir->setEnabled(true);
+
+        if (!c) dirByAction = ContestInfo::info.srcPath;
+        else if (c == 1) dirByAction = ContestInfo::info.dataPath;
+        else dirByAction = ContestInfo::info.dataPath + ContestInfo::info.problems[c - 2].name + "/";
+
+        if (QDir(dirByAction).exists())
+        {
+            if (!c) action_open_dir->setText("打开选手目录(&O)...");
+            else if (c == 1) action_open_dir->setText("打开试题目录(&O)...");
+            else action_open_dir->setText("打开目录(&O)...");
+            menu_header->addAction(action_open_dir);
+            if (c > 1)
+            {
+                fileByAction = ContestInfo::info.problems[c - 2].name;
+                menu_header->addSeparator();
+                action_remove_dir->setText(QString("删除试题 \"%1\"(&R)").arg(fileByAction));
+                menu_header->addAction(action_remove_dir);
+            }
+        }
+        else menu_header->addAction(action_create_dir);
+
+        menu_header->popup(QCursor::pos());
+    }
+}
+
+void MainWindow::onMenuTableEvent(const QPoint& pos)
+{
+    action_create_file->setEnabled(true);
+    action_create_dir->setEnabled(true);
+    action_open_dir->setEnabled(true);
+    action_open_dir->setText("打开目录(&O)...");
+    menu_table->clear();
+    QTableWidgetItem* item = board_table->itemAt(pos);
+    if (item)
+    {
+        int r = item->row(), c = item->column();
+        detail_table->showDetailEvent(r, c);
+        r = GetLogicalRow(r);
+        Player* player = &ContestInfo::info.players[r];
+        if (c > 1)
+        {
+            Problem* problem = &ContestInfo::info.problems[c - 2];
+            dirByAction = ContestInfo::info.srcPath + player->name + "/" + problem->dir + "/";
+            fileByAction = problem->getCompiler(player->name).file;
+
+            if (fileByAction == "")
+            {
+                playerByAction = player, problemByAction = problem;
+                if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size())
+                    action_create_file->setEnabled(false);
+                menu_table->addAction(action_create_file);
+            }
+            else
+            {
+                action_edit_file->setText(QString("编辑 \"%1\" (&E)...").arg(fileByAction));
+                menu_table->addAction(action_edit_file);
+            }
+
+            menu_table->addSeparator();
+
+            if (QDir(dirByAction).exists()) menu_table->addAction(action_open_dir);
+            else if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size())
+                menu_table->addAction(action_create_dir);
+            else
+            {
+                action_open_dir->setEnabled(false);
+                menu_table->addAction(action_open_dir);
+            }
+        }
+        else
+        {
+            dirByAction = ContestInfo::info.srcPath + player->name + "/";
+            fileByAction = player->name;
+
+            if (QDir(dirByAction).exists())
+            {
+                menu_table->addAction(action_open_dir);
+                menu_table->addSeparator();
+                action_remove_dir->setText(QString("删除选手 \"%1\"(&R)").arg(fileByAction));
+                menu_table->addAction(action_remove_dir);
+            }
+            else menu_table->addAction(action_create_dir);
+        }
+    }
+    else
+    {
+        menu_table->addAction(ui->action_refresh);
+        menu_table->addSeparator();
+        menu_table->addAction(ui->action_judge_selected);
+        menu_table->addAction(ui->action_judge_unjudged);
+        menu_table->addAction(ui->action_judge_all);
+
+        menu_table->addAction(ui->action_stop);
+    }
+    menu_table->popup(QCursor::pos());
+}
+
+void MainWindow::on_listWidget_recent_itemDoubleClicked(QListWidgetItem* item)
+{
+    if (item) LoadContest(item->text());
+}
+
+void MainWindow::on_action_open_triggered()
+{
+    if (Status::g_is_judging)
+    {
+        StopJudging();
+        QMessageBox::warning(this, "", QString("测评被终止！"));
+    }
+
+    QDir dir(last_contest);
     dir.cdUp();
     QString path = QFileDialog::getExistingDirectory(this, "打开竞赛目录", dir.path());
-    if (path.size()) loadContestEvent(path);
+    if (path.size()) LoadContest(path);
 }
 
-void MainWindow::on_actionClose_triggered()
+void MainWindow::on_action_close_triggered()
 {
-    closeContestEvent();
-
-    ui->label->show();
-    ui->label_2->show();
-    ui->recentList->show();
-    closeButton->hide();
-    updateRecentContest(true);
-    this->setWindowTitle("CCR Plus 测评器");
-    ui->actionClose->setEnabled(false);
-
-    ui->actionConfig->setEnabled(false);
-    ui->actionList->setEnabled(false);
-    ui->actionExport->setEnabled(false);
-    ui->actionRefresh->setEnabled(false);
-    ui->actionJudgeSelect->setEnabled(false);
-    ui->actionJudgeUnjudged->setEnabled(false);
-    ui->actionJudgeAll->setEnabled(false);
-    ui->actionStop->setEnabled(false);
-    ui->actionList->setChecked(false);
+    CloseContest(false);
 }
 
-void MainWindow::on_actionExit_triggered()
+void MainWindow::on_action_configure_triggered()
 {
-    if (ui->actionClose->isEnabled()) closeContestEvent();
+    ConfigDialog dialog(this);
+    if (dialog.exec())
+    {
+        LoadBoard();
+        detail_table->showConfigDetail();
+    }
+}
+
+void MainWindow::on_action_set_list_triggered()
+{
+    if (ContestInfo::info.isListUsed)
+    {
+        if (QMessageBox::question(this, "移除选手名单", "确实要移除选手名单吗？") == QMessageBox::No)
+        {
+            ContestInfo::info.isListUsed = true;
+            ui->action_set_list->setChecked(true);
+            return;
+        }
+        ContestInfo::info.isListUsed = false;
+        ui->action_set_list->setChecked(false);
+        QFile(ContestInfo::info.contestPath + ".list").remove();
+
+        for (auto& i : ContestInfo::info.players)
+            if (!i.type)
+            {
+                QLabel* tmp = i.label[0];
+                i.name_list = "", tmp->setText(i.name);
+                tmp->setAlignment(Qt::AlignCenter);
+                tmp->setStyleSheet("");
+            }
+        board_table->resizePlayerLabel();
+    }
+    else
+    {
+        QString fileName = QFileDialog::getOpenFileName(this, "导入选手名单", ContestInfo::info.contestPath, "CSV (逗号分隔) (*.csv)");
+        if (!fileName.size())
+        {
+            ContestInfo::info.isListUsed = false;
+            ui->action_set_list->setChecked(false);
+            return;
+        }
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            QMessageBox::critical(this, "导入名单失败", file.errorString());
+        else
+        {
+            ContestInfo::info.isListUsed = true;
+            ui->action_set_list->setChecked(true);
+            ReadPlayerList(file, true);
+            file.close();
+        }
+    }
+    detail_table->clearDetail();
+}
+
+void MainWindow::on_action_export_triggered()
+{
+    ExportPlayerScore();
+}
+
+void MainWindow::on_action_exit_triggered()
+{
+    if (ui->action_close->isEnabled()) CloseContest(true);
     QApplication::exit();
 }
 
-void MainWindow::on_actionAbout_triggered()
+void MainWindow::on_action_refresh_triggered()
+{
+    LoadBoard();
+}
+
+void MainWindow::on_action_judge_selected_triggered()
+{
+    StartJudging(-1, -1);
+}
+
+void MainWindow::on_action_judge_unjudged_triggered()
+{
+    StartJudging(-2, -2);
+}
+
+void MainWindow::on_action_judge_all_triggered()
+{
+    board_table->selectAll();
+    StartJudging(-1, -1);
+}
+
+void MainWindow::on_action_stop_triggered()
+{
+    StopJudging();
+}
+
+void MainWindow::on_action_help_triggered()
+{
+
+}
+
+void MainWindow::on_action_about_triggered()
 {
     QMessageBox* msgBox = new QMessageBox(this);
     msgBox->setWindowTitle("关于 CCR Plus");
@@ -1039,22 +813,41 @@ void MainWindow::on_actionAbout_triggered()
     msgBox->exec();
 }
 
-void MainWindow::on_recentList_itemDoubleClicked(QListWidgetItem* item)
+void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (item) loadContestEvent(item->text());
+    if (ui->action_close->isEnabled()) CloseContest(true);
+    event->accept();
 }
 
-void MainWindow::on_actionConfig_triggered()
+void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    ConfigDialog dialog(this);
-    if (dialog.exec())
+    if (!ui->action_close->isEnabled() && (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) && ui->listWidget_recent->currentItem()->isSelected())
+        on_listWidget_recent_itemDoubleClicked(ui->listWidget_recent->currentItem());
+    else QWidget::keyPressEvent(event);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
+{
+    auto data = event->mimeData();
+    if (data->hasUrls() && data->urls().size() == 1 && QDir(data->urls().at(0).toLocalFile()).exists()) event->acceptProposedAction();
+    else event->ignore();
+}
+
+void MainWindow::dropEvent(QDropEvent* event)
+{
+    auto data = event->mimeData();
+    if (data->hasUrls() && data->urls().size() == 1)
     {
-        loadBoardEvent();
-        detailTable->showConfigDetail();
+        QString path = data->urls().first().toLocalFile();
+        if (path.size() >= 2 && path[0] == '/' && path[1] == '/') path.remove(0, 1);
+        if (QDir(path).exists())
+        {
+            if (Status::g_is_judging)
+            {
+                StopJudging();
+                QMessageBox::warning(this, "", QString("测评被终止！"));
+            }
+            LoadContest(path);
+        }
     }
-}
-
-void MainWindow::on_actionHelp_triggered()
-{
-
 }
