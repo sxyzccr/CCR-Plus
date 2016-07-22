@@ -8,7 +8,7 @@ class ItemDelegate : public QStyledItemDelegate
     Q_OBJECT
 public:
     explicit ItemDelegate(QObject* parent = 0);
-    ~ItemDelegate();
+    virtual ~ItemDelegate();
 
     QRect CheckBoxRect(const QStyleOptionViewItem& viewItemStyleOptions) const;
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const;

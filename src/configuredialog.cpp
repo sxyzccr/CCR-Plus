@@ -1,4 +1,4 @@
-#include "contestinfo.h"
+#include "global.h"
 #include "configuredialog.h"
 #include "ui_configuredialog.h"
 
@@ -35,7 +35,7 @@ ConfigDialog::~ConfigDialog()
 void ConfigDialog::setModelData(int c)
 {
     Problem* problem = NULL;
-    if (c < ContestInfo::info.problemNum) problem = &ContestInfo::info.problems[c];
+    if (c < Global::g_contest.problem_num) problem = &Global::g_contest.problems[c];
 
     auto configNew = [&]()
     {
@@ -101,8 +101,8 @@ void ConfigDialog::setModelData(int c)
 
 void ConfigDialog::loadProblems()
 {
-    for (auto i : ContestInfo::info.problemOrder) problemList.append(ContestInfo::info.problems[i].name);
-    QStringList tmp = QDir(ContestInfo::info.dataPath).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (auto i : Global::g_contest.problem_order) problemList.append(Global::g_contest.problems[i].name);
+    QStringList tmp = QDir(Global::g_contest.data_path).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (auto i : tmp) if (!problemList.count(i)) problemList.append(i);
     num = problemList.size();
 
@@ -152,7 +152,7 @@ void ConfigDialog::dataChangedEvent(const QModelIndex& tl, const QModelIndex& br
 
     if (r == 4)
     {
-        if (c >= ContestInfo::info.problemNum) model.item(r, c)->setData(2, Qt::EditRole);
+        if (c >= Global::g_contest.problem_num) model.item(r, c)->setData(2, Qt::EditRole);
         else if (model.item(r, c)->data(Qt::EditRole).toBool())
         {
             for (int i = 0; i <= 3; i++)
@@ -224,7 +224,7 @@ void ConfigDialog::accept()
             if (model.item(4, t)->data(Qt::EditRole).toBool()) prob.configureNew(type, tim, mem, checker);
             else
             {
-                prob = ContestInfo::info.problems[t];
+                prob = Global::g_contest.problems[t];
                 prob.configure(type, tim, mem, checker);
             }
             if (!prob.saveConfig())
@@ -236,6 +236,6 @@ void ConfigDialog::accept()
         list.append(problemList[t]);
     }
     //qDebug()<<list;
-    ContestInfo::info.SaveProblemOrder(list);
+    Global::g_contest.SaveProblemOrder(list);
     QDialog::accept();
 }

@@ -17,7 +17,7 @@ class ConfigDialog : public QDialog
 
 public:
     explicit ConfigDialog(QWidget* parent = 0);
-    ~ConfigDialog();
+    virtual ~ConfigDialog();
 
 private slots:
     void dataChangedEvent(const QModelIndex& tl, const QModelIndex& br);

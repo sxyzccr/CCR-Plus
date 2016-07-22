@@ -1,4 +1,4 @@
-#include "contestinfo.h"
+#include "contest.h"
 
 #include <map>
 #include <QtXml>
@@ -6,27 +6,9 @@
 
 using namespace std;
 
-namespace ContestInfo
+QPixmap Contest::CreateIcon(const QString& contestPath)
 {
-Info info;
-}
-
-void ContestInfo::Info::Clear()
-{
-    playerNum = problemNum = 0;
-    sumScore = 0;
-
-    for (auto i : problems) i.clear();
-    for (auto i : players) i.clear();
-
-    problems.clear();
-    players.clear();
-    problemOrder.clear();
-}
-
-QPixmap ContestInfo::Info::CreateIcon(const QString& path)
-{
-    QStringList list = ReadProblemOrder(path);
+    QStringList list = ReadProblemOrder(contestPath);
     QImage image = QPixmap(":/icon/image/folder.png").toImage();
     QPainter painter(&image);
     painter.setFont(QFont("Times New Roman", 15, 0, true));
@@ -43,22 +25,9 @@ QPixmap ContestInfo::Info::CreateIcon(const QString& path)
     return QPixmap::fromImage(image);
 }
 
-QStringList ContestInfo::Info::ReadFolders(const QString& path)
+QStringList Contest::ReadProblemOrder(const QString& contestPath)
 {
-    QDir dir(path);
-    QStringList list = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    if (path == dataPath)
-    {
-        QStringList tmp;
-        for (auto i : list) if (QFile::exists(dataPath + i + "/.prb")) tmp.append(i);
-        return tmp;
-    }
-    else return list;
-}
-
-QStringList ContestInfo::Info::ReadProblemOrder(const QString& path)
-{
-    QFile file(path + ".ccr");
+    QFile file(contestPath + ".ccr");
     QStringList problem;
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -87,9 +56,35 @@ QStringList ContestInfo::Info::ReadProblemOrder(const QString& path)
     return problem;
 }
 
-void ContestInfo::Info::SaveProblemOrder(const QStringList& list)
+void Contest::Clear()
 {
-    QFile file(contestPath + ".ccr");
+    player_num = problem_num = 0;
+    sum_score = 0;
+
+    for (auto i : problems) i.clear();
+    for (auto i : players) i.clear();
+
+    problems.clear();
+    players.clear();
+    problem_order.clear();
+}
+
+QStringList Contest::ReadFolders(const QString& path)
+{
+    QDir dir(path);
+    QStringList list = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    if (path == data_path)
+    {
+        QStringList tmp;
+        for (auto i : list) if (QFile::exists(data_path + i + "/.prb")) tmp.append(i);
+        return tmp;
+    }
+    else return list;
+}
+
+void Contest::SaveProblemOrder(const QStringList& list)
+{
+    QFile file(path + ".ccr");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
     QTextStream out(&file);
     out.setCodec("UTF-8");
@@ -102,14 +97,14 @@ void ContestInfo::Info::SaveProblemOrder(const QStringList& list)
     file.close();
 }
 
-void ContestInfo::Info::ReadContestInfo()
+void Contest::ReadContestInfo()
 {
     Clear();
 
     // 读取 src 文件夹, data 文件夹与 .ccr 文件
-    QStringList playerName = ReadFolders(ContestInfo::info.srcPath),
-                problemName = ReadFolders(ContestInfo::info.dataPath),
-                order = ReadProblemOrder(ContestInfo::info.contestPath);
+    QStringList playerName = ReadFolders(src_path),
+                problemName = ReadFolders(data_path),
+                order = ReadProblemOrder(path);
 
     map<QString, int> playerID, problemID;
     problemID.clear();
@@ -123,25 +118,25 @@ void ContestInfo::Info::ReadContestInfo()
 
     for (auto name : problemName)
     {
-        problemOrder.push_back(problemNum);
-        problemID[name] = problemNum;
+        problem_order.push_back(problem_num);
+        problemID[name] = problem_num;
         problems.push_back(Problem(name));
 
-        problemNum++;
+        problem_num++;
     }
 
     for (auto name : playerName)
     {
-        playerID[name] = playerNum;
-        Player p(name, playerNum);
-        for (int i = 0; i < problemNum; i++) p.problem.push_back(Player::Result());
+        playerID[name] = player_num;
+        Player p(name, player_num);
+        for (int i = 0; i < problem_num; i++) p.problem.push_back(Player::Result());
         players.push_back(p);
 
-        playerNum++;
+        player_num++;
     }
 
     // 读取 result 文件夹
-    QFile file(resultPath + ".reslist");
+    QFile file(result_path + ".reslist");
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&file);
@@ -170,7 +165,7 @@ void ContestInfo::Info::ReadContestInfo()
         for (auto j : playerID)
             if (!players[j.second].problem[i.second].state)
             {
-                file.setFileName(resultPath + i.first + "/" + j.first + ".res");
+                file.setFileName(result_path + i.first + "/" + j.first + ".res");
                 if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
                 QDomDocument doc;
                 if (!doc.setContent(&file)) {file.close(); continue;}
@@ -194,8 +189,92 @@ void ContestInfo::Info::ReadContestInfo()
             }
 
     // 读取 .prb 文件
-    for (auto& i : info.problems) i.readConfig();
+    for (auto& i : problems) i.readConfig();
 
-    for (auto i : info.problems) ContestInfo::info.sumScore += i.sumScore;
-    for (auto& i : info.players) i.calcSum();
+    for (auto i : problems) sum_score += i.sumScore;
+    for (auto& i : players) i.calcSum();
+}
+
+void Contest::SaveResultCache()
+{
+    QFile file(result_path + ".reslist");
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QTextStream out(&file);
+        out.setCodec("UTF-8");
+        for (int i = 0; i < players.size(); i++)
+        {
+            int t = GetLogicalRow(i);
+            Player* p = &players[t];
+            for (auto j : problem_order)
+            {
+                Player::Result* r = &p->problem[j];
+                out << p->name << '/' << problems[j].name << '/' << r->score << '/' << r->usedTime << '/' << r->state << '/' << endl;
+            }
+        }
+        file.close();
+    }
+}
+
+void Contest::ReadPlayerList(QFile& file, bool isSaveList)
+{
+    map<QString, QString> list;
+    list.clear();
+    QTextStream in(&file);
+    for (; !in.atEnd();)
+    {
+        QString s = in.readLine();
+        //in.setCodec("UTF-8");
+        QStringList line = s.split(",");
+        for (auto& i : line) i = i.trimmed(), i.remove('\"');
+        if (line.size() >= 2 && line[0].size() && line[1].size()) list[line[0]] = line[1];
+    }
+
+    if (isSaveList)
+    {
+        QFile f(path + ".list");
+        if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QTextStream out(&f);
+            //out.setCodec("UTF-8");
+            for (auto i : list) out << i.first << "," << i.second << endl;
+            f.close();
+        }
+    }
+
+    for (auto& i : players)
+        if (!i.type)
+        {
+            QLabel* tmp = i.label[0];
+            if (list.count(i.name))
+            {
+                i.name_list = list[i.name];
+                if (i.name_list.length() == 2) tmp->setText(QString("%1 [%2   %3]").arg(i.name, i.name_list.at(0), i.name_list.at(1)));
+                else tmp->setText(QString("%1 [%2]").arg(i.name, i.name_list));
+                tmp->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+                tmp->setStyleSheet("");
+            }
+            else tmp->setStyleSheet("QLabel{color:rgb(120,120,120);}");
+        }
+}
+
+void Contest::ExportPlayerScore(QFile& file)
+{
+    QTextStream out(&file);
+    //out.setCodec("UTF-8");
+    if (is_list_used) out << QString("编号,") << QString("姓名,"); else out << QString("选手,");
+    out << QString("总分,");
+    for (auto j : problem_order) out << QString("\"%1\",").arg(problems[j].name);
+    out << endl;
+    for (int i = 0; i < players.size(); i++)
+    {
+        int t = GetLogicalRow(i);
+        Player* p = &players[t];
+        out << QString("\"%1\",").arg(p->name);
+        if (is_list_used) out << QString("\"%1\",").arg(p->name_list);
+        out << p->sum.score << ",";
+        for (auto j : problem_order) out << p->problem[j].score << ",";
+        out << endl;
+    }
+    file.close();
 }

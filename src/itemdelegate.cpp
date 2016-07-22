@@ -1,4 +1,4 @@
-#include "contestinfo.h"
+#include "global.h"
 #include "itemdelegate.h"
 
 #include <QComboBox>
@@ -112,7 +112,7 @@ QWidget* ItemDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem&
         item->setToolTip("全文比较(过滤行末空格及文末回车)");
         model->appendRow(item);
 
-        QString dir1 = QDir().currentPath() + "/checker", dir2 = ContestInfo::info.dataPath + problemList[index.column()];
+        QString dir1 = QDir().currentPath() + "/checker", dir2 = Global::g_contest.data_path + problemList[index.column()];
         QStringList list1, list2;
 #ifdef Q_OS_LINUX
         list1 = QDir(dir1).entryList(QDir::Files | QDir::Executable);

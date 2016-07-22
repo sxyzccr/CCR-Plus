@@ -1,6 +1,6 @@
-#include "status.h"
+#include "global.h"
 #include "boardtable.h"
-#include "contestinfo.h"
+#include "contest.h"
 
 #include <QScrollBar>
 #include <QHeaderView>
@@ -158,7 +158,7 @@ int BoardTable::showProblemResult(QLabel* tmp, Player::Result* res, int sum, int
 void BoardTable::showResult()
 {
     int row = 0;
-    for (auto& i : ContestInfo::info.players)
+    for (auto& i : Global::g_contest.players)
     {
         QLabel* tmp;
 
@@ -178,7 +178,7 @@ void BoardTable::showResult()
         tmp->setAlignment(Qt::AlignCenter);
         this->setCellWidget(row, 1, tmp);
         i.label.push_back(tmp);
-        i.style.push_back(showProblemSumResult(tmp, &i.sum, ContestInfo::info.sumScore, false));
+        i.style.push_back(showProblemSumResult(tmp, &i.sum, Global::g_contest.sum_score, false));
 
         int col = 0;
         for (auto j : i.problem)
@@ -187,13 +187,13 @@ void BoardTable::showResult()
             tmp->setAlignment(Qt::AlignCenter);
             this->setCellWidget(row, col + 2, tmp);
             i.label.push_back(tmp);
-            i.style.push_back(showProblemResult(tmp, &j, ContestInfo::info.problems[col].sumScore, false));
+            i.style.push_back(showProblemResult(tmp, &j, Global::g_contest.problems[col].sumScore, false));
             col++;
         }
         row++;
     }
-    for (int r = 0; r < ContestInfo::info.playerNum; r++)
-        for (int c = 0; c < ContestInfo::info.problemNum + 2; c++)
+    for (int r = 0; r < Global::g_contest.player_num; r++)
+        for (int c = 0; c < Global::g_contest.problem_num + 2; c++)
         {
             QTableWidgetItem* bg = new QTableWidgetItem;
             if (c <= 1) bg->setFlags(bg->flags()^Qt::ItemIsSelectable);
@@ -206,7 +206,7 @@ void BoardTable::showResult()
 void BoardTable::resizePlayerLabel()
 {
     int len = 75;
-    for (auto& i : ContestInfo::info.players)
+    for (auto& i : Global::g_contest.players)
     {
         QLabel* tmp = i.label[0];
         len = max(len, QFontMetrics(FONT).width(tmp->text()) + 30);
@@ -221,23 +221,23 @@ void BoardTable::onSectionMove(int i, int oldV, int newV)
     if (i <= 1 || newV <= 1) alreadyMovingSection = true, this->horizontalHeader()->moveSection(newV, oldV), alreadyMovingSection = false;
     else
     {
-        ContestInfo::info.problemOrder.move(oldV - 2, newV - 2);
+        Global::g_contest.problem_order.move(oldV - 2, newV - 2);
         QStringList list;
-        for (auto i : ContestInfo::info.problemOrder) list.append(ContestInfo::info.problems[i].name);
-        ContestInfo::info.SaveProblemOrder(list);
+        for (auto i : Global::g_contest.problem_order) list.append(Global::g_contest.problems[i].name);
+        Global::g_contest.SaveProblemOrder(list);
     }
 }
 
 inline bool cmpName(const Player& x, const Player& y) { return x.type < y.type || (x.type == y.type && x.name < y.name); }
 inline bool cmpSumScore(const Player& x, const Player& y) { return x.sum < y.sum || (x.sum == y.sum && !cmpName(x, y)); }
 
-void BoardTable::sortByName() { sort(ContestInfo::info.players.begin(), ContestInfo::info.players.end(), cmpName); }
-void BoardTable::sortBySumScore() { sort(ContestInfo::info.players.begin(), ContestInfo::info.players.end(), cmpSumScore); }
+void BoardTable::sortByName() { sort(Global::g_contest.players.begin(), Global::g_contest.players.end(), cmpName); }
+void BoardTable::sortBySumScore() { sort(Global::g_contest.players.begin(), Global::g_contest.players.end(), cmpSumScore); }
 void BoardTable::sortByProblem(int p)
 {
     char F[128];
     F[' '] = 0, F['F'] = 1, F['S'] = 2, F['C'] = 3, F['E'] = 4, F['N'] = 5;
-    sort(ContestInfo::info.players.begin(), ContestInfo::info.players.end(), [&](const Player & x, const Player & y)
+    sort(Global::g_contest.players.begin(), Global::g_contest.players.end(), [&](const Player & x, const Player & y)
     {
         if (!x.problem[p].score && !y.problem[p].score) return F[x.problem[p].state] < F[y.problem[p].state] || (F[x.problem[p].state] == F[y.problem[p].state] && cmpSumScore(x, y));
         return x.problem[p] < y.problem[p] || (x.problem[p] == y.problem[p] && cmpSumScore(x, y));
@@ -247,10 +247,10 @@ void BoardTable::sortByProblem(int p)
 void BoardTable::clearHighlighted(int c)
 {
     if (c >= 0)
-        for (int i = 0; i < ContestInfo::info.playerNum; i++)
+        for (int i = 0; i < Global::g_contest.player_num; i++)
         {
             int t = GetLogicalRow(i);
-            Player* p = &ContestInfo::info.players[t];
+            Player* p = &Global::g_contest.players[t];
             if (p->style[c] >= 0) p->label[c]->setStyleSheet(LABEL_STYLE_SOFT[p->style[c]]);
             // if (c>1) setSelected(t,c,p->selected[c-2]);
         }
@@ -259,10 +259,10 @@ void BoardTable::clearHighlighted(int c)
 void BoardTable::setHighlighted(int c)
 {
     if (c >= 0)
-        for (int i = 0; i < ContestInfo::info.playerNum; i++) //auto i:players)
+        for (int i = 0; i < Global::g_contest.player_num; i++) //auto i:players)
         {
             int t = GetLogicalRow(i);
-            Player* p = &ContestInfo::info.players[t];
+            Player* p = &Global::g_contest.players[t];
             if (p->style[c] >= 0)
                 p->label[c]->setStyleSheet(LABEL_STYLE_HARD[p->style[c]] + "QLabel{border-width:1px;}");
             else if (c)
@@ -273,7 +273,7 @@ void BoardTable::setHighlighted(int c)
 
 void BoardTable::onSortTable(int c)
 {
-    if (Status::g_is_judging) return;
+    if (Global::g_is_judging) return;
 
     if (preHeaderClicked != c)
     {
@@ -283,14 +283,14 @@ void BoardTable::onSortTable(int c)
 
     this->horizontalHeader()->setSortIndicatorShown(true);
     if (preHeaderClicked != c && c) this->horizontalHeader()->setSortIndicator(c, Qt::DescendingOrder);
-    Status::g_pre_sort_order = this->horizontalHeader()->sortIndicatorOrder();
+    Global::g_pre_sort_order = this->horizontalHeader()->sortIndicatorOrder();
 
     if (!c) sortByName();
     else if (c == 1) sortBySumScore();
     else sortByProblem(c - 2);
 
     int k = 0;
-    for (auto& i : ContestInfo::info.players)
+    for (auto& i : Global::g_contest.players)
     {
         this->item(i.id, c)->setData(Qt::DisplayRole, k);
         i.id = GetLogicalRow(k);
@@ -305,13 +305,13 @@ void BoardTable::onSortTable(int c)
 
 void BoardTable::onSetItemUnselected(int r, int c)
 {
-    if (Status::g_contest_closed) return;
+    if (Global::g_contest_closed) return;
     this->item(r, c)->setSelected(false);
 }
 
 void BoardTable::onUpdatePlayerLabel(QLabel* label, const QString& text, const QString& toolTip, const QString& styleSheet)
 {
-    if (Status::g_contest_closed) return;
+    if (Global::g_contest_closed) return;
     label->setText(text);
     label->setToolTip(toolTip);
     label->setStyleSheet(styleSheet);
@@ -319,7 +319,7 @@ void BoardTable::onUpdatePlayerLabel(QLabel* label, const QString& text, const Q
 
 void BoardTable::onUpdateProblemLabel(Player* ply, int c, Player::Result* res, int sum)
 {
-    if (Status::g_contest_closed) return;
+    if (Global::g_contest_closed) return;
     if (c == 1)
         ply->style[1] = this->showProblemSumResult(ply->label[1], res, sum, 1);
     else

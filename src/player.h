@@ -9,7 +9,7 @@ class Player
 {
 public:
     explicit Player(const QString& na = "", int x = 0);
-    ~Player();
+    virtual ~Player();
 
     void calcSum();
     void clear();

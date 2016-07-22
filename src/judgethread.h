@@ -15,7 +15,7 @@ class JudgeThread: public QThread
     Q_OBJECT
 public:
     explicit JudgeThread(QObject* parent = 0);
-    ~JudgeThread();
+    virtual ~JudgeThread();
 
     int r, c;
 

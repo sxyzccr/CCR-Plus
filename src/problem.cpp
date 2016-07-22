@@ -1,5 +1,5 @@
+#include "global.h"
 #include "problem.h"
-#include "contestinfo.h"
 
 #include <QtXml>
 
@@ -47,7 +47,7 @@ QString Problem::removeSuff(QString file)
 void Problem::readConfig()
 {
     sumScore = 0;
-    QFile file(ContestInfo::info.dataPath + name + "/.prb");
+    QFile file(Global::g_contest.data_path + name + "/.prb");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
     QDomDocument doc;
     if (!doc.setContent(&file)) {file.close(); return;}
@@ -177,7 +177,7 @@ bool Problem::saveConfig()
         }
     }
 
-    QFile file(ContestInfo::info.dataPath + name + "/.prb");
+    QFile file(Global::g_contest.data_path + name + "/.prb");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return false;
     QTextStream out(&file);
     doc.save(out, 4);
@@ -189,7 +189,7 @@ typedef QPair<QString, QString> Pair;
 
 QList<QPair<QString, QString>> Problem::getInAndOutFile()
 {
-    QString dir = ContestInfo::info.dataPath + name;
+    QString dir = Global::g_contest.data_path + name;
     QStringList list = QDir(dir).entryList(QDir::Files);
     const QStringList in({".in", ".inp", "in", "inp"}), out({".out", ".ans", ".ou", ".an", ".sol", ".res", ".std", "out", "ans", "ou", "an", "sol", "res", "std"});
     QList<Pair> Q[in.size()][out.size()];
@@ -219,7 +219,7 @@ QList<QPair<QString, QString>> Problem::getInAndOutFile()
 Problem::CompilerInfo Problem::getCompiler(const QString& playerName)
 {
     for (auto i : compilers)
-        if (QFile(ContestInfo::info.srcPath + playerName + "/" + dir + "/" + i.file).exists()) return i;
+        if (QFile(Global::g_contest.src_path + playerName + "/" + dir + "/" + i.file).exists()) return i;
     return CompilerInfo();
 }
 

@@ -23,7 +23,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = 0);
-    ~MainWindow();
+    virtual ~MainWindow();
 
 private:
     Ui::MainWindow* ui;
@@ -46,22 +46,13 @@ private:
     void LoadContest(const QString& path);
 
     /// 关闭竞赛，是否退出程序
-    void CloseContest(bool);
+    void CloseContest(bool isExit = false);
 
     /// 载入 board (刷新)
     void LoadBoard();
 
     /// 清空 board
     void ClearBoard();
-
-    /// 缓存测评结果到 .reslist
-    void SaveResultList();
-
-    /// 读取选手名单，是否从 .csv 文件导入
-    void ReadPlayerList(QFile& fileName, bool isCSV);
-
-    /// 导出选手成绩
-    void ExportPlayerScore();
 
     /// 停止测评
     void StopJudging();
@@ -88,7 +79,7 @@ private slots:
     void onMenuHeaderEvent(const QPoint& pos);
     void onMenuTableEvent(const QPoint& pos);
 
-    // recentListWidget item action
+    // listWidget_recent item action
     void on_listWidget_recent_itemDoubleClicked(QListWidgetItem* item);
 
     // Contest menu actions

@@ -1,5 +1,4 @@
-#include "status.h"
-#include "contestinfo.h"
+#include "global.h"
 #include "detailtable.h"
 
 #include <QtXml>
@@ -54,7 +53,7 @@ void DetailTable::clearDetail()
 
 void DetailTable::addTitleDetail(int row, const QString& title)
 {
-    if (Status::g_contest_closed) return;
+    if (Global::g_contest_closed) return;
 
     isScrollBarAtBottom = this->verticalScrollBar()->value() >= this->verticalScrollBar()->maximum() - 5;
 
@@ -68,12 +67,12 @@ void DetailTable::addTitleDetail(int row, const QString& title)
     this->setSpan(row, 0, 1, 2);
     this->setVerticalHeaderItem(row, new QTableWidgetItem);
 
-    if (Status::g_is_judging) this->adjustScrollbar();
+    if (Global::g_is_judging) this->adjustScrollbar();
 }
 
 void DetailTable::addNoteDetail(int row, const QString& note, const QString& state)
 {
-    if (Status::g_contest_closed) return;
+    if (Global::g_contest_closed) return;
 
     isScrollBarAtBottom = this->verticalScrollBar()->value() >= this->verticalScrollBar()->maximum() - 5;
 
@@ -92,12 +91,12 @@ void DetailTable::addNoteDetail(int row, const QString& note, const QString& sta
     this->setVerticalHeaderItem(row, new QTableWidgetItem);
     this->verticalHeader()->resizeSection(row, b);
 
-    if (Status::g_is_judging) this->adjustScrollbar();
+    if (Global::g_is_judging) this->adjustScrollbar();
 }
 
 void DetailTable::addPointDetail(int row, int num, const QString& note, const QString& state, const QString& file, int len)
 {
-    if (Status::g_contest_closed) return;
+    if (Global::g_contest_closed) return;
 
     isScrollBarAtBottom = this->verticalScrollBar()->value() >= this->verticalScrollBar()->maximum() - 5;
 
@@ -148,12 +147,12 @@ void DetailTable::addPointDetail(int row, int num, const QString& note, const QS
 
     if (len > 1) this->setSpan(row - len + 1, 0, len, 1);
 
-    if (Status::g_is_judging) this->adjustScrollbar();
+    if (Global::g_is_judging) this->adjustScrollbar();
 }
 
 void DetailTable::addScoreDetail(int row, int len, int score, int sumScore)
 {
-    if (Status::g_contest_closed) return;
+    if (Global::g_contest_closed) return;
 
     QTableWidgetItem* tmp = new QTableWidgetItem(QString::number(score));
     tmp->setTextAlignment(Qt::AlignCenter);
@@ -166,12 +165,12 @@ void DetailTable::showProblemDetail(Player* player, Problem* problem)
 {
     int row = this->rowCount() - 1;
     QString title = player->name;
-    if (ContestInfo::info.isListUsed && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
+    if (Global::g_contest.is_list_used && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
     if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name);
     else title += +" - " + problem->name;
     addTitleDetail(row++, title);
 
-    QFile file(ContestInfo::info.resultPath + problem->name + "/" + player->name + ".res");
+    QFile file(Global::g_contest.result_path + problem->name + "/" + player->name + ".res");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         addNoteDetail(row++, "无测评结果", " ");
@@ -230,9 +229,9 @@ void DetailTable::showProblemDetail(Player* player, Problem* problem)
 void DetailTable::showConfigDetail()
 {
     int row = this->rowCount() - 1;
-    for (auto i : ContestInfo::info.problemOrder)
+    for (auto i : Global::g_contest.problem_order)
     {
-        Problem* prob = &ContestInfo::info.problems[i];
+        Problem* prob = &Global::g_contest.problems[i];
         addTitleDetail(row++, QString("\"%1\" 的配置结果").arg(prob->name));
 
         int t = 0;
@@ -253,11 +252,11 @@ void DetailTable::showConfigDetail()
 
 void DetailTable::showDetailEvent(int r, int c)
 {
-    if (Status::g_is_judging || (lastJudgeTimer.isValid() && lastJudgeTimer.elapsed() < 1000)) return;
+    if (Global::g_is_judging || (lastJudgeTimer.isValid() && lastJudgeTimer.elapsed() < 1000)) return;
     clearDetail();
     r = GetLogicalRow(r);
-    if (c > 1) showProblemDetail(&ContestInfo::info.players[r], &ContestInfo::info.problems[c - 2]);
-    else for (auto i : ContestInfo::info.problemOrder) showProblemDetail(&ContestInfo::info.players[r], &ContestInfo::info.problems[i]);
+    if (c > 1) showProblemDetail(&Global::g_contest.players[r], &Global::g_contest.problems[c - 2]);
+    else for (auto i : Global::g_contest.problem_order) showProblemDetail(&Global::g_contest.players[r], &Global::g_contest.problems[i]);
 }
 
 void DetailTable::adjustScrollbar()

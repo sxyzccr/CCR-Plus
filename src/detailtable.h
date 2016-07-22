@@ -12,7 +12,7 @@ class DetailTable : public QTableWidget
     Q_OBJECT
 public:
     explicit DetailTable(QWidget* parent = 0);
-    ~DetailTable();
+    virtual ~DetailTable();
 
     void startLastJudgeTimer() { lastJudgeTimer.start(); }
 

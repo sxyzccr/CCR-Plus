@@ -1,6 +1,5 @@
 #include "const.h"
-#include "status.h"
-#include "contestinfo.h"
+#include "global.h"
 
 QColor GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int y)
 {
@@ -14,5 +13,5 @@ QColor GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int 
 
 int GetLogicalRow(int visualRow)
 {
-    return Status::g_pre_sort_order == Qt::DescendingOrder ? ContestInfo::info.playerNum - visualRow - 1 : visualRow;
+    return Global::g_pre_sort_order == Qt::DescendingOrder ? Global::g_contest.player_num - visualRow - 1 : visualRow;
 }

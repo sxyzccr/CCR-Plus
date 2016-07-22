@@ -7,7 +7,7 @@ class Problem
 {
 public:
     explicit Problem(const QString& na = "");
-    ~Problem();
+    virtual ~Problem();
 
     void clear();
     void readConfig();

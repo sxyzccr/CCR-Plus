@@ -10,7 +10,7 @@ class BoardTable : public QTableWidget
     Q_OBJECT
 public:
     explicit BoardTable(QWidget* parent = 0);
-    ~BoardTable();
+    virtual ~BoardTable();
 
     void clearBoard();
     void showResult();
