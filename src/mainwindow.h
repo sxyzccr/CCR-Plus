@@ -37,9 +37,9 @@ private:
     // Context menus and actions
     QMenu *menu_recent_list, *menu_table, *menu_header;
     QAction *action_create_file, *action_edit_file, *action_create_dir, *action_open_dir, *action_remove_dir,
-            *action_remove_recent, *action_clean_recent, *action_recent_list[MAX_RECENT_CONTEST];
+            *action_remove_recent, *action_clean_recent, *action_recent_list[Global::MAX_RECENT_CONTEST];
 
-    /// 更新最近打开的竞赛列表，是否更新 recentListWidget
+    /// 更新最近打开的竞赛列表，是否更新 listWidget_recent
     void UpdateRecentContest(bool);
 
     /// 载入竞赛
@@ -48,11 +48,11 @@ private:
     /// 关闭竞赛，是否退出程序
     void CloseContest(bool isExit = false);
 
-    /// 载入 board (刷新)
-    void LoadBoard();
+    /// 载入表格 (刷新)
+    void LoadTable();
 
     /// 清空 board
-    void ClearBoard();
+    void ClearTable();
 
     /// 停止测评
     void StopJudging();

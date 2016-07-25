@@ -51,32 +51,37 @@ struct ResultSummary
 class ResultLabel : public QLabel
 {
 public:
-    explicit ResultLabel() : QLabel(), style(-1) {}
-    explicit ResultLabel(const QString& text) : QLabel(text), style(-1) {}
+    explicit ResultLabel() : QLabel(), res(), style(Global::StyleNone) {}
+    explicit ResultLabel(const QString& text) : QLabel(text), res(), style(Global::StyleNone) {}
     virtual ~ResultLabel() {}
+
+    /// 根据 style 和是否高亮计算 StyleSheet 字符串
+    static QString GetLabelStyleSheet(Global::LabelStyle style, bool isHighlighted = false);
 
     // Getter member functions
     int GetScore() const { return res.score; }
     double GetTime() const { return res.time; }
     char GetState() const { return res.state; }
     ResultSummary GetResult() const { return res; }
-    int GetLabelStyle() const { return style; }
+    Global::LabelStyle GetLabelStyle() const { return style; }
 
     // Setter member functions
-    void SetScore(int _score) { res.score = _score; }
-    void SetTime(double _time) { res.time = _time; }
-    void SetState(char _state) { res.state = _state; }
+    void SetScore(int score) { res.score = score; }
+    void SetTime(double time) { res.time = time; }
+    void SetState(char state) { res.state = state; }
     void SetResult(const ResultSummary& _res) { res = _res; }
     void SetResult(int score = 0, double time = 0, char state = 0, QString detail = "") { res = ResultSummary(score, time, state, detail); }
-    void SetLabelStyle(int _style) { style = _style; }
+    void SetLabelStyle(Global::LabelStyle _style) { style = _style; }
 
     // Plus or subtract ResultSummary
     void Plus(const ResultSummary& _res) { res += _res; }
     void Subtract(const ResultSummary& _res) { res -= _res; }
 
 private:
+    static const QString COLOR_NAME[17];
+
     ResultSummary res;
-    int style;
+    Global::LabelStyle style;
 };
 
 class Player
@@ -116,8 +121,9 @@ public:
     void SetSpecialNameLabel();
 
     /// 比较函数
-    friend bool cmpName(const Player& x, const Player& y);
-    friend bool cmpSumScore(const Player& x, const Player& y);
+    friend bool CmpName(const Player& x, const Player& y);
+    friend bool CmpSumScore(const Player& x, const Player& y);
+    friend bool CmpProblem(const Player& x, const Player& y);
 
 private:
     int id, priority;
@@ -127,15 +133,17 @@ private:
     std::vector<ResultLabel*> prob_label;
 };
 
-inline bool cmpName(const Player& x, const Player& y)
+inline bool CmpName(const Player& x, const Player& y)
 {
     return x.priority > y.priority || (x.priority == y.priority && x.name < y.name);
 }
 
-inline bool cmpSumScore(const Player& x, const Player& y)
+inline bool CmpSumScore(const Player& x, const Player& y)
 {
     return  x.sum_label->GetResult() <  y.sum_label->GetResult()||
-           (x.sum_label->GetResult() == y.sum_label->GetResult() && !cmpName(x, y));
+           (x.sum_label->GetResult() == y.sum_label->GetResult() && !CmpName(x, y));
 }
+
+bool CmpProblem(const Player& x, const Player& y);
 
 #endif // PLAYER_H

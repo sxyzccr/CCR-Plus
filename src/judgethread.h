@@ -44,7 +44,7 @@ private:
     double judgeTask(Problem::Info* info, QString& note, QString& state, double& usedTime, int testNum); //return ratio
     void initialize(const QString& name, Problem* prob);
     void saveHTMLResult(Player* player);
-    CompileResult compile(const Problem::CompilerInfo& compiler, QString& note);
+    Global::CompileResult compile(const Problem::CompilerInfo& compiler, QString& note);
 
 signals:
     void titleDetailFinished(int rows, const QString& title);
@@ -53,8 +53,9 @@ signals:
     void scoreDetailFinished(int rows, int len, int score, int sumScore);
 
     void itemJudgeFinished(int r, int c);
-    void playerLabelChanged(QLabel* label, const QString& s1, const QString& s2, const QString& s3);
-    void problemLabelChanged(Player* ply, int c, int sum);
+    void resultLabelTextChanged(ResultLabel* tmp, const QString& text, const QString& toolTip, Global::LabelStyle style);
+    void sumResultLabelChanged(Player* player, int sum);
+    void problemResultLabelChanged(Player* player, int c, int sum);
 };
 
 #endif // JUDGETHREAD_H

@@ -1,5 +1,5 @@
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#ifndef CONFIGUREDIALOG_H
+#define CONFIGUREDIALOG_H
 
 #include "itemdelegate.h"
 
@@ -37,4 +37,4 @@ private:
     void accept();
 };
 
-#endif // CONFIGDIALOG_H
+#endif // CONFIGUREDIALOG_H

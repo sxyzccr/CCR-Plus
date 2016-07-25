@@ -199,7 +199,7 @@ void Contest::SaveResultCache()
         out.setCodec("UTF-8");
         for (int i = 0; i < players.size(); i++)
         {
-            int t = GetLogicalRow(i);
+            int t = Global::GetLogicalRow(i);
             Player* p = &players[t];
             for (auto j : problem_order)
             {
@@ -248,9 +248,9 @@ void Contest::ExportPlayerScore(QFile& file)
     out << QString("总分,");
     for (auto j : problem_order) out << QString("\"%1\",").arg(problems[j].name);
     out << endl;
-    for (int i = 0; i < players.size(); i++)
+    for (int i = 0; i < player_num; i++)
     {
-        int t = GetLogicalRow(i);
+        int t = Global::GetLogicalRow(i);
         Player* p = &players[t];
         out << QString("\"%1\",").arg(p->GetName());
         if (is_list_used) out << QString("\"%1\",").arg(p->GetNameInList());

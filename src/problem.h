@@ -18,7 +18,7 @@ public:
     QString name, dir, exe, checker, outFile, inFile;
     int sumScore, timeLim_checker;
     double codeLim;
-    ProblemType type;
+    Global::ProblemType type;
 
     class CompilerInfo
     {

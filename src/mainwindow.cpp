@@ -55,20 +55,21 @@ MainWindow::MainWindow(QWidget* parent) :
     // Set connect
     connect(close_button, &QToolButton::clicked, this, &MainWindow::on_action_close_triggered);
 
-    connect(board_table, &QTableWidget::cellClicked,       detail_table, &DetailTable::showDetailEvent);
+    connect(board_table, &QTableWidget::cellClicked,       detail_table, &DetailTable::onShowDetail);
     connect(board_table, &QTableWidget::cellDoubleClicked, this,         &MainWindow::StartJudging);
 
     connect(board_table->horizontalHeader(), &QHeaderView::sectionClicked, board_table, &BoardTable::onSortTable);
     connect(board_table->horizontalHeader(), &QHeaderView::sectionMoved,   board_table, &BoardTable::onSectionMove);
 
-    connect(judger, &JudgeThread::titleDetailFinished, detail_table, &DetailTable::addTitleDetail);
-    connect(judger, &JudgeThread::noteDetailFinished,  detail_table, &DetailTable::addNoteDetail);
-    connect(judger, &JudgeThread::pointDetailFinished, detail_table, &DetailTable::addPointDetail);
-    connect(judger, &JudgeThread::scoreDetailFinished, detail_table, &DetailTable::addScoreDetail);
+    connect(judger, &JudgeThread::titleDetailFinished, detail_table, &DetailTable::onAddTitleDetail);
+    connect(judger, &JudgeThread::noteDetailFinished,  detail_table, &DetailTable::onAddNoteDetail);
+    connect(judger, &JudgeThread::pointDetailFinished, detail_table, &DetailTable::onAddPointDetail);
+    connect(judger, &JudgeThread::scoreDetailFinished, detail_table, &DetailTable::onAddScoreDetail);
 
-    connect(judger, &JudgeThread::itemJudgeFinished,   board_table, &BoardTable::onSetItemUnselected);
-    connect(judger, &JudgeThread::playerLabelChanged,  board_table, &BoardTable::onUpdatePlayerLabel);
-    connect(judger, &JudgeThread::problemLabelChanged, board_table, &BoardTable::onUpdateProblemLabel);
+    connect(judger, &JudgeThread::itemJudgeFinished,         board_table, &BoardTable::onSetItemUnselected);
+    connect(judger, &JudgeThread::resultLabelTextChanged,    board_table, &BoardTable::onUpdateResultLabelText);
+    connect(judger, &JudgeThread::problemResultLabelChanged, board_table, &BoardTable::onUpdateProblemResultLabel);
+    qRegisterMetaType<Global::LabelStyle>("Global::LabelStyle");
 
     this->activateWindow();
 }
@@ -87,7 +88,7 @@ void MainWindow::UpdateRecentContest(bool updateRecentListWidget)
     QSettings set("ccr.ini", QSettings::IniFormat);
     QStringList list = set.value("RecentContestList").toStringList();
     lastContest = set.value("LastContest").toString();
-    int n = min(list.size(), MAX_RECENT_CONTEST);
+    int n = min(list.size(), Global::MAX_RECENT_CONTEST);
     for (int i = 0; i < n; i++)
     {
         QString s = QString("&%1 %2").arg(i + 1).arg(list[i]);
@@ -95,7 +96,7 @@ void MainWindow::UpdateRecentContest(bool updateRecentListWidget)
         action_recent_list[i]->setData(list[i]);
         action_recent_list[i]->setVisible(true);
     }
-    for (int i = n; i < MAX_RECENT_CONTEST; i++) action_recent_list[i]->setVisible(false);
+    for (int i = n; i < Global::MAX_RECENT_CONTEST; i++) action_recent_list[i]->setVisible(false);
     ui->menu_recent->setEnabled((bool)n);
 
     if (!updateRecentListWidget) return;
@@ -164,24 +165,24 @@ void MainWindow::LoadContest(const QString& path)
     ui->action_judge_all->setEnabled(true);
     ui->action_stop->setEnabled(false);
 
-    Global::g_judge_stoped = false;
-    Global::g_contest_closed = false;
+    Global::g_is_judge_stoped = false;
+    Global::g_is_contest_closed = false;
 
-    board_table->setup();
-    detail_table->setup();
+    board_table->Setup();
+    detail_table->Setup();
 
-    LoadBoard();
+    LoadTable();
 }
 
 void MainWindow::CloseContest(bool isExit)
 {
-    Global::g_contest_closed = true;
+    Global::g_is_contest_closed = true;
     StopJudging();
     judger->waitForFinished(2000);
     Global::g_contest.SaveResultCache();
     splitter->hide();
     judger->waitForClearedTmpDir(2000);
-    ClearBoard();
+    ClearTable();
     Global::g_contest.Clear();
 
     if (isExit) return;
@@ -204,7 +205,7 @@ void MainWindow::CloseContest(bool isExit)
     ui->action_stop->setEnabled(false);
 }
 
-void MainWindow::LoadBoard()
+void MainWindow::LoadTable()
 {
     if (Global::g_is_judging) return;
 
@@ -224,7 +225,7 @@ void MainWindow::LoadBoard()
     Global::g_contest.SaveResultCache();
 
     // 显示 boardTable
-    ClearBoard();
+    ClearTable();
     splitter->show();
 
     board_table->setRowCount(Global::g_contest.player_num);
@@ -233,7 +234,7 @@ void MainWindow::LoadBoard()
     for (auto i : Global::g_contest.problems) headerLabels.append(i.name);
     board_table->setHorizontalHeaderLabels(headerLabels);
     for (int i = 0; i < Global::g_contest.problem_num + 2; i++) board_table->horizontalHeaderItem(i)->setToolTip(headerLabels[i]);
-    board_table->showResult();
+    board_table->ShowResult();
 
     // 读取 .list 文件
     QFile file(Global::g_contest.path + ".list");
@@ -250,32 +251,30 @@ void MainWindow::LoadBoard()
         ui->action_set_list->setChecked(false);
     }
 
-    board_table->resizePlayerLabel();
+    board_table->ResizePlayerLabel();
 }
 
-void MainWindow::ClearBoard()
+void MainWindow::ClearTable()
 {
-    board_table->clearBoard();
-    detail_table->clearDetail();
+    board_table->ClearBoard();
+    detail_table->ClearDetail();
 }
 
 void MainWindow::StopJudging()
 {
     //qDebug()<<"STOP";
-    Global::g_judge_stoped = true;
+    Global::g_is_judge_stoped = true;
     //judger->stop();
 }
 
 void MainWindow::StartJudging(int r, int c)
 {
-    //qDebug()<<r<<c;
     if (Global::g_is_judging) return;
 
     Global::g_is_judging = true;
-    Global::g_judge_stoped = false;
+    Global::g_is_judge_stoped = false;
 
-    board_table->clearHighlighted(board_table->preHeaderClicked);
-    board_table->preHeaderClicked = -1;
+    board_table->ClearHighlighted();
     board_table->setSelectionMode(QAbstractItemView::NoSelection);
     board_table->horizontalHeader()->setSectionsMovable(false);
     board_table->horizontalHeader()->setSortIndicatorShown(false);
@@ -290,8 +289,8 @@ void MainWindow::StartJudging(int r, int c)
     ui->action_judge_all->setEnabled(false);
     ui->action_stop->setEnabled(true);
 
-    detail_table->startLastJudgeTimer();
-    detail_table->clearDetail();
+    detail_table->StartLastJudgeTimer();
+    detail_table->ClearDetail();
 
     judger->setup(r, c, Global::g_contest.path);
 
@@ -306,7 +305,7 @@ void MainWindow::StartJudging(int r, int c)
     {
         for (int i = 0; i < Global::g_contest.player_num; i++)
             for (auto j : Global::g_contest.problem_order)
-                if (Global::g_contest.players[GetLogicalRow(i)].GetProbLabel(j)->GetState() == ' ')
+                if (Global::g_contest.players[Global::GetLogicalRow(i)].GetProbLabel(j)->GetState() == ' ')
                 {
                     judger->appendProblem(qMakePair(i, j + 2));
                     board_table->item(i, j + 2)->setSelected(true);
@@ -327,7 +326,7 @@ void MainWindow::StartJudging(int r, int c)
     delete eventLoop;
 
     Global::g_is_judging = false;
-    if (Global::g_contest_closed) return;
+    if (Global::g_is_contest_closed) return;
 
     if (r >= 0 && c > 1) board_table->item(r, c)->setSelected(true);
 
@@ -351,7 +350,7 @@ void MainWindow::StartJudging(int r, int c)
 
 void MainWindow::CreateActions()
 {
-    for (int i = 0; i < MAX_RECENT_CONTEST; i++)
+    for (int i = 0; i < Global::MAX_RECENT_CONTEST; i++)
     {
         action_recent_list[i] = new QAction(this);
         action_recent_list[i]->setVisible(false);
@@ -432,7 +431,7 @@ void MainWindow::onRemoveDir()
     {
         QDir(dirByAction).removeRecursively();
         if (t1 == "删除试题") QDir(Global::g_contest.result_path + fileByAction).removeRecursively();
-        LoadBoard();
+        LoadTable();
     }
 }
 
@@ -528,8 +527,8 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
     if (item)
     {
         int r = item->row(), c = item->column();
-        detail_table->showDetailEvent(r, c);
-        r = GetLogicalRow(r);
+        detail_table->onShowDetail(r, c);
+        r = Global::GetLogicalRow(r);
         Player* player = &Global::g_contest.players[r];
         if (c > 1)
         {
@@ -540,7 +539,7 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
             if (fileByAction == "")
             {
                 playerByAction = player, problemByAction = problem;
-                if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size())
+                if (problem->type == Global::AnswersOnly || !problem->compilers.size())
                     action_create_file->setEnabled(false);
                 menu_table->addAction(action_create_file);
             }
@@ -553,7 +552,7 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
             menu_table->addSeparator();
 
             if (QDir(dirByAction).exists()) menu_table->addAction(action_open_dir);
-            else if (problem->type == ProblemType::AnswersOnly || !problem->compilers.size())
+            else if (problem->type == Global::AnswersOnly || !problem->compilers.size())
                 menu_table->addAction(action_create_dir);
             else
             {
@@ -618,8 +617,8 @@ void MainWindow::on_action_configure_triggered()
     ConfigDialog dialog(this);
     if (dialog.exec())
     {
-        LoadBoard();
-        detail_table->showConfigDetail();
+        LoadTable();
+        detail_table->onShowConfigDetail();
     }
 }
 
@@ -638,7 +637,7 @@ void MainWindow::on_action_set_list_triggered()
         QFile(Global::g_contest.path + ".list").remove();
 
         for (auto& i : Global::g_contest.players) i.SetNameLabelWithoutList();
-        board_table->resizePlayerLabel();
+        board_table->ResizePlayerLabel();
     }
     else
     {
@@ -657,11 +656,11 @@ void MainWindow::on_action_set_list_triggered()
             Global::g_contest.is_list_used = true;
             Global::g_contest.ReadPlayerList(file, true);
             ui->action_set_list->setChecked(true);
-            board_table->resizePlayerLabel();
+            board_table->ResizePlayerLabel();
             file.close();
         }
     }
-    detail_table->clearDetail();
+    detail_table->ClearDetail();
 }
 
 void MainWindow::on_action_export_triggered()
@@ -683,7 +682,7 @@ void MainWindow::on_action_exit_triggered()
 
 void MainWindow::on_action_refresh_triggered()
 {
-    LoadBoard();
+    LoadTable();
 }
 
 void MainWindow::on_action_judge_selected_triggered()

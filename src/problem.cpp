@@ -13,7 +13,7 @@ Problem::Problem(const QString& na)
     sumScore = 100;
     codeLim = 100;
     timeLim_checker = 10;
-    type = OtherType;
+    type = Global::OtherProblemType;
 }
 
 Problem::~Problem()
@@ -55,9 +55,9 @@ void Problem::ReadConfig()
     QDomElement root = doc.documentElement();
     if (root.isNull() || root.tagName() != "problem") {file.close(); return;}
     QString s = root.attribute("type");
-    if (s == "TRA" || s == "TRA_0_4") type = Traditional;
-    else if (s == "ANS" || s == "ANS_0_4") type = AnswersOnly;
-    else if (s == "INT" || s == "INT_0_4") type = Interactive;
+    if (s == "TRA" || s == "TRA_0_4") type = Global::Traditional;
+    else if (s == "ANS" || s == "ANS_0_4") type = Global::AnswersOnly;
+    else if (s == "INT" || s == "INT_0_4") type = Global::Interactive;
 
     QDomNodeList list = root.childNodes();
     for (int i = 0; i < list.count(); i++)
@@ -127,14 +127,14 @@ bool Problem::SaveConfig()
     QDomProcessingInstruction xml = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
     doc.appendChild(xml);
     QDomElement root = doc.createElement("problem");
-    root.setAttribute("type", type == ProblemType::Traditional ? "TRA_0_4" : type == ProblemType::AnswersOnly ? "ANS_0_4" : "UNKNOWN");
+    root.setAttribute("type", type == Global::Traditional ? "TRA_0_4" : type == Global::AnswersOnly ? "ANS_0_4" : "UNKNOWN");
     root.setAttribute("maker", "ccr-plus");
     doc.appendChild(root);
 
     QDomElement source = doc.createElement("source");
     source.setAttribute("dir", dir);
     root.appendChild(source);
-    if (type == ProblemType::Traditional)
+    if (type == Global::Traditional)
     {
         source.setAttribute("file", removeSuff(exe));
         source.setAttribute("code", codeLim);
@@ -149,7 +149,7 @@ bool Problem::SaveConfig()
     }
 
     QDomElement task = doc.createElement("task");
-    if (type == ProblemType::Traditional)
+    if (type == Global::Traditional)
     {
         task.setAttribute("input", inFile);
         task.setAttribute("output", outFile);
@@ -167,8 +167,8 @@ bool Problem::SaveConfig()
             QDomElement point = doc.createElement("point");
             point.setAttribute("in", que[j].in);
             point.setAttribute("out", que[j].out);
-            if (type == ProblemType::AnswersOnly) point.setAttribute("sub", que[j].sub);
-            if (type == ProblemType::Traditional)
+            if (type == Global::AnswersOnly) point.setAttribute("sub", que[j].sub);
+            if (type == Global::Traditional)
             {
                 point.setAttribute("time", que[j].timeLim);
                 point.setAttribute("mem", que[j].memLim);
@@ -227,8 +227,8 @@ void Problem::Configure(const QString& typ, double timeLim, double memLim, const
 {
     if (typ.size())
     {
-        if (typ == "传统型") type = ProblemType::Traditional;
-        else if (typ == "提交答案型") type = ProblemType::AnswersOnly;
+        if (typ == "传统型") type = Global::Traditional;
+        else if (typ == "提交答案型") type = Global::AnswersOnly;
     }
     if (check.size()) checker = addSuff(check == "全文比较" ? "fulltext" : check);
     exe = addSuff(exe);
@@ -244,8 +244,8 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
 {
     if (typ.size())
     {
-        if (typ == "传统型") type = ProblemType::Traditional;
-        else if (typ == "提交答案型") type = ProblemType::AnswersOnly;
+        if (typ == "传统型") type = Global::Traditional;
+        else if (typ == "提交答案型") type = Global::AnswersOnly;
     }
     if (check.size()) checker = addSuff(check == "全文比较" ? "fulltext" : check);
     exe = addSuff(exe);
@@ -263,7 +263,7 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
     for (int i = 0; i < num; i++) score.append(sumScore / num), sum -= score[i];
     for (int i = num - 1; sum && i >= 0; i--) score[i]++, sum--;
 
-    if (type == ProblemType::Traditional)
+    if (type == Global::Traditional)
     {
         compilers.push_back(CompilerInfo(QString("gcc -o %1 %1.c -lm -static").arg(name), QString("%1.c").arg(name)));
         compilers.push_back(CompilerInfo(QString("g++ -o %1 %1.cpp -lm -static").arg(name), QString("%1.cpp").arg(name)));
@@ -276,7 +276,7 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
         Info x(timeLim, memLim);
         x.in = list[i].first;
         x.out = list[i].second;
-        if (type == ProblemType::AnswersOnly) x.sub = QString("%1%2.out").arg(name).arg(i + 1);
+        if (type == Global::AnswersOnly) x.sub = QString("%1%2.out").arg(name).arg(i + 1);
         sub.point.push_back(que.size());
         que.push_back(x);
         tasks.push_back(sub);

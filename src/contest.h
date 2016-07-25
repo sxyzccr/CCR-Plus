@@ -5,6 +5,7 @@
 #include "problem.h"
 
 #include <vector>
+#include <algorithm>
 #include <QDir>
 
 struct Contest
@@ -35,6 +36,9 @@ struct Contest
 
     /// 读取竞赛信息
     void ReadContestInfo();
+
+    /// 选手排序
+    void SortPlayers(bool (*cmp)(const Player& x, const Player& y)) { sort(players.begin(), players.end(), cmp); }
 
     /// 缓存测评结果到 .reslist
     void SaveResultCache();

@@ -1,7 +1,7 @@
 #include "const.h"
 #include "global.h"
 
-QColor GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int y)
+QColor Global::GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int y)
 {
     x = std::min(x, y);
     if (!y) return QColor(rl, gl, bl);
@@ -11,7 +11,7 @@ QColor GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int 
     return QColor(r, g, b);
 }
 
-int GetLogicalRow(int visualRow)
+int Global::GetLogicalRow(int visualRow)
 {
-    return Global::g_pre_sort_order == Qt::DescendingOrder ? Global::g_contest.player_num - visualRow - 1 : visualRow;
+    return g_pre_sort_order == Qt::DescendingOrder ? g_contest.player_num - visualRow - 1 : visualRow;
 }

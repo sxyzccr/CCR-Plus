@@ -46,15 +46,15 @@ void ConfigDialog::setModelData(int c)
         model.item(4, c)->setData(2, Qt::EditRole);
         model.item(4, c)->setToolTip("true");
 
-        for (int i = 0; i < 4; i++) model.item(i, c)->setFont(BOLD_FONT);
-        model.horizontalHeaderItem(c)->setFont(BOLD_FONT);
+        for (int i = 0; i < 4; i++) model.item(i, c)->setFont(Global::BOLD_FONT);
+        model.horizontalHeaderItem(c)->setFont(Global::BOLD_FONT);
     };
 
     if (!problem || !problem->que.size()) { configNew(); return; }
 
     model.item(4, c)->setToolTip("false");
     model.item(3, c)->setData((problem->checker == "fulltext" || problem->checker == "fulltext.exe") ? "全文比较" : problem->checker == ".exe" ? "" : problem->checker, Qt::EditRole);
-    if (problem->type == ProblemType::Traditional)
+    if (problem->type == Global::Traditional)
     {
         model.item(0, c)->setData("传统型", Qt::EditRole);
         double minT = 1e9, maxT = 0, minM = 1e9, maxM = 0;
@@ -69,7 +69,7 @@ void ConfigDialog::setModelData(int c)
         else
         {
             model.item(1, c)->setData(QString("无效"), Qt::EditRole);
-            model.item(1, c)->setFont(BOLD_FONT);
+            model.item(1, c)->setFont(Global::BOLD_FONT);
         }
 
         if (minM == maxM) model.item(2, c)->setData(minM, Qt::EditRole);
@@ -77,10 +77,10 @@ void ConfigDialog::setModelData(int c)
         else
         {
             model.item(2, c)->setData(QString("无效"), Qt::EditRole);
-            model.item(2, c)->setFont(BOLD_FONT);
+            model.item(2, c)->setFont(Global::BOLD_FONT);
         }
     }
-    else if (problem->type == ProblemType::AnswersOnly)
+    else if (problem->type == Global::AnswersOnly)
     {
         model.item(0, c)->setData("提交答案型", Qt::EditRole);
         model.item(1, c)->setText("");
@@ -91,7 +91,7 @@ void ConfigDialog::setModelData(int c)
     else
     {
         model.item(0, c)->setData("无效", Qt::EditRole);
-        model.item(0, c)->setFont(BOLD_FONT);
+        model.item(0, c)->setFont(Global::BOLD_FONT);
         model.item(1, c)->setText("");
         model.item(1, c)->setEditable(false);
         model.item(2, c)->setText("");
@@ -146,9 +146,9 @@ void ConfigDialog::dataChangedEvent(const QModelIndex& tl, const QModelIndex& br
 
     int r = tl.row(), c = tl.column();
     QString text = model.item(r, c)->text();
-    model.item(r, c)->setFont(BOLD_FONT);
+    model.item(r, c)->setFont(Global::BOLD_FONT);
     model.item(r, c)->setToolTip(text);
-    model.horizontalHeaderItem(c)->setFont(BOLD_FONT);
+    model.horizontalHeaderItem(c)->setFont(Global::BOLD_FONT);
 
     if (r == 4)
     {
@@ -161,7 +161,7 @@ void ConfigDialog::dataChangedEvent(const QModelIndex& tl, const QModelIndex& br
                 else if (i == 3) model.item(i, c)->setData("全文比较", Qt::EditRole);
                 else model.item(i, c)->setData(i == 1 ? 1 : 128, Qt::EditRole);
                 model.item(i, c)->setToolTip(model.item(i, c)->text());
-                model.item(i, c)->setFont(BOLD_FONT);
+                model.item(i, c)->setFont(Global::BOLD_FONT);
                 model.item(i, c)->setEditable(true);
             }
         }
@@ -183,7 +183,7 @@ void ConfigDialog::dataChangedEvent(const QModelIndex& tl, const QModelIndex& br
             {
                 model.item(i, c)->setData(i == 1 ? 1 : 128, Qt::EditRole);
                 model.item(i, c)->setToolTip(model.item(i, c)->text());
-                model.item(i, c)->setFont(BOLD_FONT);
+                model.item(i, c)->setFont(Global::BOLD_FONT);
                 model.item(i, c)->setEditable(true);
             }
         }
