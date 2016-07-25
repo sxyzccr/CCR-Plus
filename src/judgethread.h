@@ -21,6 +21,7 @@ public:
 
     void setup(int r, int c, const QString& dir);
     bool waitForClearedTmpDir(int ms);  //return:   1:success 0:fail
+    bool waitForFinished(int ms);
     void appendProblem(const QPair<int, int>& p) { judgeList.append(p); }
     void run();
 
@@ -53,7 +54,7 @@ signals:
 
     void itemJudgeFinished(int r, int c);
     void playerLabelChanged(QLabel* label, const QString& s1, const QString& s2, const QString& s3);
-    void problemLabelChanged(Player* ply, int c, Player::Result* res, int sum);
+    void problemLabelChanged(Player* ply, int c, int sum);
 };
 
 #endif // JUDGETHREAD_H

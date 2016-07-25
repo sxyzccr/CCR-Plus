@@ -221,13 +221,13 @@ void ConfigDialog::accept()
             if (!model.item(2, t)->font().bold()) mem = -1;
             Problem prob(problemList[t]);
             //qDebug()<<problemList[t]<<type<<checker<<tim<<mem;
-            if (model.item(4, t)->data(Qt::EditRole).toBool()) prob.configureNew(type, tim, mem, checker);
+            if (model.item(4, t)->data(Qt::EditRole).toBool()) prob.ConfigureNew(type, tim, mem, checker);
             else
             {
                 prob = Global::g_contest.problems[t];
-                prob.configure(type, tim, mem, checker);
+                prob.Configure(type, tim, mem, checker);
             }
-            if (!prob.saveConfig())
+            if (!prob.SaveConfig())
             {
                 QMessageBox::critical(this, "保存配置失败", "无法写入配置文件！");
                 return;

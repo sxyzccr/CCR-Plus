@@ -21,7 +21,7 @@ Problem::~Problem()
 
 }
 
-void Problem::clear()
+void Problem::Clear()
 {
     tasks.clear();
     que.clear();
@@ -44,7 +44,7 @@ QString Problem::removeSuff(QString file)
     return file;
 }
 
-void Problem::readConfig()
+void Problem::ReadConfig()
 {
     sumScore = 0;
     QFile file(Global::g_contest.data_path + name + "/.prb");
@@ -121,7 +121,7 @@ void Problem::readConfig()
     file.close();
 }
 
-bool Problem::saveConfig()
+bool Problem::SaveConfig()
 {
     QDomDocument doc;
     QDomProcessingInstruction xml = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
@@ -223,7 +223,7 @@ Problem::CompilerInfo Problem::getCompiler(const QString& playerName)
     return CompilerInfo();
 }
 
-void Problem::configure(const QString& typ, double timeLim, double memLim, const QString& check)
+void Problem::Configure(const QString& typ, double timeLim, double memLim, const QString& check)
 {
     if (typ.size())
     {
@@ -240,7 +240,7 @@ void Problem::configure(const QString& typ, double timeLim, double memLim, const
     }
 }
 
-void Problem::configureNew(const QString& typ, double timeLim, double memLim, const QString& check)
+void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check)
 {
     if (typ.size())
     {

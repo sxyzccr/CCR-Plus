@@ -14,6 +14,7 @@ public:
     explicit DetailTable(QWidget* parent = 0);
     virtual ~DetailTable();
 
+    void setup();
     void startLastJudgeTimer() { lastJudgeTimer.start(); }
 
 public slots:

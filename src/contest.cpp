@@ -61,8 +61,8 @@ void Contest::Clear()
     player_num = problem_num = 0;
     sum_score = 0;
 
-    for (auto i : problems) i.clear();
-    for (auto i : players) i.clear();
+    for (auto i : problems) i.Clear();
+    for (auto i : players) i.Clear();
 
     problems.clear();
     players.clear();
@@ -128,8 +128,7 @@ void Contest::ReadContestInfo()
     for (auto name : playerName)
     {
         playerID[name] = player_num;
-        Player p(name, player_num);
-        for (int i = 0; i < problem_num; i++) p.problem.push_back(Player::Result());
+        Player p(name, player_num, problem_num);
         players.push_back(p);
 
         player_num++;
@@ -155,15 +154,13 @@ void Contest::ReadContestInfo()
             if (c == 'R') c = 'N';
             if (c == 'O') c = 'N';
             if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
-            players[x].problem[y].state = c;
-            players[x].problem[y].score = s;
-            players[x].problem[y].usedTime = t;
+            players[x].GetProbLabel(y)->SetResult(s, t, c);
         }
         file.close();
     }
     for (auto i : problemID)
         for (auto j : playerID)
-            if (!players[j.second].problem[i.second].state)
+            if (!players[j.second].GetProbLabel(i.second)->GetState())
             {
                 file.setFileName(result_path + i.first + "/" + j.first + ".res");
                 if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
@@ -181,18 +178,16 @@ void Contest::ReadContestInfo()
                 if (c == 'R') c = 'N';
                 if (c == 'O') c = 'N';
                 if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
-                players[x].problem[y].state = c;
-                players[x].problem[y].score = s;
-                players[x].problem[y].usedTime = t;
+                players[x].GetProbLabel(y)->SetResult(s, t, c);
 
                 file.close();
             }
 
     // 读取 .prb 文件
-    for (auto& i : problems) i.readConfig();
+    for (auto& i : problems) i.ReadConfig();
 
     for (auto i : problems) sum_score += i.sumScore;
-    for (auto& i : players) i.calcSum();
+    for (auto& i : players) i.CalcSum();
 }
 
 void Contest::SaveResultCache()
@@ -208,8 +203,8 @@ void Contest::SaveResultCache()
             Player* p = &players[t];
             for (auto j : problem_order)
             {
-                Player::Result* r = &p->problem[j];
-                out << p->name << '/' << problems[j].name << '/' << r->score << '/' << r->usedTime << '/' << r->state << '/' << endl;
+                ResultSummary r = p->GetProbLabel(j)->GetResult();
+                out << p->GetName() << '/' << problems[j].name << '/' << r.score << '/' << r.time << '/' << r.state << '/' << endl;
             }
         }
         file.close();
@@ -242,20 +237,7 @@ void Contest::ReadPlayerList(QFile& file, bool isSaveList)
         }
     }
 
-    for (auto& i : players)
-        if (!i.type)
-        {
-            QLabel* tmp = i.label[0];
-            if (list.count(i.name))
-            {
-                i.name_list = list[i.name];
-                if (i.name_list.length() == 2) tmp->setText(QString("%1 [%2   %3]").arg(i.name, i.name_list.at(0), i.name_list.at(1)));
-                else tmp->setText(QString("%1 [%2]").arg(i.name, i.name_list));
-                tmp->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-                tmp->setStyleSheet("");
-            }
-            else tmp->setStyleSheet("QLabel{color:rgb(120,120,120);}");
-        }
+    for (auto& i : players) i.SetNameLabelWithList(list.count(i.GetName()) ? list[i.GetName()] : "");
 }
 
 void Contest::ExportPlayerScore(QFile& file)
@@ -270,10 +252,10 @@ void Contest::ExportPlayerScore(QFile& file)
     {
         int t = GetLogicalRow(i);
         Player* p = &players[t];
-        out << QString("\"%1\",").arg(p->name);
-        if (is_list_used) out << QString("\"%1\",").arg(p->name_list);
-        out << p->sum.score << ",";
-        for (auto j : problem_order) out << p->problem[j].score << ",";
+        out << QString("\"%1\",").arg(p->GetName());
+        if (is_list_used) out << QString("\"%1\",").arg(p->GetNameInList());
+        out << p->GetSumLabel()->GetScore() << ",";
+        for (auto j : problem_order) out << p->GetProbLabel(j)->GetScore() << ",";
         out << endl;
     }
     file.close();

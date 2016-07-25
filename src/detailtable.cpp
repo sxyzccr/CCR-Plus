@@ -9,6 +9,16 @@ using namespace std;
 
 DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent)
 {
+    setup();
+}
+
+DetailTable::~DetailTable()
+{
+
+}
+
+void DetailTable::setup()
+{
     this->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
     this->setColumnCount(2);
     this->setMinimumSize(QSize(320, 250));
@@ -36,11 +46,6 @@ DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent)
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
     this->verticalHeader()->setMinimumWidth(22);
-}
-
-DetailTable::~DetailTable()
-{
-
 }
 
 void DetailTable::clearDetail()
@@ -164,13 +169,11 @@ void DetailTable::addScoreDetail(int row, int len, int score, int sumScore)
 void DetailTable::showProblemDetail(Player* player, Problem* problem)
 {
     int row = this->rowCount() - 1;
-    QString title = player->name;
-    if (Global::g_contest.is_list_used && !player->type && player->name_list.size()) title = QString("%1 [%2]").arg(player->name, player->name_list);
-    if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name);
-    else title += +" - " + problem->name;
+    QString title = player->GetNameWithList();
+    if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name); else title += +" - " + problem->name;
     addTitleDetail(row++, title);
 
-    QFile file(Global::g_contest.result_path + problem->name + "/" + player->name + ".res");
+    QFile file(Global::g_contest.result_path + problem->name + "/" + player->GetName() + ".res");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         addNoteDetail(row++, "无测评结果", " ");

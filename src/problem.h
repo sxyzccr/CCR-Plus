@@ -9,11 +9,11 @@ public:
     explicit Problem(const QString& na = "");
     virtual ~Problem();
 
-    void clear();
-    void readConfig();
-    bool saveConfig();
-    void configure(const QString& typ, double timeLim, double memLim, const QString& check);
-    void configureNew(const QString& typ, double timeLim, double memLim, const QString& check);
+    void Clear();
+    void ReadConfig();
+    bool SaveConfig();
+    void Configure(const QString& typ, double timeLim, double memLim, const QString& check);
+    void ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check);
 
     QString name, dir, exe, checker, outFile, inFile;
     int sumScore, timeLim_checker;

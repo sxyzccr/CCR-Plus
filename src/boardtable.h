@@ -12,12 +12,13 @@ public:
     explicit BoardTable(QWidget* parent = 0);
     virtual ~BoardTable();
 
+    void setup();
     void clearBoard();
     void showResult();
     void resizePlayerLabel();
     void clearHighlighted(int c);
-    int showProblemSumResult(QLabel* tmp, Player::Result* res, int sum, int Highlighted); //return style
-    int showProblemResult(QLabel* tmp, Player::Result* res, int sum, int Highlighted); //return style
+    void showProblemSumResult(ResultLabel* tmp, int sum, int Highlighted);
+    void showProblemResult(ResultLabel* tmp, int sum, int Highlighted);
 
     int preHeaderClicked;
 
@@ -27,7 +28,7 @@ public slots:
 
     void onSetItemUnselected(int r, int c);
     void onUpdatePlayerLabel(QLabel *label, const QString &text, const QString &toolTip, const QString &styleSheet);
-    void onUpdateProblemLabel(Player *ply, int c, Player::Result *res, int sum);
+    void onUpdateProblemLabel(Player *ply, int c, int sum);
 
 private:
     void sortByName();

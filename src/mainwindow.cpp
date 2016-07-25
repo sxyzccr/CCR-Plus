@@ -167,8 +167,8 @@ void MainWindow::LoadContest(const QString& path)
     Global::g_judge_stoped = false;
     Global::g_contest_closed = false;
 
-    //boardTable->setup();
-    //detailTable->setup();
+    board_table->setup();
+    detail_table->setup();
 
     LoadBoard();
 }
@@ -177,6 +177,7 @@ void MainWindow::CloseContest(bool isExit)
 {
     Global::g_contest_closed = true;
     StopJudging();
+    judger->waitForFinished(2000);
     Global::g_contest.SaveResultCache();
     splitter->hide();
     judger->waitForClearedTmpDir(2000);
@@ -305,7 +306,7 @@ void MainWindow::StartJudging(int r, int c)
     {
         for (int i = 0; i < Global::g_contest.player_num; i++)
             for (auto j : Global::g_contest.problem_order)
-                if (Global::g_contest.players[GetLogicalRow(i)].problem[j].state == ' ')
+                if (Global::g_contest.players[GetLogicalRow(i)].GetProbLabel(j)->GetState() == ' ')
                 {
                     judger->appendProblem(qMakePair(i, j + 2));
                     board_table->item(i, j + 2)->setSelected(true);
@@ -533,8 +534,8 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
         if (c > 1)
         {
             Problem* problem = &Global::g_contest.problems[c - 2];
-            dirByAction = Global::g_contest.src_path + player->name + "/" + problem->dir + "/";
-            fileByAction = problem->getCompiler(player->name).file;
+            dirByAction = Global::g_contest.src_path + player->GetName() + "/" + problem->dir + "/";
+            fileByAction = problem->getCompiler(player->GetName()).file;
 
             if (fileByAction == "")
             {
@@ -562,8 +563,8 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
         }
         else
         {
-            dirByAction = Global::g_contest.src_path + player->name + "/";
-            fileByAction = player->name;
+            dirByAction = Global::g_contest.src_path + player->GetName() + "/";
+            fileByAction = player->GetName();
 
             if (QDir(dirByAction).exists())
             {
@@ -636,14 +637,7 @@ void MainWindow::on_action_set_list_triggered()
         ui->action_set_list->setChecked(false);
         QFile(Global::g_contest.path + ".list").remove();
 
-        for (auto& i : Global::g_contest.players)
-            if (!i.type)
-            {
-                QLabel* tmp = i.label[0];
-                i.name_list = "", tmp->setText(i.name);
-                tmp->setAlignment(Qt::AlignCenter);
-                tmp->setStyleSheet("");
-            }
+        for (auto& i : Global::g_contest.players) i.SetNameLabelWithoutList();
         board_table->resizePlayerLabel();
     }
     else
@@ -672,11 +666,11 @@ void MainWindow::on_action_set_list_triggered()
 
 void MainWindow::on_action_export_triggered()
 {
-    QString fileName = QFileDialog::getSaveFileName(false, "导出成绩", Global::g_contest.path + Global::g_contest.name + ".csv", "CSV (逗号分隔) (*.csv)");
+    QString fileName = QFileDialog::getSaveFileName(this, "导出成绩", Global::g_contest.path + Global::g_contest.name + ".csv", "CSV (逗号分隔) (*.csv)");
     if (!fileName.size()) return;
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-        QMessageBox::critical(false, "导出成绩失败", file.errorString());
+        QMessageBox::critical(this, "导出成绩失败", file.errorString());
     else
         Global::g_contest.ExportPlayerScore(file);
 }
