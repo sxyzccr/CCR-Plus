@@ -38,18 +38,18 @@ private:
     bool monitorProcess(QProcess* process, int ms);  //return:   1:EXITED 0:KILLED or TLE
     bool runProgram(double timeLim, double memLim, QString& note, QString& state, double& usedTime); //return:   1:normal 0:killed
     double judgeOutput(const QString& inFile, const QString& ansFile, const QString& outFile, QString& note, QString& state);
-    double judgeTraditionalTask(Problem::Info* info, QString& note, QString& state, double& usedTime);
-    double judgeAnswersOnlyTask(Problem::Info* info, QString& note, QString& state);
+    double judgeTraditionalTask(TestCase* ponit, QString& note, QString& state, double& usedTime);
+    double judgeAnswersOnlyTask(TestCase* point, QString& note, QString& state);
     void judgeProblem(Player* player, Problem* problem, char& state, int& sumScore, double& sumTime, QString& detail);
-    double judgeTask(Problem::Info* info, QString& note, QString& state, double& usedTime, int testNum); //return ratio
+    double judgeTask(TestCase* point, QString& note, QString& state, double& usedTime, int testNum); //return ratio
     void initialize(const QString& name, Problem* prob);
     void saveHTMLResult(Player* player);
-    Global::CompileResult compile(const Problem::CompilerInfo& compiler, QString& note);
+    Global::CompileResult compile(Compiler* compiler, QString& note);
 
 signals:
     void titleDetailFinished(int rows, const QString& title);
     void noteDetailFinished(int rows, const QString& note, const QString& state);
-    void pointDetailFinished(int rows, int num, const QString& note, const QString& state, const QString& file, int len);
+    void pointDetailFinished(int rows, int num, const QString& note, const QString& state, const QString& inOut, int len);
     void scoreDetailFinished(int rows, int len, int score, int sumScore);
 
     void itemJudgeFinished(int r, int c);

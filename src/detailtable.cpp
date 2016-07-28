@@ -49,6 +49,7 @@ void DetailTable::Setup()
     this->verticalHeader()->setMinimumWidth(22);
 
     is_scrollBar_at_bottom = false;
+    is_show_detail = false;
 }
 
 void DetailTable::ClearDetail()
@@ -57,6 +58,9 @@ void DetailTable::ClearDetail()
     this->setRowCount(0);
     this->setHorizontalHeaderLabels({"得分", "详情"});
     this->verticalScrollBar()->setValue(0);
+
+    is_scrollBar_at_bottom = false;
+    is_show_detail = false;
 }
 
 void DetailTable::AdjustScrollBar()
@@ -70,10 +74,10 @@ void DetailTable::ShowProblemDetail(Player* player, Problem* problem)
 {
     int row = this->rowCount() - 1;
     QString title = player->GetNameWithList();
-    if (title == "std") title = QString("\"%1\" 的标程").arg(problem->name); else title += +" - " + problem->name;
+    if (title == "std") title = QString("\"%1\" 的标程").arg(problem->Name()); else title += " - " + problem->Name();
     onAddTitleDetail(row++, title);
 
-    QFile file(Global::g_contest.result_path + problem->name + "/" + player->GetName() + ".res");
+    QFile file(Global::g_contest.result_path + problem->Name() + "/" + player->Name() + ".res");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         onAddNoteDetail(row++, "无测评结果", " ");
@@ -111,18 +115,16 @@ void DetailTable::ShowProblemDetail(Player* player, Problem* problem)
                 QDomElement b = l.item(j).toElement();
                 if (b.tagName() == "point")
                 {
-                    QString inout;
-                    if (tot < problem->que.size())
-                    {
-                        inout = QString("标准输入:\"%1\" 标准输出:\"%2\"").arg(problem->que[tot].in).arg(problem->que[tot].out);
-                        if (problem->type == Global::AnswersOnly) inout += QString(" 选手提交:\"%1\"").arg(problem->que[tot].sub);
-                    }
-                    tot++, len++;
-                    onAddPointDetail(row++, tot + 1, b.attribute("note"), b.attribute("state"), inout, len);
+                    onAddPointDetail(row++, tot + 1, b.attribute("note"), b.attribute("state"), tot < problem->TestCaseCount() ?
+                                                                                                      problem->GetInOutString(problem->TestCaseAt(tot)) :
+                                                                                                      "", ++len);
+                    tot++;
                 }
             }
 
-            if (len) onAddScoreDetail(row, len, a.attribute("score").toInt(), tasktot < problem->tasks.size() ? problem->tasks[tasktot].score : 0);
+            if (len) onAddScoreDetail(row, len, a.attribute("score").toInt(), tasktot < problem->SubtaskCount() ?
+                                                                                        problem->SubtaskAt(tasktot)->Score() :
+                                                                                        0);
             tasktot++;
         }
     }
@@ -147,7 +149,7 @@ void DetailTable::onAddTitleDetail(int row, const QString& title)
     this->setSpan(row, 0, 1, 2);
     this->setVerticalHeaderItem(row, new QTableWidgetItem);
 
-    if (Global::g_is_judging) this->AdjustScrollBar();
+    if (!is_show_detail) this->AdjustScrollBar();
 }
 
 void DetailTable::onAddNoteDetail(int row, const QString& note, const QString& state)
@@ -161,8 +163,8 @@ void DetailTable::onAddNoteDetail(int row, const QString& note, const QString& s
     tmp->setTextColor(QColor(80, 80, 80));
     tmp->setBackgroundColor(QColor(180, 180, 180));
     if (state == "E") tmp->setTextColor(QColor(0, 0, 0)), tmp->setBackgroundColor(QColor(227, 58, 218));
-    if (state == " " || state == "") tmp->setTextColor(QColor(100, 100, 100)), tmp->setBackgroundColor(QColor(235, 235, 235));
-    if (state == "") tmp->setTextAlignment(Qt::AlignCenter);
+    if (state == " " || state.isEmpty()) tmp->setTextColor(QColor(100, 100, 100)), tmp->setBackgroundColor(QColor(235, 235, 235));
+    if (state.isEmpty()) tmp->setTextAlignment(Qt::AlignCenter);
 
     int a = tmp->text().split('\n').count(), b = min(a, 4) * 17 + 5;
     this->insertRow(++row);
@@ -171,10 +173,10 @@ void DetailTable::onAddNoteDetail(int row, const QString& note, const QString& s
     this->setVerticalHeaderItem(row, new QTableWidgetItem);
     this->verticalHeader()->resizeSection(row, b);
 
-    if (Global::g_is_judging) this->AdjustScrollBar();
+    if (!is_show_detail) this->AdjustScrollBar();
 }
 
-void DetailTable::onAddPointDetail(int row, int num, const QString& note, const QString& state, const QString& file, int len)
+void DetailTable::onAddPointDetail(int row, int num, const QString& note, const QString& state, const QString& inOut, int len)
 {
     if (Global::g_is_contest_closed) return;
 
@@ -222,12 +224,12 @@ void DetailTable::onAddPointDetail(int row, int num, const QString& note, const 
     this->setItem(row, 1, tmp);
 
     QTableWidgetItem* t = new QTableWidgetItem(QString::number(num));
-    t->setToolTip(file);
+    t->setToolTip(inOut);
     this->setVerticalHeaderItem(row, t);
 
     if (len > 1) this->setSpan(row - len + 1, 0, len, 1);
 
-    if (Global::g_is_judging) this->AdjustScrollBar();
+    if (!is_show_detail) this->AdjustScrollBar();
 }
 
 void DetailTable::onAddScoreDetail(int row, int len, int score, int sumScore)
@@ -245,36 +247,37 @@ void DetailTable::onShowDetail(int r, int c)
 {
     if (Global::g_is_judging || (last_judge_timer.isValid() && last_judge_timer.elapsed() < 1000)) return;
     ClearDetail();
+    is_show_detail = true;
+
     r = Global::GetLogicalRow(r);
     if (c > 1)
-        ShowProblemDetail(&Global::g_contest.players[r], &Global::g_contest.problems[c - 2]);
+        ShowProblemDetail(Global::g_contest.players[r], Global::g_contest.problems[c - 2]);
     else
     {
         for (auto i : Global::g_contest.problem_order)
-            ShowProblemDetail(&Global::g_contest.players[r], &Global::g_contest.problems[i]);
+            ShowProblemDetail(Global::g_contest.players[r], Global::g_contest.problems[i]);
     }
+
+    is_show_detail = false;
 }
 
 void DetailTable::onShowConfigDetail()
 {
+    is_show_detail = true;
     int row = this->rowCount() - 1;
     for (auto i : Global::g_contest.problem_order)
     {
-        Problem* prob = &Global::g_contest.problems[i];
-        onAddTitleDetail(row++, QString("\"%1\" 的配置结果").arg(prob->name));
+        Problem* prob = Global::g_contest.problems[i];
+        onAddTitleDetail(row++, QString("\"%1\" 的配置结果").arg(prob->Name()));
 
         int t = 0;
-        for (auto i : prob->tasks)
+        for (int i = 0; i < prob->SubtaskCount(); i++)
         {
+            Subtask* sub = prob->SubtaskAt(i);
             int len = 0;
-            for (auto j : i.point)
-            {
-                Problem::Info* x = &prob->que[j];
-                QString inout = QString("标准输入:\"%1\" 标准输出:\"%2\"").arg(x->in).arg(x->out);
-                if (prob->type == Global::AnswersOnly) inout += QString(" 选手提交:\"%1\"").arg(x->sub);
-                onAddPointDetail(row++, ++t, inout, "conf", inout, ++len);
-            }
-            onAddScoreDetail(row, i.point.size(), i.score, i.score);
+            for (TestCase* point : *sub) onAddPointDetail(row++, ++t, prob->GetInOutString(point), "conf", prob->GetInOutString(point), ++len);
+            onAddScoreDetail(row, sub->Size(), sub->Score(), sub->Score());
         }
     }
+    is_show_detail = false;
 }

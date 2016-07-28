@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QDesktopServices>
+#include <QDebug>
 
 using namespace std;
 
@@ -28,7 +29,7 @@ MainWindow::MainWindow(QWidget* parent) :
                              "</p>").arg(VERSION));
 
     splitter = new QSplitter(ui->centralWidget);
-    close_button = new QToolButton();
+    close_button = new QToolButton(ui->menuBar);
     detail_table = new DetailTable(splitter);
     board_table = new BoardTable(splitter);
     judger = new JudgeThread();
@@ -104,7 +105,7 @@ void MainWindow::UpdateRecentContest(bool updateRecentListWidget)
     for (auto i : list)
     {
         QPixmap icon = Contest::CreateIcon(i + "/");
-        QListWidgetItem* item = new QListWidgetItem(QIcon(icon), i);
+        QListWidgetItem* item = new QListWidgetItem(QIcon(icon), i, ui->listWidget_recent);
         item->setToolTip(item->text());
         item->setFlags(item->flags()^Qt::ItemIsDragEnabled);
         ui->listWidget_recent->addItem(item);
@@ -139,6 +140,7 @@ void MainWindow::LoadContest(const QString& path)
         return;
     }
 
+    if (!Global::g_is_contest_closed) CloseContest();
     lastContest = path;
     Global::g_contest.SetPath(path);
 
@@ -231,7 +233,7 @@ void MainWindow::LoadTable()
     board_table->setRowCount(Global::g_contest.player_num);
     board_table->setColumnCount(Global::g_contest.problem_num + 2);
     QStringList headerLabels = {"选手", "总分"};
-    for (auto i : Global::g_contest.problems) headerLabels.append(i.name);
+    for (auto i : Global::g_contest.problems) headerLabels.append(i->Name());
     board_table->setHorizontalHeaderLabels(headerLabels);
     for (int i = 0; i < Global::g_contest.problem_num + 2; i++) board_table->horizontalHeaderItem(i)->setToolTip(headerLabels[i]);
     board_table->ShowResult();
@@ -271,7 +273,6 @@ void MainWindow::StartJudging(int r, int c)
 {
     if (Global::g_is_judging) return;
 
-    Global::g_is_judging = true;
     Global::g_is_judge_stoped = false;
 
     board_table->ClearHighlighted();
@@ -305,7 +306,7 @@ void MainWindow::StartJudging(int r, int c)
     {
         for (int i = 0; i < Global::g_contest.player_num; i++)
             for (auto j : Global::g_contest.problem_order)
-                if (Global::g_contest.players[Global::GetLogicalRow(i)].GetProbLabel(j)->GetState() == ' ')
+                if (Global::g_contest.players[Global::GetLogicalRow(i)]->ProblemLabelAt(j)->State() == ' ')
                 {
                     judger->appendProblem(qMakePair(i, j + 2));
                     board_table->item(i, j + 2)->setSelected(true);
@@ -325,10 +326,7 @@ void MainWindow::StartJudging(int r, int c)
     eventLoop->exec();
     delete eventLoop;
 
-    Global::g_is_judging = false;
     if (Global::g_is_contest_closed) return;
-
-    if (r >= 0 && c > 1) board_table->item(r, c)->setSelected(true);
 
     board_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
     board_table->horizontalHeader()->setSectionsMovable(true);
@@ -359,9 +357,9 @@ void MainWindow::CreateActions()
     }
     ui->menu_recent->addSeparator();
 
-    menu_recent_list = new QMenu(this);
-    menu_table = new QMenu(board_table);
+    menu_recent_list = new QMenu(ui->listWidget_recent);
     menu_header = new QMenu(board_table->horizontalHeader());
+    menu_table = new QMenu(board_table);
     action_clean_recent = new QAction("清空列表(&C)", this);
     action_remove_recent = new QAction("从列表中移除(&R)", this);
     action_edit_file = new QAction("编辑源代码(&E)...", this);
@@ -494,7 +492,7 @@ void MainWindow::onMenuHeaderEvent(const QPoint& pos)
 
         if (!c) dirByAction = Global::g_contest.src_path;
         else if (c == 1) dirByAction = Global::g_contest.data_path;
-        else dirByAction = Global::g_contest.data_path + Global::g_contest.problems[c - 2].name + "/";
+        else dirByAction = Global::g_contest.data_path + Global::g_contest.problems[c - 2]->Name() + "/";
 
         if (QDir(dirByAction).exists())
         {
@@ -504,7 +502,7 @@ void MainWindow::onMenuHeaderEvent(const QPoint& pos)
             menu_header->addAction(action_open_dir);
             if (c > 1)
             {
-                fileByAction = Global::g_contest.problems[c - 2].name;
+                fileByAction = Global::g_contest.problems[c - 2]->Name();
                 menu_header->addSeparator();
                 action_remove_dir->setText(QString("删除试题 \"%1\"(&R)").arg(fileByAction));
                 menu_header->addAction(action_remove_dir);
@@ -529,17 +527,18 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
         int r = item->row(), c = item->column();
         detail_table->onShowDetail(r, c);
         r = Global::GetLogicalRow(r);
-        Player* player = &Global::g_contest.players[r];
+        Player* player = Global::g_contest.players[r];
         if (c > 1)
         {
-            Problem* problem = &Global::g_contest.problems[c - 2];
-            dirByAction = Global::g_contest.src_path + player->GetName() + "/" + problem->dir + "/";
-            fileByAction = problem->getCompiler(player->GetName()).file;
+            Problem* problem = Global::g_contest.problems[c - 2];
+            dirByAction = Global::g_contest.src_path + player->Name() + "/" + problem->Directory() + "/";
+            Compiler* compiler = problem->GetCompiler(player->Name());
+            fileByAction = !compiler ? "" : compiler->SourceFile();
 
-            if (fileByAction == "")
+            if (fileByAction.isEmpty())
             {
                 playerByAction = player, problemByAction = problem;
-                if (problem->type == Global::AnswersOnly || !problem->compilers.size())
+                if (problem->Type() == Global::AnswersOnly || !problem->CompilerCount())
                     action_create_file->setEnabled(false);
                 menu_table->addAction(action_create_file);
             }
@@ -551,8 +550,9 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
 
             menu_table->addSeparator();
 
-            if (QDir(dirByAction).exists()) menu_table->addAction(action_open_dir);
-            else if (problem->type == Global::AnswersOnly || !problem->compilers.size())
+            if (QDir(dirByAction).exists())
+                menu_table->addAction(action_open_dir);
+            else if (problem->Type() == Global::AnswersOnly || !problem->CompilerCount())
                 menu_table->addAction(action_create_dir);
             else
             {
@@ -562,8 +562,8 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
         }
         else
         {
-            dirByAction = Global::g_contest.src_path + player->GetName() + "/";
-            fileByAction = player->GetName();
+            dirByAction = Global::g_contest.src_path + player->Name() + "/";
+            fileByAction = player->Name();
 
             if (QDir(dirByAction).exists())
             {
@@ -614,12 +614,13 @@ void MainWindow::on_action_close_triggered()
 
 void MainWindow::on_action_configure_triggered()
 {
-    ConfigDialog dialog(this);
-    if (dialog.exec())
+    ConfigDialog* dialog = new ConfigDialog(this);
+    if (dialog->exec())
     {
         LoadTable();
         detail_table->onShowConfigDetail();
     }
+    delete dialog;
 }
 
 void MainWindow::on_action_set_list_triggered()
@@ -636,7 +637,7 @@ void MainWindow::on_action_set_list_triggered()
         ui->action_set_list->setChecked(false);
         QFile(Global::g_contest.path + ".list").remove();
 
-        for (auto& i : Global::g_contest.players) i.SetNameLabelWithoutList();
+        for (auto i : Global::g_contest.players) i->SetNameLabelWithoutList();
         board_table->ResizePlayerLabel();
     }
     else
@@ -729,6 +730,7 @@ void MainWindow::on_action_about_triggered()
     msgBox->setStandardButtons(QMessageBox::Ok);
     msgBox->setIconPixmap(QPixmap(":/icon/image/logo.png"));
     msgBox->exec();
+    delete msgBox;
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)

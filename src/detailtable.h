@@ -37,7 +37,7 @@ public slots:
     void onAddNoteDetail(int row, const QString& note, const QString& state = "N");
 
     /// 测试点单元格
-    void onAddPointDetail(int row, int num, const QString& note, const QString& state, const QString& file, int len);
+    void onAddPointDetail(int row, int num, const QString& note, const QString& state, const QString& inOut, int len);
 
     /// 分数单元格
     void onAddScoreDetail(int row, int len, int score, int sumScore);
@@ -51,6 +51,7 @@ public slots:
 private:
     bool is_scrollBar_at_bottom;
     QElapsedTimer last_judge_timer;
+    bool is_show_detail;
 };
 
 #endif // DETAILTABLE_H

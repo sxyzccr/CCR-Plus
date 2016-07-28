@@ -147,7 +147,7 @@ QWidget* ItemDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem&
 
         return editor;
     }
-    else return NULL;
+    else return nullptr;
 }
 
 void ItemDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const

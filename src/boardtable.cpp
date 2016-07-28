@@ -91,14 +91,17 @@ void BoardTable::ClearBoard()
     this->clear();
     this->setRowCount(0);
     this->setColumnCount(2);
+
+    pre_highlighted_col = -1;
+    already_moving_section = false;
 }
 
 void BoardTable::ResizePlayerLabel()
 {
     int len = 75;
-    for (auto& i : Global::g_contest.players)
+    for (auto i : Global::g_contest.players)
     {
-        QLabel* tmp = i.GetNameLabel();
+        QLabel* tmp = i->NameLabel();
         len = max(len, QFontMetrics(Global::FONT).width(tmp->text()) + 30);
     }
     this->horizontalHeader()->resizeSection(0, len);
@@ -107,7 +110,7 @@ void BoardTable::ResizePlayerLabel()
 void BoardTable::SetSumResultLabel(ResultLabel* tmp, int sum)
 {
     Global::LabelStyle x = Global::StyleNone;
-    ResultSummary res = tmp->GetResult();
+    ResultSummary res = tmp->Result();
 
     tmp->setText(QFontMetrics(tmp->font()).elidedText(QString::number(res.score), Qt::ElideRight, 60 - 5));
     tmp->setToolTip(QString("总用时: %1s").arg(res.time, 0, 'f', 2));
@@ -125,7 +128,7 @@ void BoardTable::SetSumResultLabel(ResultLabel* tmp, int sum)
 void BoardTable::SetProblemResultLabel(ResultLabel* tmp, int sum)
 {
     Global::LabelStyle x = Global::StyleNone;
-    ResultSummary res = tmp->GetResult();
+    ResultSummary res = tmp->Result();
 
     tmp->setText(QFontMetrics(tmp->font()).elidedText(QString::number(res.score), Qt::ElideRight, 85 - 5));
     tmp->setToolTip(QString("用时: %1s").arg(res.time, 0, 'f', 2));
@@ -172,20 +175,20 @@ void BoardTable::SetProblemResultLabel(ResultLabel* tmp, int sum)
 void BoardTable::ShowResult()
 {
     int row = 0;
-    for (auto& i : Global::g_contest.players)
+    for (auto i : Global::g_contest.players)
     {
         ResultLabel* tmp;
 
-        tmp = i.GetNameLabel();
-        tmp->setToolTip(i.GetName());
+        tmp = i->NameLabel();
+        tmp->setToolTip(i->Name());
         tmp->setIndent(15);
         tmp->setAlignment(Qt::AlignCenter);
         tmp->SetLabelStyle(Global::StyleNone);
         this->setCellWidget(row, 0, tmp);
 
-        i.SetSpecialNameLabel();
+        i->SetSpecialNameLabel();
 
-        tmp = i.GetSumLabel();
+        tmp = i->SumLabel();
         tmp->setAlignment(Qt::AlignCenter);
         SetSumResultLabel(tmp, Global::g_contest.sum_score);
         this->setCellWidget(row, 1, tmp);
@@ -193,9 +196,9 @@ void BoardTable::ShowResult()
         int col = 0;
         for (int j = 0; j < Global::g_contest.problem_num; j++)
         {
-            tmp = i.GetProbLabel(j);
+            tmp = i->ProblemLabelAt(j);
             tmp->setAlignment(Qt::AlignCenter);
-            SetProblemResultLabel(tmp, Global::g_contest.problems[col].sumScore);
+            SetProblemResultLabel(tmp, Global::g_contest.problems[col]->Score());
             this->setCellWidget(row, col + 2, tmp);
             col++;
         }
@@ -215,20 +218,20 @@ void BoardTable::ShowResult()
 void BoardTable::SetHighlighted(int c)
 {
     if (c <= 0) return;
-    for (auto& i : Global::g_contest.players)
+    for (auto i : Global::g_contest.players)
     {
-        ResultLabel* tmp = i.GetLabel(c);
-        tmp->setStyleSheet(ResultLabel::GetLabelStyleSheet(tmp->GetLabelStyle(), true));
+        ResultLabel* tmp = i->LabelAt(c);
+        tmp->setStyleSheet(ResultLabel::GetLabelStyleSheet(tmp->LabelStyle(), true));
     }
 }
 
 void BoardTable::ClearHighlighted(int c)
 {
     if (c <= 0) return;
-    for (auto& i : Global::g_contest.players)
+    for (auto i : Global::g_contest.players)
     {
-        ResultLabel* tmp = i.GetLabel(c);
-        tmp->setStyleSheet(ResultLabel::GetLabelStyleSheet(tmp->GetLabelStyle()));
+        ResultLabel* tmp = i->LabelAt(c);
+        tmp->setStyleSheet(ResultLabel::GetLabelStyleSheet(tmp->LabelStyle()));
     }
 }
 
@@ -248,7 +251,7 @@ void BoardTable::onSectionMove(int logicalIndex, int oldVisualIndex, int newVisu
     {
         Global::g_contest.problem_order.move(oldVisualIndex - 2, newVisualIndex - 2);
         QStringList list;
-        for (auto i : Global::g_contest.problem_order) list.append(Global::g_contest.problems[i].name);
+        for (auto i : Global::g_contest.problem_order) list.append(Global::g_contest.problems[i]->Name());
         Global::g_contest.SaveProblemOrder(list);
     }
 }
@@ -278,10 +281,10 @@ void BoardTable::onSortTable(int c)
     }
 
     int k = 0;
-    for (auto& i : Global::g_contest.players)
+    for (auto i : Global::g_contest.players)
     {
-        this->item(i.GetID(), c)->setData(Qt::DisplayRole, k);
-        i.SetID(Global::GetLogicalRow(k));
+        this->item(i->Id(), c)->setData(Qt::DisplayRole, k);
+        i->SetId(Global::GetLogicalRow(k));
         k++;
     }
     this->sortByColumn(c);
@@ -309,11 +312,11 @@ void BoardTable::onUpdateResultLabelText(ResultLabel* tmp, const QString& text, 
 void BoardTable::onUpdateSumResultLabel(Player* player, int sum)
 {
     if (Global::g_is_contest_closed) return;
-    SetSumResultLabel(player->GetSumLabel(), sum);
+    SetSumResultLabel(player->SumLabel(), sum);
 }
 
 void BoardTable::onUpdateProblemResultLabel(Player* player, int c, int sum)
 {
     if (Global::g_is_contest_closed) return;
-    SetProblemResultLabel(player->GetProbLabel(c - 2), sum);
+    SetProblemResultLabel(player->ProblemLabelAt(c - 2), sum);
 }

@@ -5,55 +5,54 @@
 
 using namespace std;
 
-Problem::Problem(const QString& na)
+const map<QString, QString> Problem::SPECIAL_CHECKER_MAP =
 {
-    name = dir = exe = na;
-    inFile = na + ".in";
-    outFile = na + ".out";
-    sumScore = 100;
-    codeLim = 100;
-    timeLim_checker = 10;
-    type = Global::OtherProblemType;
+    {"fulltext", "全文比较"}
+};
+
+QString Problem::FromSpecialCheckerName(const QString& checker)
+{
+    for (auto i : SPECIAL_CHECKER_MAP)
+        if (checker == i.second) return AddFileExtension(i.first);
+    return AddFileExtension(checker);
+}
+
+
+
+Problem::Problem(const QString& name) :
+    name(name), dir(name), exe(name), checker(),
+    in_file(name + ".in"), out_file(name + ".out"),
+    score(100), checker_time_lim(10), code_len_lim(100),
+    type(Global::OtherProblemType)
+{
+
 }
 
 Problem::~Problem()
 {
-
+    Clear();
 }
 
 void Problem::Clear()
 {
-    tasks.clear();
-    que.clear();
+    for (auto i : cases) delete i;
+    for (auto i : subtasks) delete i;
+    for (auto i : compilers) delete i;
+    cases.clear();
+    subtasks.clear();
     compilers.clear();
-}
-
-QString Problem::addSuff(QString file)
-{
-#ifdef Q_OS_WIN
-    if (!file.endsWith(".exe")) file += ".exe";
-#endif
-    return file;
-}
-
-QString Problem::removeSuff(QString file)
-{
-#ifdef Q_OS_WIN
-    if (file.endsWith(".exe")) file.remove(file.length() - 4, 4);
-#endif
-    return file;
 }
 
 void Problem::ReadConfig()
 {
-    sumScore = 0;
+    score = 0;
     QFile file(Global::g_contest.data_path + name + "/.prb");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
     QDomDocument doc;
-    if (!doc.setContent(&file)) {file.close(); return;}
+    if (!doc.setContent(&file)) { file.close(); return; }
 
     QDomElement root = doc.documentElement();
-    if (root.isNull() || root.tagName() != "problem") {file.close(); return;}
+    if (root.isNull() || root.tagName() != "problem") { file.close(); return; }
     QString s = root.attribute("type");
     if (s == "TRA" || s == "TRA_0_4") type = Global::Traditional;
     else if (s == "ANS" || s == "ANS_0_4") type = Global::AnswersOnly;
@@ -66,8 +65,8 @@ void Problem::ReadConfig()
         if (a.tagName() == "source")
         {
             if (a.hasAttribute("dir")) dir = a.attribute("dir");
-            if (a.hasAttribute("file")) exe = addSuff(a.attribute("file"));
-            if (a.hasAttribute("code")) codeLim = a.attribute("code").toDouble();
+            if (a.hasAttribute("file")) exe = AddFileExtension(a.attribute("file"));
+            if (a.hasAttribute("code")) code_len_lim = a.attribute("code").toDouble();
 
             QDomNodeList l = a.childNodes();
             for (int j = 0; j < l.count(); j++)
@@ -75,21 +74,22 @@ void Problem::ReadConfig()
                 QDomElement b = l.item(j).toElement();
                 if (b.tagName() == "language")
                 {
-                    CompilerInfo x(b.attribute("cmd"), b.attribute("file"));
+                    Compiler* x;
+                    if (b.hasAttribute("time"))
+                        x =  new Compiler(b.attribute("cmd"), b.attribute("file"), b.attribute("time").toInt());
+                    else
+                        x =  new Compiler(b.attribute("cmd"), b.attribute("file"));
                     //if (x.file.endsWith(".cpp")||x.file.endsWith(".c")) x.cmd+=" -static";
-                    if (b.hasAttribute("time")) x.timeLim = b.attribute("time").toInt();
-                    compilers.push_back(x);
+                    this->compilers.push_back(x);
                 }
             }
         }
         else if (a.tagName() == "task")
         {
-            inFile = a.attribute("input");
-            outFile = a.attribute("output");
-            checker = a.attribute("checker");
-            if (checker == "全文比较") checker = "fulltext";
-            checker = addSuff(checker);
-            if (a.hasAttribute("time")) timeLim_checker = a.attribute("time").toInt();
+            in_file = a.attribute("input");
+            out_file = a.attribute("output");
+            checker = FromSpecialCheckerName(a.attribute("checker"));
+            if (a.hasAttribute("time")) checker_time_lim = a.attribute("time").toInt();
 
             QDomNodeList l = a.childNodes();
             for (int j = 0; j < l.count(); j++)
@@ -97,23 +97,21 @@ void Problem::ReadConfig()
                 QDomElement b = l.item(j).toElement();
                 if (b.tagName() == "subtask")
                 {
-                    Subtask sub(b.attribute("score").toInt());
+                    Subtask* sub = new Subtask(b.attribute("score").toInt());
                     QDomNodeList ll = b.childNodes();
                     for (int k = 0; k < ll.count(); k++)
                     {
                         QDomElement c = ll.item(k).toElement();
                         if (c.tagName() == "point")
                         {
-                            Info x(c.attribute("time").toDouble(), c.attribute("mem").toDouble());
-                            x.in = c.attribute("in");
-                            x.out = c.attribute("out");
-                            x.sub = c.attribute("sub");
-                            sub.point.push_back(que.size());
-                            que.push_back(x);
+                            TestCase* x = new TestCase(this->cases.size() + 1, c.attribute("time").toDouble(), c.attribute("mem").toDouble(),
+                                                       c.attribute("in"), c.attribute("out"), c.attribute("sub"));
+                            sub->append(x);
+                            this->cases.push_back(x);
                         }
                     }
-                    sumScore += sub.score;
-                    tasks.push_back(sub);
+                    score += sub->Score();
+                    this->subtasks.push_back(sub);
                 }
             }
         }
@@ -136,14 +134,14 @@ bool Problem::SaveConfig()
     root.appendChild(source);
     if (type == Global::Traditional)
     {
-        source.setAttribute("file", removeSuff(exe));
-        source.setAttribute("code", codeLim);
+        source.setAttribute("file", RemoveFileExtension(exe));
+        source.setAttribute("code", code_len_lim);
         for (auto i : compilers)
         {
             QDomElement lang = doc.createElement("language");
-            lang.setAttribute("cmd", i.cmd);
-            lang.setAttribute("file", i.file);
-            lang.setAttribute("time", i.timeLim);
+            lang.setAttribute("cmd", i->Cmd());
+            lang.setAttribute("file", i->SourceFile());
+            lang.setAttribute("time", i->TimeLimit());
             source.appendChild(lang);
         }
     }
@@ -151,27 +149,27 @@ bool Problem::SaveConfig()
     QDomElement task = doc.createElement("task");
     if (type == Global::Traditional)
     {
-        task.setAttribute("input", inFile);
-        task.setAttribute("output", outFile);
+        task.setAttribute("input", in_file);
+        task.setAttribute("output", out_file);
     }
-    task.setAttribute("checker", removeSuff(checker));
-    task.setAttribute("time", timeLim_checker);
+    task.setAttribute("checker", RemoveFileExtension(checker));
+    task.setAttribute("time", checker_time_lim);
     root.appendChild(task);
-    for (auto i : tasks)
+    for (auto i : subtasks)
     {
         QDomElement subtask = doc.createElement("subtask");
-        subtask.setAttribute("score", i.score);
+        subtask.setAttribute("score", i->Score());
         task.appendChild(subtask);
-        for (auto j : i.point)
+        for (auto j : *i)
         {
             QDomElement point = doc.createElement("point");
-            point.setAttribute("in", que[j].in);
-            point.setAttribute("out", que[j].out);
-            if (type == Global::AnswersOnly) point.setAttribute("sub", que[j].sub);
+            point.setAttribute("in", j->InFile());
+            point.setAttribute("out", j->OutFile());
+            if (type == Global::AnswersOnly) point.setAttribute("sub", j->SubmitFile());
             if (type == Global::Traditional)
             {
-                point.setAttribute("time", que[j].timeLim);
-                point.setAttribute("mem", que[j].memLim);
+                point.setAttribute("time", j->TimeLimit());
+                point.setAttribute("mem", j->MemoryLimit());
             }
             subtask.appendChild(point);
         }
@@ -185,100 +183,100 @@ bool Problem::SaveConfig()
     return true;
 }
 
-typedef QPair<QString, QString> Pair;
-
-QList<QPair<QString, QString>> Problem::getInAndOutFile()
+void Problem::Configure(const QString& typ, double timeLim, double memLim, const QString& check)
 {
+    if (typ == "传统型") type = Global::Traditional;
+    else if (typ == "提交答案型") type = Global::AnswersOnly;
+
+    if (!check.isEmpty()) checker = FromSpecialCheckerName(check);
+    exe = AddFileExtension(exe);
+
+    for (auto i : cases)
+    {
+        if (timeLim >= 0) i->SetTimeLimit(timeLim);
+        if (memLim >= 0) i->SetMemoryLimit(memLim);
+    }
+}
+
+void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check)
+{
+    Clear();
+
+    if (typ == "传统型") type = Global::Traditional;
+    else if (typ == "提交答案型") type = Global::AnswersOnly;
+
+    if (!check.isEmpty()) checker = FromSpecialCheckerName(check);
+    exe = AddFileExtension(exe);
+
+    QList<QPair<QString, QString>> list = GetInAndOutFile();
+    //qDebug()<<list;
+
+    int num = list.size(), sum = score;
+    QList<int> scores;
+    for (int i = 0; i < num; i++) scores.append(score / num), sum -= scores[i];
+    for (int i = num - 1; sum && i >= 0; i--) scores[i]++, sum--;
+
+    if (type == Global::Traditional)
+    {
+        compilers = { new Compiler(QString("gcc -o %1 %1.c -lm -static").arg(name), QString("%1.c").arg(name)),
+                      new Compiler(QString("g++ -o %1 %1.cpp -lm -static").arg(name), QString("%1.cpp").arg(name)),
+                      new Compiler(QString("fpc %1.pas").arg(name), QString("%1.pas").arg(name))
+                    };
+    }
+
+    for (int i = 0; i < num; i++)
+    {
+        Subtask* sub = new Subtask(scores[i]);
+        TestCase* point = new TestCase(i + 1, timeLim, memLim, list[i].first, list[i].second);
+        if (type == Global::AnswersOnly) point->SetSubmitFile(point->OutFile());
+        sub->append(point);
+        this->cases.push_back(point);
+        this->subtasks.push_back(sub);
+    }
+}
+
+Compiler* Problem::GetCompiler(const QString& playerName)
+{
+    for (auto i : compilers)
+        if (QFile(Global::g_contest.src_path + playerName + "/" + dir + "/" + i->SourceFile()).exists()) return i;
+    return nullptr;
+}
+
+QList<QPair<QString, QString>> Problem::GetInAndOutFile()
+{
+    typedef QPair<QString, QString> InOutPair;
+
     QString dir = Global::g_contest.data_path + name;
     QStringList list = QDir(dir).entryList(QDir::Files);
-    const QStringList in({".in", ".inp", "in", "inp"}), out({".out", ".ans", ".ou", ".an", ".sol", ".res", ".std", "out", "ans", "ou", "an", "sol", "res", "std"});
-    QList<Pair> Q[in.size()][out.size()];
+    const QStringList in  = {".in", ".inp", "in", "inp"},
+                      out = {".out", ".ans", ".ou", ".an", ".sol", ".res", ".std", "out", "ans", "ou", "an", "sol", "res", "std"};
+    QList<InOutPair> Q[in.size()][out.size()], res;
     int ma = 0;
 
     for (int i = 0; i < in.size(); i++)
         for (int j = 0; j < out.size(); j++)
         {
             QString a = in[i], b = out[j];
-            QMap<Pair, int> F;
+            QMap<InOutPair, int> F;
             for (auto s : list)
             {
                 int p = s.indexOf(a), q = s.indexOf(b);
-                if (p != -1) F[Pair(s.left(p), s.right(s.length() - a.length() - p))]++;
-                if (q != -1) F[Pair(s.left(q), s.right(s.length() - b.length() - q))]++;
+                if (p != -1) F[qMakePair(s.left(p), s.right(s.length() - a.length() - p))]++;
+                if (q != -1) F[qMakePair(s.left(q), s.right(s.length() - b.length() - q))]++;
             }
             for (auto k = F.constBegin(); k != F.constEnd(); k++)
-                if (k.value() == 2) Q[i][j].append(Pair(k.key().first + a + k.key().second, k.key().first + b + k.key().second));
+                if (k.value() == 2) Q[i][j].append(qMakePair(k.key().first + a + k.key().second, k.key().first + b + k.key().second));
             ma = max(ma, Q[i][j].size());
         }
-    for (int i = 0; i < in.size(); i++)
-        for (int j = 0; j < out.size(); j++)
-            if (ma - Q[i][j].size() <= 3) return Q[i][j];
-    return QList<Pair>();
-}
+    for (int i = 0; i < in.size() && !res.size(); i++)
+        for (int j = 0; j < out.size() && !res.size(); j++)
+            if (ma - Q[i][j].size() <= 3) { res = Q[i][j]; break; }
 
-Problem::CompilerInfo Problem::getCompiler(const QString& playerName)
-{
-    for (auto i : compilers)
-        if (QFile(Global::g_contest.src_path + playerName + "/" + dir + "/" + i.file).exists()) return i;
-    return CompilerInfo();
-}
-
-void Problem::Configure(const QString& typ, double timeLim, double memLim, const QString& check)
-{
-    if (typ.size())
-    {
-        if (typ == "传统型") type = Global::Traditional;
-        else if (typ == "提交答案型") type = Global::AnswersOnly;
-    }
-    if (check.size()) checker = addSuff(check == "全文比较" ? "fulltext" : check);
-    exe = addSuff(exe);
-
-    for (auto& i : que)
-    {
-        if (timeLim >= 0) i.timeLim = timeLim;
-        if (memLim >= 0) i.memLim = memLim;
-    }
-}
-
-void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check)
-{
-    if (typ.size())
-    {
-        if (typ == "传统型") type = Global::Traditional;
-        else if (typ == "提交答案型") type = Global::AnswersOnly;
-    }
-    if (check.size()) checker = addSuff(check == "全文比较" ? "fulltext" : check);
-    exe = addSuff(exe);
-
-    QList<QPair<QString, QString>> list = getInAndOutFile();
-    //qDebug()<<list;
-    sort(list.begin(), list.end(), [&](const Pair & a, const Pair & b)
+    sort(res.begin(), res.end(), [&](const InOutPair& a, const InOutPair& b)
     {
         QCollator c;
         c.setNumericMode(true);
         return c.compare(a.first, b.first) == -1;
     });
-    int num = list.size(), sum = sumScore;
-    QList<int> score;
-    for (int i = 0; i < num; i++) score.append(sumScore / num), sum -= score[i];
-    for (int i = num - 1; sum && i >= 0; i--) score[i]++, sum--;
-
-    if (type == Global::Traditional)
-    {
-        compilers.push_back(CompilerInfo(QString("gcc -o %1 %1.c -lm -static").arg(name), QString("%1.c").arg(name)));
-        compilers.push_back(CompilerInfo(QString("g++ -o %1 %1.cpp -lm -static").arg(name), QString("%1.cpp").arg(name)));
-        compilers.push_back(CompilerInfo(QString("fpc %1.pas").arg(name), QString("%1.pas").arg(name)));
-    }
-
-    for (int i = 0; i < num; i++)
-    {
-        Subtask sub(score[i]);
-        Info x(timeLim, memLim);
-        x.in = list[i].first;
-        x.out = list[i].second;
-        if (type == Global::AnswersOnly) x.sub = QString("%1%2.out").arg(name).arg(i + 1);
-        sub.point.push_back(que.size());
-        que.push_back(x);
-        tasks.push_back(sub);
-    }
+    return res;
 }

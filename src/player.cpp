@@ -5,19 +5,7 @@
 
 using namespace std;
 
-Player::Player(const QString& name, int id, int probNum) :
-    id(id), priority(0), name(name), name_in_list(""),
-    name_label(new ResultLabel(name)), sum_label(new ResultLabel)
-{
-    for (int i = 0; i < probNum; i++) prob_label.push_back(new ResultLabel);
-}
-
-Player::~Player()
-{
-    //Clear();
-}
-
-const QString ResultLabel::COLOR_NAME[17] =
+const QStringList ResultLabel::COLOR_NAME_LIST =
 {
     "#EB1D00", // StyleScore_1_9
     "#E23A00", // StyleScore_10_19
@@ -41,7 +29,7 @@ const QString ResultLabel::COLOR_NAME[17] =
 QString ResultLabel::GetLabelStyleSheet(Global::LabelStyle style, bool isHighlighted)
 {
     if (style == Global::StyleNone) return "";
-    QColor color(0, 0, 0), background(COLOR_NAME[(int)style]);
+    QColor color(0, 0, 0), background(COLOR_NAME_LIST[(int)style]);
     if (!isHighlighted) color.setAlpha(128), background.setAlpha(192);
 
     QString s = QString("QLabel{color:%1;background:%2;}").arg(color.name(QColor::HexArgb)).arg(background.name(QColor::HexArgb));
@@ -49,10 +37,24 @@ QString ResultLabel::GetLabelStyleSheet(Global::LabelStyle style, bool isHighlig
     return s;
 }
 
+
+
+Player::Player(const QString& name, int id, int probNum) :
+    id(id), priority(0), name(name), name_in_list(""),
+    name_label(new ResultLabel(name)), sum_label(new ResultLabel)
+{
+    for (int i = 0; i < probNum; i++) prob_label.push_back(new ResultLabel);
+}
+
+Player::~Player()
+{
+    Clear();
+}
+
 void Player::Clear()
 {
-    if (name_label) name_label->deleteLater();
-    if (sum_label) sum_label->deleteLater();
+    name_label->deleteLater();
+    sum_label->deleteLater();
     for (auto i : prob_label) i->deleteLater();
     prob_label.clear();
 }
@@ -62,15 +64,15 @@ void Player::CalcSum()
     sum_label->SetResult(ResultSummary());
     for (auto i : prob_label)
     {
-        if (!i->GetState()) i->SetState(' ');
-        if (i->GetState() != 'N' && i->GetState() != 'E') i->SetScore(0), i->SetTime(0);
-        sum_label->Plus(i->GetResult());
+        if (!i->State()) i->SetState(' ');
+        if (i->State() != 'N' && i->State() != 'E') i->SetScore(0), i->SetTime(0);
+        sum_label->Plus(i->Result());
     }
 }
 
 QString Player::GetNameWithList() const
 {
-    if (Global::g_contest.is_list_used && !priority && name_in_list != "")
+    if (Global::g_contest.is_list_used && !priority && !name_in_list.isEmpty())
         return QString("%1 [%2]").arg(name, name_in_list);
     else
         return name;
@@ -92,7 +94,7 @@ void Player::SetNameLabelWithList(const QString& nameInList)
     if (!this->priority)
     {
         QLabel* tmp = this->name_label;
-        if (nameInList != "")
+        if (!nameInList.isEmpty())
         {
             this->name_in_list = nameInList;
             if (nameInList.length() == 2) tmp->setText(QString("%1 [%2   %3]").arg(this->name, nameInList.at(0), nameInList.at(1)));
@@ -123,22 +125,22 @@ void Player::SetSpecialNameLabel()
         if (this->name.toLower() == i.name_orig)
         {
             this->priority = i.priority;
-            if (i.name_show != "") tmp->setText(i.name_show);
+            if (!i.name_show.isEmpty()) tmp->setText(i.name_show);
             tmp->setStyleSheet(i.style);
         }
 }
 
-bool CmpProblem(const Player &x, const Player &y)
+bool CmpProblem(Player* x,Player* y)
 {
     static char F[128];
     F[' '] = 0, F['F'] = 1, F['S'] = 2, F['C'] = 3, F['E'] = 4, F['N'] = 5;
-    ResultLabel *a = x.GetProbLabel(Global::g_sort_key_col),
-                *b = y.GetProbLabel(Global::g_sort_key_col);
+    ResultLabel *a = x->ProblemLabelAt(Global::g_sort_key_col),
+                *b = y->ProblemLabelAt(Global::g_sort_key_col);
 
-    if (!a->GetScore() && !b->GetScore())
-        return  F[a->GetState()] <  F[b->GetState()] ||
-               (F[a->GetState()] == F[b->GetState()] && CmpSumScore(x, y));
+    if (!a->Score() && !b->Score())
+        return  F[a->State()] <  F[b->State()] ||
+               (F[a->State()] == F[b->State()] && CmpSumScore(x, y));
     else
-        return  a->GetResult() <  b->GetResult() ||
-               (a->GetResult() == b->GetResult() && CmpSumScore(x, y));
+        return  a->Result() <  b->Result() ||
+               (a->Result() == b->Result() && CmpSumScore(x, y));
 }

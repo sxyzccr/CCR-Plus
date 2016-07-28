@@ -34,8 +34,8 @@ ConfigDialog::~ConfigDialog()
 
 void ConfigDialog::setModelData(int c)
 {
-    Problem* problem = NULL;
-    if (c < Global::g_contest.problem_num) problem = &Global::g_contest.problems[c];
+    Problem* problem = nullptr;
+    if (c < Global::g_contest.problem_num) problem = Global::g_contest.problems[c];
 
     auto configNew = [&]()
     {
@@ -50,18 +50,19 @@ void ConfigDialog::setModelData(int c)
         model.horizontalHeaderItem(c)->setFont(Global::BOLD_FONT);
     };
 
-    if (!problem || !problem->que.size()) { configNew(); return; }
+    if (!problem || !problem->TestCaseCount()) { configNew(); return; }
 
     model.item(4, c)->setToolTip("false");
-    model.item(3, c)->setData((problem->checker == "fulltext" || problem->checker == "fulltext.exe") ? "全文比较" : problem->checker == ".exe" ? "" : problem->checker, Qt::EditRole);
-    if (problem->type == Global::Traditional)
+    model.item(3, c)->setData(problem->SpecialCheckerName(), Qt::EditRole);
+    if (problem->Type() == Global::Traditional)
     {
         model.item(0, c)->setData("传统型", Qt::EditRole);
         double minT = 1e9, maxT = 0, minM = 1e9, maxM = 0;
-        for (auto info : problem->que)
+        for (int i = 0; i < problem->TestCaseCount(); i++)//   auto info : problem->cases)
         {
-            minT = min(minT, info.timeLim), maxT = max(maxT, info.timeLim);
-            minM = min(minM, info.memLim), maxM = max(maxM, info.memLim);
+            TestCase* point = problem->TestCaseAt(i);
+            minT = min(minT, point->TimeLimit()), maxT = max(maxT, point->TimeLimit());
+            minM = min(minM, point->MemoryLimit()), maxM = max(maxM, point->MemoryLimit());
         }
         if (minT > maxT || minM > maxM) {configNew(); return;}
         if (minT == maxT) model.item(1, c)->setData(minT, Qt::EditRole);
@@ -80,7 +81,7 @@ void ConfigDialog::setModelData(int c)
             model.item(2, c)->setFont(Global::BOLD_FONT);
         }
     }
-    else if (problem->type == Global::AnswersOnly)
+    else if (problem->Type() == Global::AnswersOnly)
     {
         model.item(0, c)->setData("提交答案型", Qt::EditRole);
         model.item(1, c)->setText("");
@@ -101,7 +102,7 @@ void ConfigDialog::setModelData(int c)
 
 void ConfigDialog::loadProblems()
 {
-    for (auto i : Global::g_contest.problem_order) problemList.append(Global::g_contest.problems[i].name);
+    for (auto i : Global::g_contest.problem_order) problemList.append(Global::g_contest.problems[i]->Name());
     QStringList tmp = QDir(Global::g_contest.data_path).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (auto i : tmp) if (!problemList.count(i)) problemList.append(i);
     num = problemList.size();
@@ -219,19 +220,26 @@ void ConfigDialog::accept()
             if (!model.item(3, t)->font().bold()) checker = "";
             if (!model.item(1, t)->font().bold()) tim = -1;
             if (!model.item(2, t)->font().bold()) mem = -1;
-            Problem prob(problemList[t]);
+            Problem* tmp = new Problem(problemList[t]);
+            Problem* prob;
             //qDebug()<<problemList[t]<<type<<checker<<tim<<mem;
-            if (model.item(4, t)->data(Qt::EditRole).toBool()) prob.ConfigureNew(type, tim, mem, checker);
+            if (model.item(4, t)->data(Qt::EditRole).toBool())
+            {
+                prob = tmp;
+                prob->ConfigureNew(type, tim, mem, checker);
+            }
             else
             {
                 prob = Global::g_contest.problems[t];
-                prob.Configure(type, tim, mem, checker);
+                prob->Configure(type, tim, mem, checker);
             }
-            if (!prob.SaveConfig())
+            if (!prob->SaveConfig())
             {
                 QMessageBox::critical(this, "保存配置失败", "无法写入配置文件！");
+                delete tmp;
                 return;
             }
+            delete tmp;
         }
         list.append(problemList[t]);
     }
