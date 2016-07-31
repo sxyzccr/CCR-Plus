@@ -48,6 +48,8 @@ struct ResultSummary
     }
 };
 
+
+
 class ResultLabel : public QLabel
 {
 public:
@@ -83,6 +85,8 @@ private:
     ResultSummary res;
     Global::LabelStyle style;
 };
+
+
 
 class Player
 {

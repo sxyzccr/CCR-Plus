@@ -15,23 +15,23 @@ class CreateFileDialog;
 class CreateFileDialog : public QDialog
 {
     Q_OBJECT
-
 public:
     explicit CreateFileDialog(QWidget* parent = 0, Player* ply = 0, Problem* prob = 0);
     virtual ~CreateFileDialog();
 
-    QString getSelectedFile() const { return selectedFile; }
+    QString GetSelectedFile() const { return selected_file; }
 
-private slots:
-    void on_listWidget_itemDoubleClicked(QListWidgetItem*);
+public slots:
+    void accept() override;
 
 private:
     Ui::CreateFileDialog* ui;
     Player* player;
     Problem* problem;
-    QString selectedFile;
+    QString selected_file;
 
-    void accept() override;
+private slots:
+    void on_listWidget_itemDoubleClicked(QListWidgetItem*);
 };
 
 #endif // CREATEFILEDIALOG_H

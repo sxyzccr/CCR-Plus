@@ -10,18 +10,7 @@ using namespace std;
 DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
     is_scrollBar_at_bottom(false)
 {
-    Setup();
-}
-
-DetailTable::~DetailTable()
-{
-
-}
-
-void DetailTable::Setup()
-{
     this->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
-    this->setColumnCount(2);
     this->setMinimumSize(QSize(320, 250));
     this->setFocusPolicy(Qt::NoFocus);
     this->setFrameShape(QFrame::NoFrame);
@@ -34,28 +23,32 @@ void DetailTable::Setup()
     this->setStyleSheet(QLatin1String(
                             "QHeaderView\n"
                             "{\n"
-                            "	background:white;\n"
+                            "	background:#FFFFFF;\n"
                             "}"));
 
     this->horizontalHeader()->setDefaultSectionSize(45);
     this->horizontalHeader()->setMinimumSectionSize(45);
+    this->horizontalHeader()->setFixedHeight(20);
     this->horizontalHeader()->setStretchLastSection(true);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     this->verticalHeader()->setDefaultSectionSize(22);
     this->verticalHeader()->setMinimumSectionSize(22);
+    this->verticalHeader()->setMinimumWidth(22);
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    this->verticalHeader()->setMinimumWidth(22);
+}
 
-    is_scrollBar_at_bottom = false;
-    is_show_detail = false;
+DetailTable::~DetailTable()
+{
+
 }
 
 void DetailTable::ClearDetail()
 {
     this->clear();
     this->setRowCount(0);
+    this->setColumnCount(2);
     this->setHorizontalHeaderLabels({"得分", "详情"});
     this->verticalScrollBar()->setValue(0);
 

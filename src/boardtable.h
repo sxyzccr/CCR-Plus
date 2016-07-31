@@ -12,9 +12,6 @@ public:
     explicit BoardTable(QWidget* parent = 0);
     virtual ~BoardTable();
 
-    /// 界面初始化设置
-    void Setup();
-
     /// 清空 board 表格
     void ClearBoard();
 

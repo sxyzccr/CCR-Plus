@@ -1,40 +1,32 @@
 #ifndef CONFIGUREDIALOG_H
 #define CONFIGUREDIALOG_H
 
-#include "itemdelegate.h"
+#include "configtable.h"
 
 #include <QDialog>
-#include <QStandardItemModel>
 
 namespace Ui
 {
-class ConfigDialog;
+class ConfigureDialog;
 }
 
-class ConfigDialog : public QDialog
+class ConfigureDialog : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit ConfigDialog(QWidget* parent = 0);
-    virtual ~ConfigDialog();
+    explicit ConfigureDialog(QWidget* parent = 0);
+    virtual ~ConfigureDialog();
 
-private slots:
-    void dataChangedEvent(const QModelIndex& tl, const QModelIndex& br);
-    void on_pushButton_clicked();
+public slots:
+    void accept() override;
 
 private:
-    Ui::ConfigDialog* ui;
+    Ui::ConfigureDialog* ui;
+    ConfigTable* config_table;
+    QStringList problem_list;
 
-    QStringList problemList;
-    QStandardItemModel model;
-    ItemDelegate delegate;
-    bool alreadyChangingData;
-    int num;
-
-    void loadProblems();
-    void setModelData(int c);
-    void accept();
+private slots:
+    void on_pushButton_clicked();
 };
 
 #endif // CONFIGUREDIALOG_H

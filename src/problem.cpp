@@ -5,16 +5,16 @@
 
 using namespace std;
 
-const map<QString, QString> Problem::SPECIAL_CHECKER_MAP =
+const map<QString, pair<QString, QString>> Problem::INTERNAL_CHECKER_MAP =
 {
-    {"fulltext", "全文比较"}
+    {"fulltext", make_pair("全文比较", "全文比较(过滤行末空格及文末回车)")}
 };
 
-QString Problem::FromSpecialCheckerName(const QString& checker)
+QString Problem::FromInternalCheckerName(const QString& name)
 {
-    for (auto i : SPECIAL_CHECKER_MAP)
-        if (checker == i.second) return AddFileExtension(i.first);
-    return AddFileExtension(checker);
+    for (auto i : INTERNAL_CHECKER_MAP)
+        if (name == i.second.first) return AddFileExtension(i.first);
+    return AddFileExtension(name);
 }
 
 
@@ -88,7 +88,7 @@ void Problem::ReadConfig()
         {
             in_file = a.attribute("input");
             out_file = a.attribute("output");
-            checker = FromSpecialCheckerName(a.attribute("checker"));
+            checker = FromInternalCheckerName(a.attribute("checker"));
             if (a.hasAttribute("time")) checker_time_lim = a.attribute("time").toInt();
 
             QDomNodeList l = a.childNodes();
@@ -188,7 +188,7 @@ void Problem::Configure(const QString& typ, double timeLim, double memLim, const
     if (typ == "传统型") type = Global::Traditional;
     else if (typ == "提交答案型") type = Global::AnswersOnly;
 
-    if (!check.isEmpty()) checker = FromSpecialCheckerName(check);
+    if (!check.isEmpty()) checker = FromInternalCheckerName(check);
     exe = AddFileExtension(exe);
 
     for (auto i : cases)
@@ -205,7 +205,7 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
     if (typ == "传统型") type = Global::Traditional;
     else if (typ == "提交答案型") type = Global::AnswersOnly;
 
-    if (!check.isEmpty()) checker = FromSpecialCheckerName(check);
+    if (!check.isEmpty()) checker = FromInternalCheckerName(check);
     exe = AddFileExtension(exe);
 
     QList<QPair<QString, QString>> list = GetInAndOutFile();

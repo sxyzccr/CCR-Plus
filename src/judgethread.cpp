@@ -827,5 +827,6 @@ void JudgeThread::run()
     }
 
     emit noteDetailFinished(rows, Global::g_is_judge_stoped ? "- 测评终止 -" : "- 测评结束 -", "");
+    this->waitForClearedTmpDir(2000);
     Global::g_is_judging = false;
 }

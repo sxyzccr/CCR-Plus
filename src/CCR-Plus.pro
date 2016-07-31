@@ -8,7 +8,6 @@ CONFIG += c++11
 SOURCES += boardtable.cpp \
     createfiledialog.cpp \
     detailtable.cpp \
-    itemdelegate.cpp \
     judgethread.cpp \
     main.cpp\
     mainwindow.cpp \
@@ -17,12 +16,12 @@ SOURCES += boardtable.cpp \
     const.cpp \
     configuredialog.cpp \
     global.cpp \
-    contest.cpp
+    contest.cpp \
+    configtable.cpp
 
 HEADERS += boardtable.h \
     createfiledialog.h \
     detailtable.h \
-    itemdelegate.h \
     judgethread.h \
     mainwindow.h \
     player.h \
@@ -31,7 +30,8 @@ HEADERS += boardtable.h \
     const.h \
     configuredialog.h \
     global.h \
-    contest.h
+    contest.h \
+    configtable.h
 
 UI_DIR = forms
 RCC_DIR = rcfile

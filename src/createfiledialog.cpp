@@ -27,7 +27,7 @@ CreateFileDialog::~CreateFileDialog()
 
 void CreateFileDialog::accept()
 {
-    selectedFile = ui->listWidget->currentItem()->text();
+    selected_file = ui->listWidget->currentItem()->text();
     return QDialog::accept();
 }
 

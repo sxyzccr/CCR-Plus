@@ -14,9 +14,6 @@ public:
     explicit DetailTable(QWidget* parent = 0);
     virtual ~DetailTable();
 
-    /// 界面初始化设置
-    void Setup();
-
     /// 清空 detail 表格
     void ClearDetail();
 

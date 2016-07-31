@@ -7,12 +7,10 @@
 
 #include <QSettings>
 #include <QMimeData>
-#include <QTextStream>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QDesktopServices>
-#include <QDebug>
 
 using namespace std;
 
@@ -50,9 +48,6 @@ MainWindow::MainWindow(QWidget* parent) :
     splitter->hide();
     ui->verticalLayout->addWidget(splitter);
 
-    CreateActions();
-    UpdateRecentContest(true);
-
     // Set connect
     connect(close_button, &QToolButton::clicked, this, &MainWindow::on_action_close_triggered);
 
@@ -71,6 +66,9 @@ MainWindow::MainWindow(QWidget* parent) :
     connect(judger, &JudgeThread::resultLabelTextChanged,    board_table, &BoardTable::onUpdateResultLabelText);
     connect(judger, &JudgeThread::problemResultLabelChanged, board_table, &BoardTable::onUpdateProblemResultLabel);
     qRegisterMetaType<Global::LabelStyle>("Global::LabelStyle");
+
+    CreateActions();
+    UpdateRecentContest(true);
 
     this->activateWindow();
 }
@@ -170,9 +168,6 @@ void MainWindow::LoadContest(const QString& path)
     Global::g_is_judge_stoped = false;
     Global::g_is_contest_closed = false;
 
-    board_table->Setup();
-    detail_table->Setup();
-
     LoadTable();
 }
 
@@ -183,7 +178,6 @@ void MainWindow::CloseContest(bool isExit)
     judger->waitForFinished(2000);
     Global::g_contest.SaveResultCache();
     splitter->hide();
-    judger->waitForClearedTmpDir(2000);
     ClearTable();
     Global::g_contest.Clear();
 
@@ -343,7 +337,6 @@ void MainWindow::StartJudging(int r, int c)
     this->activateWindow();
 
     Global::g_contest.SaveResultCache();
-    judger->waitForClearedTmpDir(2000);
 }
 
 void MainWindow::CreateActions()
@@ -394,7 +387,7 @@ void MainWindow::onCreateFile()
     if (dialog.exec())
     {
         if (!QDir(dirByAction).exists()) QDir().mkpath(dirByAction);
-        QString s = dialog.getSelectedFile();
+        QString s = dialog.GetSelectedFile();
         QFile file(dirByAction + s);
         file.open(QIODevice::WriteOnly);
         file.close();
@@ -614,7 +607,7 @@ void MainWindow::on_action_close_triggered()
 
 void MainWindow::on_action_configure_triggered()
 {
-    ConfigDialog* dialog = new ConfigDialog(this);
+    ConfigureDialog* dialog = new ConfigureDialog(this);
     if (dialog->exec())
     {
         LoadTable();

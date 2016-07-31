@@ -1,6 +1,6 @@
 #include "global.h"
-#include "boardtable.h"
 #include "contest.h"
+#include "boardtable.h"
 
 #include <QScrollBar>
 #include <QHeaderView>
@@ -10,17 +10,6 @@ using namespace std;
 BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),
     pre_highlighted_col(-1), already_moving_section(false)
 {
-    Setup();
-}
-
-BoardTable::~BoardTable()
-{
-
-}
-
-void BoardTable::Setup()
-{
-    this->setColumnCount(2);
     this->setMinimumSize(QSize(140, 250));
     this->setFocusPolicy(Qt::NoFocus);
     this->setFrameShape(QFrame::NoFrame);
@@ -33,28 +22,28 @@ void BoardTable::Setup()
     this->setStyleSheet(QLatin1String(
                             "QHeaderView"
                             "{"
-                            "	background:white;"
+                            "	background:#FFFFFF;"
                             "}"
                             "QTableWidget"
                             "{"
                             "	color:rgba(0,0,0,0);"
-                            "	gridline-color:rgb(242,242,242);"
+                            "	gridline-color:#F2F2F2;"
                             "}"
                             "QTableWidget::item:alternate:!selected"
                             "{"
-                            "   background-color:rgb(255,255,255);"
+                            "   background-color:#FFFFFF;"
                             "}"
                             "QTableWidget::item:!alternate:!selected"
                             "{"
-                            "   background-color:rgb(248,248,248);"
+                            "   background-color:#F8F8F8;"
                             "}"
                             "QTableWidget::item:selected"
                             "{"
                             "	color:rgba(0,0,0,0);"
-                            "	background-color:rgb(203,232,246);"
+                            "	background-color:#CBE8F6;"
                             "	border-width:1px;"
                             "   border-style:solid;"
-                            "	border-color:rgb(38,160,218);"
+                            "	border-color:#26A0DA;"
                             "}"
                             "QLabel"
                             "{"
@@ -65,25 +54,27 @@ void BoardTable::Setup()
                             "}"));
 
     this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
-    this->horizontalHeader()->setDefaultSectionSize(85);
     this->horizontalHeader()->setHighlightSections(false);
+    this->horizontalHeader()->setDefaultSectionSize(85);
     this->horizontalHeader()->setMinimumSectionSize(60);
-    this->horizontalHeader()->setProperty("showSortIndicator", QVariant(false));
+    this->horizontalHeader()->setFixedHeight(25);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    this->horizontalHeader()->resizeSection(1, 60);
+    this->horizontalHeader()->setProperty("showSortIndicator", QVariant(false));
     this->horizontalHeader()->setSectionsMovable(true);
     this->horizontalHeader()->setSortIndicatorShown(true);
     this->horizontalHeader()->setTextElideMode(Qt::ElideRight);
 
-    this->verticalHeader()->setDefaultSectionSize(27);
     this->verticalHeader()->setHighlightSections(false);
+    this->verticalHeader()->setDefaultSectionSize(27);
     this->verticalHeader()->setMinimumSectionSize(27);
+    this->verticalHeader()->setMinimumWidth(22);
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    this->verticalHeader()->setMinimumWidth(22);
+}
 
-    pre_highlighted_col = -1;
-    already_moving_section = false;
+BoardTable::~BoardTable()
+{
+
 }
 
 void BoardTable::ClearBoard()
@@ -91,6 +82,7 @@ void BoardTable::ClearBoard()
     this->clear();
     this->setRowCount(0);
     this->setColumnCount(2);
+    this->horizontalHeader()->resizeSection(1, 60);
 
     pre_highlighted_col = -1;
     already_moving_section = false;

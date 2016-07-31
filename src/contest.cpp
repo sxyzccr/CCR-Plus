@@ -141,6 +141,7 @@ void Contest::ReadContestInfo()
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&file);
+        in.setCodec("UTF-8");
         for (; !in.atEnd();)
         {
             QString str = in.readLine();
@@ -218,10 +219,10 @@ void Contest::ReadPlayerList(QFile& file, bool isSaveList)
     map<QString, QString> list;
     list.clear();
     QTextStream in(&file);
+    //in.setCodec("UTF-8");
     for (; !in.atEnd();)
     {
         QString s = in.readLine();
-        //in.setCodec("UTF-8");
         QStringList line = s.split(",");
         for (auto& i : line) i = i.trimmed(), i.remove('\"');
         if (line.size() >= 2 && line[0].size() && line[1].size()) list[line[0]] = line[1];

@@ -21,6 +21,8 @@ private:
     const int time_lim;
 };
 
+
+
 class TestCase
 {
 public:
@@ -49,6 +51,8 @@ private:
     QString note, state;
 };
 
+
+
 struct Subtask
 {
 public:
@@ -71,11 +75,16 @@ private:
     std::vector<TestCase*> cases;
 };
 
+
+
 class Problem
 {
 public:
     explicit Problem(const QString& name = "");
     virtual ~Problem();
+
+    /// 内置校验器列表，格式： <file, <name, toolTip>>
+    static const std::map<QString, std::pair<QString, QString>> INTERNAL_CHECKER_MAP;
 
     /// 增加扩展名
     static QString AddFileExtension(QString file)
@@ -95,8 +104,8 @@ public:
         return file;
     }
 
-    /// 从特殊校验器名称获取校验器文件名
-    static QString FromSpecialCheckerName(const QString& file);
+    /// 尝试从内置校验器名称获取校验器文件名，不是内置校验器返回原始文件名
+    static QString FromInternalCheckerName(const QString& name);
 
     // Getter member functions
     QString Name() const { return name; }
@@ -139,11 +148,11 @@ public:
     /// 自动获取输入输出文件对
     QList<QPair<QString, QString>> GetInAndOutFile();
 
-    /// 特殊校验器名称
-    QString SpecialCheckerName() const
+    /// 尝试获取内置校验器名称，不是内置校验器返回原始文件名
+    QString InternalCheckerName() const
     {
-        auto p = SPECIAL_CHECKER_MAP.find(RemoveFileExtension(checker));
-        if (p != SPECIAL_CHECKER_MAP.end()) return p->second; else return checker;
+        auto p = INTERNAL_CHECKER_MAP.find(RemoveFileExtension(checker));
+        if (p != INTERNAL_CHECKER_MAP.end()) return p->second.first; else return checker;
     }
 
     /// InOutString，格式如下
@@ -156,8 +165,6 @@ public:
     }
 
 private:
-    static const std::map<QString, QString> SPECIAL_CHECKER_MAP;
-
     QString name, dir, exe, checker, in_file, out_file;
     int score, checker_time_lim;
     double code_len_lim;
