@@ -12,7 +12,11 @@ class DetailTable : public QTableWidget
     Q_OBJECT
 public:
     explicit DetailTable(QWidget* parent = 0);
-    virtual ~DetailTable();
+    ~DetailTable() {}
+
+    // 上锁与解锁，防止测评时点击
+    void Lock() { is_locked = true; }
+    void Unlock() { is_locked = false; }
 
     /// 清空 detail 表格
     void ClearDetail();
@@ -28,27 +32,27 @@ public:
 
 public slots:
     /// 标题单元格
-    void onAddTitleDetail(int row, const QString& title);
+    void onAddTitleDetail(const QString& title);
 
     /// 信息显示单元格
-    void onAddNoteDetail(int row, const QString& note, const QString& state = "N");
+    void onAddNoteDetail(const QString& note, const QString& state = "N");
 
     /// 测试点单元格
-    void onAddPointDetail(int row, int num, const QString& note, const QString& state, const QString& inOut, int len);
+    void onAddPointDetail(int num, const QString& note, const QString& state, const QString& inOut, int subTaskLen);
 
     /// 分数单元格
-    void onAddScoreDetail(int row, int len, int score, int sumScore);
+    void onAddScoreDetail(int subTaskLen, int score, int sumScore);
 
     /// 根据在 board 中点击的位置，显示普通的 detail 表格
-    void onShowDetail(int r, int c);
+    void onShowDetail(int row, int column);
 
     /// 显示配置试题后的 detail 表格
     void onShowConfigDetail();
 
 private:
-    bool is_scrollBar_at_bottom;
+    bool is_scrollBar_at_bottom, is_show_detail, is_locked;
     QElapsedTimer last_judge_timer;
-    bool is_show_detail;
+    int rows;
 };
 
 #endif // DETAILTABLE_H

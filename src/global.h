@@ -8,7 +8,6 @@
 namespace Global
 {
 
-extern bool g_is_judging;
 extern bool g_is_judge_stoped;
 extern bool g_is_contest_closed;
 extern int g_sort_key_col;

@@ -240,44 +240,39 @@ ConfigTable::ConfigTable(const QStringList& list, QWidget* parent) : QTableView(
     connect(model, &QAbstractItemModel::dataChanged, this, &ConfigTable::onDataChanged);
 }
 
-ConfigTable::~ConfigTable()
+void ConfigTable::setModelDataNew(int column)
 {
-
-}
-
-void ConfigTable::setModelDataNew(int c)
-{
-    SetItemText(0, c, "传统型");
-    SetItemData(1, c, 1);
-    SetItemData(2, c, 128);
-    SetItemText(3, c, "全文比较");
-    SetItemData(4, c, 2); // 0:off; 1:on; 2:on|disable
+    SetItemText(0, column, "传统型");
+    SetItemData(1, column, 1);
+    SetItemData(2, column, 128);
+    SetItemText(3, column, "全文比较");
+    SetItemData(4, column, 2); // 0:off; 1:on; 2:on|disable
 
     for (int i = 0; i < 4; i++)
     {
-        SetItemChanged(i, c);
-        model->item(i, c)->setEditable(true);
+        SetItemChanged(i, column);
+        model->item(i, column)->setEditable(true);
     }
 }
 
-void ConfigTable::setModelData(int c)
+void ConfigTable::setModelData(int column)
 {
     Problem* problem = nullptr;
-    if (c < Global::g_contest.problem_num) problem = Global::g_contest.problems[c];
+    if (column < Global::g_contest.problem_num) problem = Global::g_contest.problems[column];
 
     if (!problem || !problem->TestCaseCount())
     {
-        setModelDataNew(c);
+        setModelDataNew(column);
         return;
     }
 
-    SetItemData(4, c, 0);
-    SetItemText(3, c, problem->InternalCheckerName());
+    SetItemData(4, column, 0);
+    SetItemText(3, column, problem->InternalCheckerName());
     switch (problem->Type())
     {
         case Global::Traditional:
         {
-            SetItemText(0, c, "传统型");
+            SetItemText(0, column, "传统型");
             double minT = 1e9, maxT = 0, minM = 1e9, maxM = 0;
             for (int i = 0; i < problem->TestCaseCount(); i++)
             {
@@ -287,48 +282,48 @@ void ConfigTable::setModelData(int c)
             }
             if (minT > maxT || minM > maxM)
             {
-                setModelDataNew(c);
+                setModelDataNew(column);
                 return;
             }
 
             if (minT == maxT)
-                SetItemData(1, c, minT);
+                SetItemData(1, column, minT);
             else if (0 <= minT && maxT <= 3600)
-                SetItemText(1, c, QString("%1~%2").arg(minT).arg(maxT));
+                SetItemText(1, column, QString("%1~%2").arg(minT).arg(maxT));
             else
             {
-                SetItemText(1, c, QString("无效"));
-                SetItemBold(1, c);
+                SetItemText(1, column, QString("无效"));
+                SetItemBold(1, column);
             }
 
             if (minM == maxM)
-                SetItemData(2, c, minM);
+                SetItemData(2, column, minM);
             else if (0 <= minM && maxM <= 8192)
-                SetItemData(2, c, QString("%1~%2").arg(minM).arg(maxM));
+                SetItemData(2, column, QString("%1~%2").arg(minM).arg(maxM));
             else
             {
-                SetItemText(2, c, QString("无效"));
-                SetItemBold(2, c);
+                SetItemText(2, column, QString("无效"));
+                SetItemBold(2, column);
             }
             break;
         }
         case Global::AnswersOnly:
         {
-            SetItemText(0, c, QString("提交答案型"));
-            SetItemText(1, c, "");
-            SetItemText(2, c, "");
-            model->item(1, c)->setEditable(false);
-            model->item(2, c)->setEditable(false);
+            SetItemText(0, column, QString("提交答案型"));
+            SetItemText(1, column, "");
+            SetItemText(2, column, "");
+            model->item(1, column)->setEditable(false);
+            model->item(2, column)->setEditable(false);
             break;
         }
         default:
         {
-            SetItemText(0, c, QString("无效"));
-            SetItemBold(0, c);
-            SetItemText(1, c, "");
-            SetItemText(2, c, "");
-            model->item(1, c)->setEditable(false);
-            model->item(2, c)->setEditable(false);
+            SetItemText(0, column, QString("无效"));
+            SetItemBold(0, column);
+            SetItemText(1, column, "");
+            SetItemText(2, column, "");
+            model->item(1, column)->setEditable(false);
+            model->item(2, column)->setEditable(false);
             break;
         }
     }

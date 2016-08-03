@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget* parent) :
     close_button = new QToolButton(ui->menuBar);
     detail_table = new DetailTable(splitter);
     board_table = new BoardTable(splitter);
-    judger = new JudgeThread();
+    is_locked = false;
 
     close_button->setIcon(style()->standardPixmap(QStyle::SP_TitleBarCloseButton));
     close_button->setToolTip("关闭当前竞赛");
@@ -54,19 +54,6 @@ MainWindow::MainWindow(QWidget* parent) :
     connect(board_table, &QTableWidget::cellClicked,       detail_table, &DetailTable::onShowDetail);
     connect(board_table, &QTableWidget::cellDoubleClicked, this,         &MainWindow::StartJudging);
 
-    connect(board_table->horizontalHeader(), &QHeaderView::sectionClicked, board_table, &BoardTable::onSortTable);
-    connect(board_table->horizontalHeader(), &QHeaderView::sectionMoved,   board_table, &BoardTable::onSectionMove);
-
-    connect(judger, &JudgeThread::titleDetailFinished, detail_table, &DetailTable::onAddTitleDetail);
-    connect(judger, &JudgeThread::noteDetailFinished,  detail_table, &DetailTable::onAddNoteDetail);
-    connect(judger, &JudgeThread::pointDetailFinished, detail_table, &DetailTable::onAddPointDetail);
-    connect(judger, &JudgeThread::scoreDetailFinished, detail_table, &DetailTable::onAddScoreDetail);
-
-    connect(judger, &JudgeThread::itemJudgeFinished,         board_table, &BoardTable::onSetItemUnselected);
-    connect(judger, &JudgeThread::resultLabelTextChanged,    board_table, &BoardTable::onUpdateResultLabelText);
-    connect(judger, &JudgeThread::problemResultLabelChanged, board_table, &BoardTable::onUpdateProblemResultLabel);
-    qRegisterMetaType<Global::LabelStyle>("Global::LabelStyle");
-
     CreateActions();
     UpdateRecentContest(true);
 
@@ -76,7 +63,21 @@ MainWindow::MainWindow(QWidget* parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete judger;
+}
+
+
+void MainWindow::LockTable()
+{
+    is_locked = true;
+    board_table->Lock();
+    detail_table->Lock();
+}
+
+void MainWindow::UnlockTable()
+{
+    is_locked = false;
+    board_table->Unlock();
+    detail_table->Unlock();
 }
 
 // Last contest path
@@ -125,7 +126,8 @@ void MainWindow::LoadContest(const QString& path)
     }
 
     QDir dir1(path + "/src"), dir2(path + "/data");
-    if ((!dir1.exists() || !dir2.exists()) && QMessageBox::question(this, "找不到试题或选手目录", "是否继续打开并创建子目录？") == QMessageBox::No) return;
+    if (!dir1.exists() || !dir2.exists())
+        if (QMessageBox::question(this, "找不到试题或选手目录", "是否继续打开并创建子目录？") == QMessageBox::No) return;
 
     if (!dir1.exists() && !QDir(path).mkdir("src"))
     {
@@ -175,8 +177,6 @@ void MainWindow::CloseContest(bool isExit)
 {
     Global::g_is_contest_closed = true;
     StopJudging();
-    judger->waitForFinished(2000);
-    Global::g_contest.SaveResultCache();
     splitter->hide();
     ClearTable();
     Global::g_contest.Clear();
@@ -203,7 +203,7 @@ void MainWindow::CloseContest(bool isExit)
 
 void MainWindow::LoadTable()
 {
-    if (Global::g_is_judging) return;
+    if (is_locked) return;
 
     if (!QDir(Global::g_contest.path).exists())
     {
@@ -222,15 +222,8 @@ void MainWindow::LoadTable()
 
     // 显示 boardTable
     ClearTable();
-    splitter->show();
-
-    board_table->setRowCount(Global::g_contest.player_num);
-    board_table->setColumnCount(Global::g_contest.problem_num + 2);
-    QStringList headerLabels = {"选手", "总分"};
-    for (auto i : Global::g_contest.problems) headerLabels.append(i->Name());
-    board_table->setHorizontalHeaderLabels(headerLabels);
-    for (int i = 0; i < Global::g_contest.problem_num + 2; i++) board_table->horizontalHeaderItem(i)->setToolTip(headerLabels[i]);
     board_table->ShowResult();
+    splitter->show();
 
     // 读取 .list 文件
     QFile file(Global::g_contest.path + ".list");
@@ -260,20 +253,31 @@ void MainWindow::StopJudging()
 {
     //qDebug()<<"STOP";
     Global::g_is_judge_stoped = true;
-    //judger->stop();
+    if (is_locked)
+    {
+        judge_thread->StopJudge();
+        judge_thread->WaitForFinished(2000);
+    }
+    Global::g_contest.SaveResultCache();
+    UnlockTable();
 }
 
-void MainWindow::StartJudging(int r, int c)
+void MainWindow::StartJudging(int row, int column)
 {
-    if (Global::g_is_judging) return;
+    if (is_locked) return;
 
     Global::g_is_judge_stoped = false;
 
     board_table->ClearHighlighted();
-    board_table->setSelectionMode(QAbstractItemView::NoSelection);
     board_table->horizontalHeader()->setSectionsMovable(false);
     board_table->horizontalHeader()->setSortIndicatorShown(false);
     board_table->horizontalHeader()->setSortIndicator(-1, Qt::AscendingOrder);
+    board_table->setSelectionMode(QAbstractItemView::NoSelection);
+
+    detail_table->StartLastJudgeTimer();
+    detail_table->ClearDetail();
+
+    LockTable();
 
     ui->action_configure->setEnabled(false);
     ui->action_set_list->setEnabled(false);
@@ -284,46 +288,56 @@ void MainWindow::StartJudging(int r, int c)
     ui->action_judge_all->setEnabled(false);
     ui->action_stop->setEnabled(true);
 
-    detail_table->StartLastJudgeTimer();
-    detail_table->ClearDetail();
+    judge_thread = new JudgeThread(row, column, this);
 
-    judger->setup(r, c, Global::g_contest.path);
+    connect(judge_thread, &JudgeThread::titleDetailFinished, detail_table, &DetailTable::onAddTitleDetail);
+    connect(judge_thread, &JudgeThread::noteDetailFinished,  detail_table, &DetailTable::onAddNoteDetail);
+    connect(judge_thread, &JudgeThread::pointDetailFinished, detail_table, &DetailTable::onAddPointDetail);
+    connect(judge_thread, &JudgeThread::scoreDetailFinished, detail_table, &DetailTable::onAddScoreDetail);
 
-    if (r == -1) // Judge selected
+    connect(judge_thread, &JudgeThread::itemJudgeFinished,   board_table, &BoardTable::onSetItemUnselected);
+    connect(judge_thread, &JudgeThread::labelTextChanged,    board_table, &BoardTable::onUpdateLabelText);
+    connect(judge_thread, &JudgeThread::sumLabelChanged,     board_table, &BoardTable::onUpdateSumLabel);
+    connect(judge_thread, &JudgeThread::problemLabelChanged, board_table, &BoardTable::onUpdateProblemLabel);
+
+    if (row == -1) // Judge selected
     {
         for (int i = 0; i < Global::g_contest.player_num; i++)
             for (auto j : Global::g_contest.problem_order)
                 if (board_table->item(i, j + 2)->isSelected())
-                    judger->appendProblem(qMakePair(i, j + 2));
+                    judge_thread->AppendProblem(i, j + 2);
     }
-    else if (r == -2) // Judge unjudged
+    else if (row == -2) // Judge unjudged
     {
         for (int i = 0; i < Global::g_contest.player_num; i++)
             for (auto j : Global::g_contest.problem_order)
                 if (Global::g_contest.players[Global::GetLogicalRow(i)]->ProblemLabelAt(j)->State() == ' ')
                 {
-                    judger->appendProblem(qMakePair(i, j + 2));
+                    judge_thread->AppendProblem(i, j + 2);
                     board_table->item(i, j + 2)->setSelected(true);
                 }
     }
-    else if (c <= 1) // Judge one player's all problems
+    else if (column <= 1) // Judge one player's all problems
     {
         for (auto j : Global::g_contest.problem_order)
-            board_table->item(r, j + 2)->setSelected(true);
+            board_table->item(row, j + 2)->setSelected(true);
     }
-    else if (c > 1) // Judge one
-        judger->appendProblem(qMakePair(r, c));
+    else if (column > 1) // Judge one
+        judge_thread->AppendProblem(row, column);
 
     QEventLoop* eventLoop = new QEventLoop(this);
-    connect(judger, SIGNAL(finished()), eventLoop, SLOT(quit()));
-    judger->start();
+    connect(judge_thread, &QThread::finished, eventLoop, &QEventLoop::quit);
+    judge_thread->start();
     eventLoop->exec();
     delete eventLoop;
+    delete judge_thread;
+
+    UnlockTable();
+
+    board_table->horizontalHeader()->setSectionsMovable(true);
+    board_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     if (Global::g_is_contest_closed) return;
-
-    board_table->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    board_table->horizontalHeader()->setSectionsMovable(true);
 
     ui->action_configure->setEnabled(true);
     ui->action_set_list->setEnabled(true);
@@ -428,7 +442,7 @@ void MainWindow::onRemoveDir()
 
 void MainWindow::onOpenRecentContest()
 {
-    if (Global::g_is_judging)
+    if (is_locked)
     {
         StopJudging();
         QMessageBox::warning(this, "", QString("测评被终止！"));
@@ -588,7 +602,7 @@ void MainWindow::on_listWidget_recent_itemDoubleClicked(QListWidgetItem* item)
 
 void MainWindow::on_action_open_triggered()
 {
-    if (Global::g_is_judging)
+    if (is_locked)
     {
         StopJudging();
         QMessageBox::warning(this, "", QString("测评被终止！"));
@@ -755,7 +769,7 @@ void MainWindow::dropEvent(QDropEvent* event)
         if (path.size() >= 2 && path[0] == '/' && path[1] == '/') path.remove(0, 1);
         if (QDir(path).exists())
         {
-            if (Global::g_is_judging)
+            if (is_locked)
             {
                 StopJudging();
                 QMessageBox::warning(this, "", QString("测评被终止！"));

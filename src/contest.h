@@ -5,11 +5,12 @@
 #include "problem.h"
 
 #include <vector>
-#include <algorithm>
 #include <QDir>
 
 struct Contest
 {
+    ~Contest() { Clear(); }
+
     QString name, path, src_path, data_path, result_path;
 
     int player_num, problem_num, sum_score;

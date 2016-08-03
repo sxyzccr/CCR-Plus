@@ -1,9 +1,7 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#include <QtGlobal>
-
-#define __VERSION "1.0.0.160701 测试版"
+#define __VERSION "1.0.0.160808 测试版"
 #if defined(Q_OS_WIN)
     #define VERSION __VERSION" (Windows 32-bit)"
 #elif defined(Q_OS_LINUX)

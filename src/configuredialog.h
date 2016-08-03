@@ -15,7 +15,7 @@ class ConfigureDialog : public QDialog
     Q_OBJECT
 public:
     explicit ConfigureDialog(QWidget* parent = 0);
-    virtual ~ConfigureDialog();
+    ~ConfigureDialog();
 
 public slots:
     void accept() override;

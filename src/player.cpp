@@ -2,6 +2,8 @@
 #include "player.h"
 
 #include <vector>
+#include <QTextStream>
+#include <QDomDocument>
 
 using namespace std;
 
@@ -44,19 +46,6 @@ Player::Player(const QString& name, int id, int probNum) :
     name_label(new ResultLabel(name)), sum_label(new ResultLabel)
 {
     for (int i = 0; i < probNum; i++) prob_label.push_back(new ResultLabel);
-}
-
-Player::~Player()
-{
-    Clear();
-}
-
-void Player::Clear()
-{
-    name_label->deleteLater();
-    sum_label->deleteLater();
-    for (auto i : prob_label) i->deleteLater();
-    prob_label.clear();
 }
 
 void Player::CalcSum()
@@ -128,6 +117,182 @@ void Player::SetSpecialNameLabel()
             if (!i.name_show.isEmpty()) tmp->setText(i.name_show);
             tmp->setStyleSheet(i.style);
         }
+}
+
+void Player::SaveHTMLResult()
+{
+    QDomDocument doc, res;
+    QDomElement html = doc.createElement("html");
+    doc.appendChild(html);
+
+    QDomElement head = doc.createElement("head");
+    html.appendChild(head);
+    QDomElement meta = doc.createElement("meta");
+    meta.setAttribute("http-equiv", "Content-Type");
+    meta.setAttribute("content", "text/html; charset=utf-8");
+    head.appendChild(meta);
+    meta = doc.createElement("title");
+    meta.appendChild(doc.createTextNode(QString("%1的测评结果").arg(name)));
+    head.appendChild(meta);
+
+    head = doc.createElement("body");
+    html.appendChild(head);
+    QDomElement table = doc.createElement("table");
+    table.setAttribute("width", 500);
+    table.setAttribute("cellpadding", 2);
+    table.setAttribute("style", "font-family:verdana");
+    head.appendChild(table);
+
+    auto addRow = [&](const QString& note, const QString& state)
+    {
+        QDomElement tr = doc.createElement("tr");
+        tr.setAttribute("height", 25);
+        table.appendChild(tr);
+        QDomElement td = doc.createElement("td");
+        td.setAttribute("colspan", 3);
+
+        QColor fg(80, 80, 80), bg(180, 180, 180);
+        if (state == "E") fg.setRgb(0, 0, 0), bg.setRgb(227, 58, 218);
+        if (state == " ") fg.setRgb(100, 100, 100), bg.setRgb(235, 235, 235);
+        if (state == "title") fg.setRgb(255, 255, 255), bg.setRgb(120, 120, 120);
+        if (state == "sum") fg.setRgb(0, 0, 0), bg.setRgb(235, 235, 235);
+
+        td.setAttribute("style", QString("color:%1; background-color:%2").arg(fg.name(), bg.name()));
+        td.appendChild(doc.createTextNode(note));
+        tr.appendChild(td);
+    };
+
+    addRow(QString("总分: %1").arg(sum_label->Score()), "sum");
+
+    for (auto p : Global::g_contest.problem_order)
+    {
+        QFile file(Global::g_contest.result_path + Global::g_contest.problems[p]->Name() + "/" + name + ".res");
+        //qDebug()<<file.fileName();
+
+        addRow(QString("%1: %2").arg(Global::g_contest.problems[p]->Name()).arg(prob_label[p]->Score()), "title");
+
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            addRow("无测评结果", " ");
+            continue;
+        }
+        if (!res.setContent(&file)) { file.close(), addRow("无效的测评结果", " "); continue; }
+        QDomElement rt = res.documentElement();
+        if (rt.isNull() || rt.tagName() != "task") { file.close(), addRow("无效的测评结果", " "); continue; }
+
+        QDomNodeList list = rt.childNodes();
+        for (int i = 0; i < list.count(); i++)
+            if (list.item(i).toElement().tagName() == "note")
+                addRow(list.item(i).toElement().text(), rt.attribute("state"));
+
+        for (int i = 0, tasktot = 0, tot = 0; i < list.count(); i++)
+        {
+            QDomElement a = list.item(i).toElement();
+            if (a.tagName() == "subtask")
+            {
+                QDomNodeList l = a.childNodes();
+                int k = 0, kk = 0;
+                for (int j = 0; j < l.count(); j++)
+                    if (l.item(j).toElement().tagName() == "point") kk++;
+                for (int j = 0; j < l.count(); j++)
+                {
+                    QDomElement b = l.item(j).toElement();
+                    if (b.tagName() == "point")
+                    {
+                        QDomElement tr = doc.createElement("tr");
+                        tr.setAttribute("height", 25);
+                        table.appendChild(tr);
+                        QDomElement td = doc.createElement("td");
+                        td.setAttribute("width", 25);
+                        td.setAttribute("align", "right");
+                        td.setAttribute("style", "background-color:#ebebeb"); //rgb(235,235,235)
+                        td.appendChild(doc.createTextNode(QString::number(tot + 1)));
+                        tr.appendChild(td);
+
+                        if (!k)
+                        {
+                            td = doc.createElement("td");
+                            td.setAttribute("width", 50);
+                            td.setAttribute("rowspan", kk);
+                            td.setAttribute("align", "center");
+                            QColor color = Global::GetRatioColor(235, 235, 235, 0, 161, 241,
+                                                                 a.attribute("score").toInt(),
+                                                                 tasktot < Global::g_contest.problems[p]->SubtaskCount() ?
+                                                                           Global::g_contest.problems[p]->SubtaskAt(tasktot)->Score() :
+                                                                           0);
+                            td.setAttribute("style", QString("background-color:%1").arg(color.name()));
+                            td.appendChild(doc.createTextNode(a.attribute("score")));
+                            tr.appendChild(td);
+                        }
+
+                        QColor o(255, 255, 255);
+                        if (b.attribute("state").length() == 1)
+                            switch (b.attribute("state")[0].toLatin1())
+                            {
+                            case 'A':
+                                o.setRgb(51, 185, 6); //AC
+                                break;
+                            case 'C':
+                            case 'E':
+                                o.setRgb(227, 58, 218); //Error
+                                break;
+                            case 'I':
+                            case 'U':
+                                o.setRgb(235, 235, 235); //Ignore/UnSubmit
+                                break;
+                            case 'M':
+                            case 'R':
+                                o.setRgb(247, 63, 63); //MLE/RE
+                                break;
+                            case 'O':
+                                o.setRgb(180, 180, 180); //No Output
+                                break;
+                            case 'P':
+                                o.setRgb(143, 227, 60); //Partial
+                                break;
+                            case 'W':
+                                o.setRgb(246, 123, 20); //WA
+                                break;
+                            case 'T':
+                                o.setRgb(255, 187, 0); //TLE
+                                break;
+                            }
+                        td = doc.createElement("td");
+                        td.setAttribute("style", QString("background-color:%1").arg(o.name()));
+                        td.appendChild(doc.createTextNode(b.attribute("note")));
+                        tr.appendChild(td);
+                        k++, tot++;
+                    }
+                }
+                tasktot++;
+            }
+        }
+        file.close();
+    }
+    QDomElement p = doc.createElement("p");
+    p.appendChild(doc.createTextNode("本文件由 CCR Plus 测评器生成，如有疑问和建议请致信 "));
+    QDomElement a = doc.createElement("a");
+    a.setAttribute("href", "mailto:equation618@gmail.com");
+    a.appendChild(doc.createTextNode("equation618@gmail.com"));
+    p.appendChild(a);
+    head.appendChild(p);
+
+    p = doc.createElement("hr");
+    p.setAttribute("width", 500);
+    p.setAttribute("size", 1);
+    p.setAttribute("align", "left");
+    p.setAttribute("color", "#b4b4b4"); //rgb(180,180,180)
+    head.appendChild(p);
+
+    p = doc.createElement("p");
+    p.appendChild(doc.createTextNode("绍兴一中 贾越凯"));
+    head.appendChild(p);
+
+    QFile file(Global::g_contest.src_path + name + "/result.html");
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    QTextStream out(&file);
+    doc.save(out, 4);
+    file.close();
 }
 
 bool CmpProblem(Player* x,Player* y)

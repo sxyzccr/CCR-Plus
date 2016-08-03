@@ -2,7 +2,6 @@
 #include "configuredialog.h"
 #include "ui_configuredialog.h"
 
-#include <QVector>
 #include <QCheckBox>
 #include <QMessageBox>
 

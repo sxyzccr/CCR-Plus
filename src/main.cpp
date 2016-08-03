@@ -11,6 +11,8 @@ int main(int argc, char* argv[])
     translator.load(":/trans/rcfile/qt_zh_CN.qm");
     a.installTranslator(&translator);
 
+    qRegisterMetaType<Global::LabelStyle>("Global::LabelStyle");
+
     MainWindow w;
     w.show();
 

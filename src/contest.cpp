@@ -1,8 +1,9 @@
 #include "contest.h"
 
 #include <map>
-#include <QtXml>
 #include <QPainter>
+#include <QTextStream>
+#include <QDomDocument>
 
 using namespace std;
 
@@ -156,14 +157,14 @@ void Contest::ReadContestInfo()
             // 兼容旧版
             if (c == 'R') c = 'N';
             if (c == 'O') c = 'N';
-            if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
+            if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = ' ';
             players[x]->ProblemLabelAt(y)->SetResult(s, t, c);
         }
         file.close();
     }
     for (auto i : problemID)
         for (auto j : playerID)
-            if (!players[j.second]->ProblemLabelAt(i.second)->State())
+            if (players[j.second]->ProblemLabelAt(i.second)->State() == ' ')
             {
                 file.setFileName(result_path + i.first + "/" + j.first + ".res");
                 if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
@@ -180,7 +181,7 @@ void Contest::ReadContestInfo()
                 // 兼容旧版
                 if (c == 'R') c = 'N';
                 if (c == 'O') c = 'N';
-                if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = 0;
+                if (c != 'N' && c != 'C' && c != 'F' && c != 'S' && c != 'E') c = ' ';
                 players[x]->ProblemLabelAt(y)->SetResult(s, t, c);
 
                 file.close();

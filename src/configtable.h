@@ -13,7 +13,7 @@ class ConfigTableItemDelegate : public QStyledItemDelegate
 public:
     explicit ConfigTableItemDelegate(const QStringList& list, QObject* parent = 0) :
         QStyledItemDelegate(parent), problem_list(list) {}
-    virtual ~ConfigTableItemDelegate() {}
+    ~ConfigTableItemDelegate() {}
 
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
@@ -36,7 +36,7 @@ class ConfigTable : public QTableView
     Q_OBJECT
 public:
     explicit ConfigTable(const QStringList& list, QWidget* parent = 0);
-    virtual ~ConfigTable();
+    ~ConfigTable() {}
 
     // Getter member functions
     QString ItemText(int r, int c) const { return model->item(r, c)->text(); }
@@ -67,8 +67,8 @@ private:
     QStringList problem_list;
     bool is_changing_data;
 
-    void setModelDataNew(int c);
-    void setModelData(int c);
+    void setModelDataNew(int column);
+    void setModelData(int column);
     void loadProblems();
 
 private slots:

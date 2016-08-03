@@ -57,7 +57,6 @@ struct Subtask
 {
 public:
     explicit Subtask(int s) : score(s) {}
-    virtual ~Subtask() { cases.clear(); }
 
     // Getter member functions
     int Score() const { return score; }
@@ -81,7 +80,7 @@ class Problem
 {
 public:
     explicit Problem(const QString& name = "");
-    virtual ~Problem();
+    ~Problem() { Clear(); }
 
     /// 内置校验器列表，格式： <file, <name, toolTip>>
     static const std::map<QString, std::pair<QString, QString>> INTERNAL_CHECKER_MAP;

@@ -23,7 +23,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit MainWindow(QWidget* parent = 0);
-    virtual ~MainWindow();
+    ~MainWindow();
 
 private:
     Ui::MainWindow* ui;
@@ -32,12 +32,18 @@ private:
 
     BoardTable* board_table;
     DetailTable* detail_table;
-    JudgeThread* judger;
+    JudgeThread* judge_thread;
 
     // Context menus and actions
     QMenu *menu_recent_list, *menu_table, *menu_header;
     QAction *action_create_file, *action_edit_file, *action_create_dir, *action_open_dir, *action_remove_dir,
             *action_remove_recent, *action_clean_recent, *action_recent_list[Global::MAX_RECENT_CONTEST];
+
+    bool is_locked;
+
+    // 上锁与解锁
+    void LockTable();
+    void UnlockTable();
 
     /// 更新最近打开的竞赛列表，是否更新 listWidget_recent
     void UpdateRecentContest(bool);
@@ -57,8 +63,8 @@ private:
     /// 停止测评
     void StopJudging();
 
-    /// 开始测评 board 中第 r 行 c 列的项目，r = c = -1 测评选中项目，r = c = -2 测评未测项目
-    void StartJudging(int r, int c);
+    /// 开始测评 board 中第 row 行 column 列的项目，row = column = -1 测评选中项目，row = column = -2 测评未测项目
+    void StartJudging(int row, int column);
 
     /// 创建动作
     void CreateActions();

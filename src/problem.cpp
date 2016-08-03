@@ -1,7 +1,9 @@
 #include "global.h"
 #include "problem.h"
 
-#include <QtXml>
+#include <QCollator>
+#include <QTextStream>
+#include <QDomDocument>
 
 using namespace std;
 
@@ -26,11 +28,6 @@ Problem::Problem(const QString& name) :
     type(Global::OtherProblemType)
 {
 
-}
-
-Problem::~Problem()
-{
-    Clear();
 }
 
 void Problem::Clear()
