@@ -54,9 +54,9 @@ void Check()
         char c1=-1,c2=-1;
         for (;!feof(fans)&&(c1=fgetc(fans))!='\n';) if (c1!=-1) s1.push_back(c1);
         for (;!feof(fout)&&(c2=fgetc(fout))!='\n';) if (c2!=-1) s2.push_back(c2);
-        if (i==1&&feof(fout)&&s2=="") End("选手输出为空",0);
         if (feof(fout)&&s1!=""&&s2=="")
         {
+            if (i==1) End("选手输出为空",0);
             sprintf(s,"第%d行 标准输出:\"%s\" 选手输出已结尾",i,elided(s1,0).c_str());
             End(s,0);
         }
