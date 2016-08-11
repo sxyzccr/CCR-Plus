@@ -1,21 +1,20 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "global.h"
 #include "player.h"
 #include "problem.h"
 #include "boardtable.h"
 #include "detailtable.h"
 #include "judgethread.h"
-#include "configdialog.h"
-#include "createfiledialog.h"
 
+#include <QFile>
 #include <QSplitter>
 #include <QToolButton>
 #include <QListWidget>
 #include <QMainWindow>
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
@@ -23,93 +22,96 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
 
+private:
+    Ui::MainWindow* ui;
+    QSplitter* splitter;
+    QToolButton* close_button;
+
+    BoardTable* board_table;
+    DetailTable* detail_table;
+    JudgeThread* judge_thread;
+
+    // Context menus and actions
+    QMenu *menu_recent_list, *menu_table, *menu_header;
+    QAction *action_create_file, *action_edit_file, *action_create_dir, *action_open_dir, *action_remove_dir,
+            *action_remove_recent, *action_clean_recent, *action_recent_list[Global::MAX_RECENT_CONTEST];
+
+    bool is_locked;
+
+    // 上锁与解锁
+    void LockTable();
+    void UnlockTable();
+
+    /// 更新最近打开的竞赛列表，是否更新 listWidget_recent
+    void UpdateRecentContest(bool);
+
+    /// 载入竞赛
+    void LoadContest(const QString& path);
+
+    /// 关闭竞赛，是否退出程序
+    void CloseContest(bool isExit = false);
+
+    /// 载入表格 (刷新)
+    void LoadTable();
+
+    /// 清空 board
+    void ClearTable();
+
+    /// 停止测评
+    void StopJudging();
+
+    /// 开始测评 board 中第 row 行 column 列的项目，row = column = -1 测评选中项目，row = column = -2 测评未测项目
+    void StartJudging(int row, int column);
+
+    /// 创建动作
+    void CreateActions();
+
 private slots:
-    void judgeEvent(int,int);
-    void stopEvent();
-    void openRecentContest();
-    void updateRecentContest(bool);
-    void loadContestEvent(const QString &path);
-    void loadBoardEvent();
-    void closeContestEvent();
+    // Context menu actions
+    void onCreateFile();
+    void onEditFile();
+    void onCreateDir();
+    void onOpenDir();
+    void onRemoveDir();
+    void onOpenRecentContest();
+    void onRemoveRecentContest();
+    void onCleanRecentContest();
 
-    void removeRecent_action();
-    void cleanRecent_action();
-    void editFile_action();
-    void createFile_action();
-    void openDir_action();
-    void createDir_action();
-    void removeDir_action();
-    void recentListMenuEvent(const QPoint &pos);
-    void headerMenuEvent(const QPoint &pos);
-    void tableMenuEvent(const QPoint &pos);
+    // Context menu events
+    void onMenuRecentListEvent(const QPoint& pos);
+    void onMenuHeaderEvent(const QPoint& pos);
+    void onMenuTableEvent(const QPoint& pos);
 
-    void on_actionOpen_triggered();
-    void on_actionClose_triggered();
-    void on_actionConfig_triggered();
-    void on_actionList_triggered();
-    void on_actionExport_triggered();
-    void on_actionExit_triggered();
+    // listWidget_recent item action
+    void on_listWidget_recent_itemDoubleClicked(QListWidgetItem* item);
 
-    void on_actionRefresh_triggered();
-    void on_actionJudgeSelect_triggered();
-    void on_actionJudgeUnjudged_triggered();
-    void on_actionJudgeAll_triggered();
-    void on_actionStop_triggered();
+    // Contest menu actions
+    void on_action_open_triggered();
+    void on_action_close_triggered();
+    void on_action_configure_triggered();
+    void on_action_set_list_triggered();
+    void on_action_export_triggered();
+    void on_action_exit_triggered();
 
-    void on_actionAbout_triggered();
+    // Test menu actions
+    void on_action_refresh_triggered();
+    void on_action_judge_selected_triggered();
+    void on_action_judge_unjudged_triggered();
+    void on_action_judge_all_triggered();
+    void on_action_stop_triggered();
 
-    void on_recentList_itemDoubleClicked(QListWidgetItem *item);
-
-    void solt1(QLabel*label,const QString&s1,const QString&s2,const QString&s3);
-    void solt2(Player*ply,int c,Player::Result*res,int sum);
-
-    void slot3(int row, const QString &title);
-    void slot4(int row, const QString &note, const QString&state);
-    void slot5(int row, int num, const QString &note, const QString &state, const QString &file, int len);
-    void slot6(int row, int len, int score, int sumScore);
-
-    void slot7(int r,int c);
-    void slot8(int r,int c);
-
-    void on_actionHelp_triggered();
+    // Help menu actions
+    void on_action_help_triggered();
+    void on_action_about_triggered();
 
 protected:
-    void closeEvent(QCloseEvent *event);
-    void keyPressEvent(QKeyEvent* event);
-    void dragEnterEvent(QDragEnterEvent* event);
-    void dropEvent(QDropEvent* event);
-
-private:
-    Ui::MainWindow *ui;
-    QSplitter*splitter;
-    BoardTable*boardTable;
-    DetailTable*detailTable;
-    int playerLabelLength;
-    JudgeThread*judger;
-    bool judgeStoped,contestClosed;
-    QMenu*tableMenu,*headerMenu,*recentListMenu;
-    QAction*actionEditFile,*actionOpenDir,*actionCreateFile,*actionRemoveDir,*actionCreateDir,*actionRemove,*actionClean,*actionR[20];
-    QString dir_action,file_action,path_action,lastContest;
-    Player*player_action;
-    Problem*problem_action;
-    QToolButton*closeButton;
-
-    QStringList readFolders(const QString &path);
-    QStringList readProblemOrder(const QString &path);
-    QPixmap createIcon(const QString &path);
-
-    void clear();
-    void prepare();
-    void createActions();
-    void saveResultList();
-    void readPlayerList(QFile &fileName, bool isCSV);
-
-signals:
-    void stopJudgingSignal();
-    void closeContestSignal();
+    void closeEvent(QCloseEvent* event) override;
+    void keyPressEvent(QKeyEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
 };
 
 #endif // MAINWINDOW_H

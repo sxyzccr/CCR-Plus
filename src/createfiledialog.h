@@ -7,28 +7,31 @@
 #include <QDialog>
 #include <QListWidget>
 
-namespace Ui {
+namespace Ui
+{
 class CreateFileDialog;
 }
 
 class CreateFileDialog : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit CreateFileDialog(QWidget *parent = 0, Player *ply = 0, Problem *prob = 0);
+    explicit CreateFileDialog(QWidget* parent = 0, Player* ply = 0, Problem* prob = 0);
     ~CreateFileDialog();
 
-    QString selectedFile;
+    QString GetSelectedFile() const { return selected_file; }
 
-private slots:
-    void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
+public slots:
+    void accept() override;
 
 private:
-    Ui::CreateFileDialog *ui;
-    Player*player;
-    Problem*problem;
-    void accept();
+    Ui::CreateFileDialog* ui;
+    Player* player;
+    Problem* problem;
+    QString selected_file;
+
+private slots:
+    void on_listWidget_itemDoubleClicked(QListWidgetItem*);
 };
 
 #endif // CREATEFILEDIALOG_H

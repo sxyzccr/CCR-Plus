@@ -4,6 +4,10 @@
 # Qt Creator user files
 *.user*
 
+# Log files
+log.*
+*.log
+
 # *nix related
 # Common convention for backup or temporary files
 *~

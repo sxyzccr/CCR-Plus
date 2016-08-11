@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ConfigDialog</class>
- <widget class="QDialog" name="ConfigDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>347</width>
-    <height>260</height>
-   </rect>
+ <class>ConfigureDialog</class>
+ <widget class="QDialog" name="ConfigureDialog">
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>配置试题</string>
@@ -79,63 +77,10 @@
     </spacer>
    </item>
    <item row="0" column="0" colspan="2">
-    <widget class="QTableView" name="tableView">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>325</width>
-       <height>162</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>1090</width>
-       <height>162</height>
-      </size>
-     </property>
-     <property name="focusPolicy">
-      <enum>Qt::NoFocus</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QTableView
-{
-background-color:rgb(248,248,248);
-alternate-background-color:rgb(255,255,255);
-}
-</string>
-     </property>
-     <property name="verticalScrollBarPolicy">
-      <enum>Qt::ScrollBarAlwaysOff</enum>
-     </property>
-     <property name="alternatingRowColors">
-      <bool>true</bool>
-     </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::NoSelection</enum>
-     </property>
-     <attribute name="horizontalHeaderDefaultSectionSize">
-      <number>85</number>
-     </attribute>
-     <attribute name="horizontalHeaderHighlightSections">
+    <widget class="QWidget" name="widget_empty" native="true">
+     <property name="enabled">
       <bool>false</bool>
-     </attribute>
-     <attribute name="horizontalHeaderMinimumSectionSize">
-      <number>85</number>
-     </attribute>
-     <attribute name="verticalHeaderDefaultSectionSize">
-      <number>27</number>
-     </attribute>
-     <attribute name="verticalHeaderHighlightSections">
-      <bool>false</bool>
-     </attribute>
-     <attribute name="verticalHeaderMinimumSectionSize">
-      <number>27</number>
-     </attribute>
+     </property>
     </widget>
    </item>
   </layout>
@@ -145,7 +90,7 @@ alternate-background-color:rgb(255,255,255);
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>ConfigDialog</receiver>
+   <receiver>ConfigureDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -161,7 +106,7 @@ alternate-background-color:rgb(255,255,255);
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>ConfigDialog</receiver>
+   <receiver>ConfigureDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

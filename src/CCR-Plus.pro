@@ -6,35 +6,44 @@ TEMPLATE = app
 CONFIG += c++11
 
 SOURCES += boardtable.cpp \
-    configdialog.cpp \
     createfiledialog.cpp \
     detailtable.cpp \
-    global.cpp \
-    itemdelegate.cpp \
     judgethread.cpp \
     main.cpp\
     mainwindow.cpp \
     player.cpp \
-    problem.cpp
+    problem.cpp \
+    const.cpp \
+    configuredialog.cpp \
+    global.cpp \
+    contest.cpp \
+    configtable.cpp \
+    basejudger.cpp \
+    answeronlyjudger.cpp \
+    traditionaljudger.cpp
 
 HEADERS += boardtable.h \
-    configdialog.h \
     createfiledialog.h \
     detailtable.h \
-    global.h \
-    header.h \
-    itemdelegate.h \
     judgethread.h \
     mainwindow.h \
     player.h \
     problem.h \
-    version.h
+    version.h \
+    const.h \
+    configuredialog.h \
+    global.h \
+    contest.h \
+    configtable.h \
+    basejudger.h \
+    answeronlyjudger.h \
+    traditionaljudger.h
 
 UI_DIR = forms
 RCC_DIR = rcfile
 
 FORMS += forms/mainwindow.ui \
-    forms/configdialog.ui \
+    forms/configuredialog.ui \
     forms/createfiledialog.ui
 
 RESOURCES = rcfile/image.qrc
