@@ -179,36 +179,36 @@ void DetailTable::onAddPointDetail(int num, const QString& note, const QString& 
     tmp->setToolTip(tmp->text());
 
     QColor o(255, 255, 255);
-    if (state == "conf") o.setRgb(0, 161, 241); //Config
+    if (state == "conf") o.setRgb(0, 161, 241); // Configuration
     if (state.length() == 1)
         switch (state[0].toLatin1())
         {
         case 'A':
-            o.setRgb(51, 185, 6); //AC
+            o.setRgb(51, 185, 6); // AC
             break;
         case 'C':
         case 'E':
-            o.setRgb(227, 58, 218); //Error
+            o.setRgb(227, 58, 218); // Error
             break;
         case 'I':
         case 'U':
-            o.setRgb(235, 235, 235); //Ignore/UnSubmit
+            o.setRgb(235, 235, 235); // Ignore/UnSubmit
             break;
         case 'M':
         case 'R':
-            o.setRgb(247, 63, 63); //MLE/RE
+            o.setRgb(247, 63, 63); // MLE/RE
             break;
         case 'O':
-            o.setRgb(180, 180, 180); //No Output
+            o.setRgb(180, 180, 180); // No Output
             break;
         case 'P':
-            o.setRgb(143, 227, 60); //Partial
+            o.setRgb(143, 227, 60); // Partial
             break;
         case 'W':
-            o.setRgb(246, 123, 20); //WA
+            o.setRgb(246, 123, 20); // WA
             break;
         case 'T':
-            o.setRgb(255, 187, 0); //TLE
+            o.setRgb(255, 187, 0); // TLE
             break;
         }
     tmp->setBackgroundColor(o);
@@ -255,7 +255,7 @@ void DetailTable::onShowDetail(int row, int column)
     is_show_detail = false;
 }
 
-void DetailTable::onShowConfigDetail()
+void DetailTable::onShowConfigurationDetail()
 {
     is_show_detail = true;
     rows = this->rowCount();

@@ -130,10 +130,10 @@ public:
     void Clear();
 
     /// 读入配置文件
-    void ReadConfig();
+    void ReadConfiguration();
 
     /// 保存配置文件
-    bool SaveConfig();
+    bool SaveConfiguration();
 
     /// 配置试题，只修改时间限制 、内存限制、校验器等
     void Configure(const QString& typ, double timeLim, double memLim, const QString& check);

@@ -40,7 +40,7 @@ void Problem::Clear()
     compilers.clear();
 }
 
-void Problem::ReadConfig()
+void Problem::ReadConfiguration()
 {
     score = 0;
     QFile file(Global::g_contest.data_path + name + "/.prb");
@@ -116,7 +116,7 @@ void Problem::ReadConfig()
     file.close();
 }
 
-bool Problem::SaveConfig()
+bool Problem::SaveConfiguration()
 {
     QDomDocument doc;
     QDomProcessingInstruction xml = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");

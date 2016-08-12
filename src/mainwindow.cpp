@@ -625,7 +625,7 @@ void MainWindow::on_action_configure_triggered()
     if (dialog->exec())
     {
         LoadTable();
-        detail_table->onShowConfigDetail();
+        detail_table->onShowConfigurationDetail();
     }
     delete dialog;
 }

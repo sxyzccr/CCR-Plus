@@ -47,7 +47,7 @@ public slots:
     void onShowDetail(int row, int column);
 
     /// 显示配置试题后的 detail 表格
-    void onShowConfigDetail();
+    void onShowConfigurationDetail();
 
 private:
     bool is_scrollBar_at_bottom, is_show_detail, is_locked;

@@ -1,7 +1,7 @@
 #ifndef CONFIGUREDIALOG_H
 #define CONFIGUREDIALOG_H
 
-#include "configtable.h"
+#include "configuretable.h"
 
 #include <QDialog>
 
@@ -22,7 +22,7 @@ public slots:
 
 private:
     Ui::ConfigureDialog* ui;
-    ConfigTable* config_table;
+    ConfigureTable* configure_table;
     QStringList problem_list;
 
 private slots:

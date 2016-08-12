@@ -1,5 +1,5 @@
-#ifndef CONFIGTABLE_H
-#define CONFIGTABLE_H
+#ifndef CONFIGURETABLE_H
+#define CONFIGURETABLE_H
 
 #include "global.h"
 
@@ -7,13 +7,13 @@
 #include <QStandardItemModel>
 #include <QStyledItemDelegate>
 
-class ConfigTableItemDelegate : public QStyledItemDelegate
+class ConfigureTableItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    explicit ConfigTableItemDelegate(const QStringList& list, QObject* parent = 0) :
+    explicit ConfigureTableItemDelegate(const QStringList& list, QObject* parent = 0) :
         QStyledItemDelegate(parent), problem_list(list) {}
-    ~ConfigTableItemDelegate() {}
+    ~ConfigureTableItemDelegate() {}
 
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
@@ -31,12 +31,12 @@ private:
 
 
 
-class ConfigTable : public QTableView
+class ConfigureTable : public QTableView
 {
     Q_OBJECT
 public:
-    explicit ConfigTable(const QStringList& list, QWidget* parent = 0);
-    ~ConfigTable() {}
+    explicit ConfigureTable(const QStringList& list, QWidget* parent = 0);
+    ~ConfigureTable() {}
 
     // Getter member functions
     QString ItemText(int r, int c) const { return model->item(r, c)->text(); }
@@ -75,4 +75,4 @@ private slots:
     void onDataChanged(const QModelIndex& topLeft, const QModelIndex& bottomRight);
 };
 
-#endif // CONFIGTABLE_H
+#endif // CONFIGURETABLE_H

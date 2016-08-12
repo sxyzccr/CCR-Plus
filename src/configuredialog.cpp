@@ -18,11 +18,11 @@ ConfigureDialog::ConfigureDialog(QWidget* parent) :
     QStringList tmp = QDir(Global::g_contest.data_path).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     for (auto i : tmp) if (!problem_list.count(i)) problem_list.append(i);
 
-    config_table = new ConfigTable(problem_list, this);
+    configure_table = new ConfigureTable(problem_list, this);
     ui->widget_empty->hide();
-    ui->gridLayout->addWidget(config_table, 0, 0, 1, 2);
+    ui->gridLayout->addWidget(configure_table, 0, 0, 1, 2);
 
-    this->setFixedSize(config_table->width() + 22, config_table->height() + 100);
+    this->setFixedSize(configure_table->width() + 22, configure_table->height() + 100);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 }
 
@@ -34,7 +34,7 @@ ConfigureDialog::~ConfigureDialog()
 void ConfigureDialog::accept()
 {
     for (int i = 0; i < problem_list.size(); i++)
-        for (int j = 0; j < 3; j++) if (config_table->ItemText(j, i) == "无效")
+        for (int j = 0; j < 3; j++) if (configure_table->ItemText(j, i) == "无效")
             {
                 QMessageBox::critical(this, "保存配置失败", "存在无效的设置！");
                 return;
@@ -43,21 +43,21 @@ void ConfigureDialog::accept()
     QStringList list;
     for (int i = 0; i < problem_list.size(); i++)
     {
-        int t = config_table->horizontalHeader()->logicalIndex(i);
-        if (config_table->IsColumnChanged(t))
+        int t = configure_table->horizontalHeader()->logicalIndex(i);
+        if (configure_table->IsColumnChanged(t))
         {
-            QString type = config_table->ItemText(0, t);
-            QString checker = config_table->ItemText(3, t);
-            double tim = config_table->ItemData(1, t).toDouble();
-            double mem = config_table->ItemData(2, t).toDouble();
-            if (!config_table->IsItemChanged(0, t)) type = "";
-            if (!config_table->IsItemChanged(3, t)) checker = "";
-            if (!config_table->IsItemChanged(1, t)) tim = -1;
-            if (!config_table->IsItemChanged(2, t)) mem = -1;
+            QString type = configure_table->ItemText(0, t);
+            QString checker = configure_table->ItemText(3, t);
+            double tim = configure_table->ItemData(1, t).toDouble();
+            double mem = configure_table->ItemData(2, t).toDouble();
+            if (!configure_table->IsItemChanged(0, t)) type = "";
+            if (!configure_table->IsItemChanged(3, t)) checker = "";
+            if (!configure_table->IsItemChanged(1, t)) tim = -1;
+            if (!configure_table->IsItemChanged(2, t)) mem = -1;
             Problem* tmp = new Problem(problem_list[t]);
             Problem* prob;
             //qDebug()<<problem_list[t]<<type<<checker<<tim<<mem;
-            if (config_table->ItemData(4, t).toBool())
+            if (configure_table->ItemData(4, t).toBool())
             {
                 prob = tmp;
                 prob->ConfigureNew(type, tim, mem, checker);
@@ -67,7 +67,7 @@ void ConfigureDialog::accept()
                 prob = Global::g_contest.problems[t];
                 prob->Configure(type, tim, mem, checker);
             }
-            if (!prob->SaveConfig())
+            if (!prob->SaveConfiguration())
             {
                 QMessageBox::critical(this, "保存配置失败", "无法写入配置文件！");
                 delete tmp;
