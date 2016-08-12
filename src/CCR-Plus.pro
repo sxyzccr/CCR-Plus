@@ -17,10 +17,10 @@ SOURCES += boardtable.cpp \
     configuredialog.cpp \
     global.cpp \
     contest.cpp \
-    configtable.cpp \
     basejudger.cpp \
     answeronlyjudger.cpp \
-    traditionaljudger.cpp
+    traditionaljudger.cpp \
+    configuretable.cpp
 
 HEADERS += boardtable.h \
     createfiledialog.h \
@@ -34,10 +34,10 @@ HEADERS += boardtable.h \
     configuredialog.h \
     global.h \
     contest.h \
-    configtable.h \
     basejudger.h \
     answeronlyjudger.h \
-    traditionaljudger.h
+    traditionaljudger.h \
+    configuretable.h
 
 UI_DIR = forms
 RCC_DIR = rcfile

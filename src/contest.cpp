@@ -188,7 +188,7 @@ void Contest::ReadContestInfo()
             }
 
     // 读取 .prb 文件
-    for (auto i : problems) i->ReadConfig();
+    for (auto i : problems) i->ReadConfiguration();
 
     for (auto i : problems) sum_score += i->Score();
     for (auto i : players) i->CalcSum();

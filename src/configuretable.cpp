@@ -1,7 +1,7 @@
 #include "global.h"
 #include "player.h"
 #include "problem.h"
-#include "configtable.h"
+#include "configuretable.h"
 
 #include <QListView>
 #include <QHeaderView>
@@ -14,7 +14,7 @@
 
 using namespace std;
 
-QRect ConfigTableItemDelegate::checkBoxRect(const QStyleOptionViewItem& viewItemStyleOptions)
+QRect ConfigureTableItemDelegate::checkBoxRect(const QStyleOptionViewItem& viewItemStyleOptions)
 {
     QStyleOptionButton checkBoxStyleOptionButton;
     QRect rect = QApplication::style()->subElementRect(QStyle::SE_CheckBoxIndicator, &checkBoxStyleOptionButton);
@@ -25,7 +25,7 @@ QRect ConfigTableItemDelegate::checkBoxRect(const QStyleOptionViewItem& viewItem
 
 
 
-QWidget* ConfigTableItemDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index) const
+QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem&, const QModelIndex& index) const
 {
     switch (index.row())
     {
@@ -115,7 +115,7 @@ QWidget* ConfigTableItemDelegate::createEditor(QWidget* parent, const QStyleOpti
     }
 }
 
-void ConfigTableItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+void ConfigureTableItemDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
     if (index.row() != 4)
     {
@@ -136,7 +136,7 @@ void ConfigTableItemDelegate::paint(QPainter* painter, const QStyleOptionViewIte
     QApplication::style()->drawControl(QStyle::CE_CheckBox, &checkBoxOption, painter);
 }
 
-void ConfigTableItemDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const
+void ConfigureTableItemDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const
 {
     switch (index.row())
     {
@@ -161,7 +161,7 @@ void ConfigTableItemDelegate::setEditorData(QWidget* editor, const QModelIndex& 
     }
 }
 
-void ConfigTableItemDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const
+void ConfigureTableItemDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const
 {
     switch (index.row())
     {
@@ -182,7 +182,7 @@ void ConfigTableItemDelegate::setModelData(QWidget* editor, QAbstractItemModel* 
     }
 }
 
-bool ConfigTableItemDelegate::editorEvent(QEvent* event, QAbstractItemModel* model, const QStyleOptionViewItem& option, const QModelIndex& index)
+bool ConfigureTableItemDelegate::editorEvent(QEvent* event, QAbstractItemModel* model, const QStyleOptionViewItem& option, const QModelIndex& index)
 {
     if (index.row() != 4)
         return QStyledItemDelegate::editorEvent(event, model, option, index);
@@ -203,7 +203,7 @@ bool ConfigTableItemDelegate::editorEvent(QEvent* event, QAbstractItemModel* mod
 
 
 
-ConfigTable::ConfigTable(const QStringList& list, QWidget* parent) : QTableView(parent),
+ConfigureTable::ConfigureTable(const QStringList& list, QWidget* parent) : QTableView(parent),
     model(new QStandardItemModel(this)), problem_list(list), is_changing_data(false)
 {
     this->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
@@ -233,14 +233,14 @@ ConfigTable::ConfigTable(const QStringList& list, QWidget* parent) : QTableView(
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     this->setModel(model);
-    this->setItemDelegate(new ConfigTableItemDelegate(problem_list, this));
+    this->setItemDelegate(new ConfigureTableItemDelegate(problem_list, this));
 
     loadProblems();
 
-    connect(model, &QAbstractItemModel::dataChanged, this, &ConfigTable::onDataChanged);
+    connect(model, &QAbstractItemModel::dataChanged, this, &ConfigureTable::onDataChanged);
 }
 
-void ConfigTable::setModelDataNew(int column)
+void ConfigureTable::setModelDataNew(int column)
 {
     SetItemText(0, column, "传统型");
     SetItemData(1, column, 1);
@@ -255,7 +255,7 @@ void ConfigTable::setModelDataNew(int column)
     }
 }
 
-void ConfigTable::setModelData(int column)
+void ConfigureTable::setModelData(int column)
 {
     Problem* problem = nullptr;
     if (column < Global::g_contest.problem_num) problem = Global::g_contest.problems[column];
@@ -329,7 +329,7 @@ void ConfigTable::setModelData(int column)
     }
 }
 
-void ConfigTable::loadProblems()
+void ConfigureTable::loadProblems()
 {
     model->setRowCount(5);
     model->setVerticalHeaderLabels({"题目类型", "时间限制", "内存限制", "比较方式", "清空原配置"});
@@ -357,7 +357,7 @@ void ConfigTable::loadProblems()
 
 
 
-void ConfigTable::onDataChanged(const QModelIndex& topLeft, const QModelIndex&)
+void ConfigureTable::onDataChanged(const QModelIndex& topLeft, const QModelIndex&)
 {
     if (is_changing_data) return;
     is_changing_data = true;
