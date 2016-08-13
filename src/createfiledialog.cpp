@@ -10,12 +10,11 @@ CreateFileDialog::CreateFileDialog(QWidget* parent, Player* ply, Problem* prob) 
 
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
-    int t = 0;
     for (int i = 0; i < problem->CompilerCount(); i++)
     {
         Compiler* compiler = problem->CompilerAt(i);
         ui->listWidget->addItem(compiler->SourceFile());
-        ui->listWidget->item(t++)->setToolTip(compiler->SourceFile());
+        ui->listWidget->item(i)->setToolTip(compiler->SourceFile());
     }
     ui->listWidget->setCurrentRow(0);
 }

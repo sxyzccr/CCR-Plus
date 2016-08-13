@@ -14,7 +14,7 @@ class ConfigureDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ConfigureDialog(QWidget* parent = 0);
+    explicit ConfigureDialog(const QStringList& list, QWidget* parent = 0);
     ~ConfigureDialog();
 
 public slots:

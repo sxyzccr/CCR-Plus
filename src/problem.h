@@ -48,7 +48,6 @@ private:
     const int id;
     double time_lim, mem_lim;
     QString in, out, sub;
-    QString note, state;
 };
 
 

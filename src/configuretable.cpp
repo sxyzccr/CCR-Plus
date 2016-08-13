@@ -258,7 +258,8 @@ void ConfigureTable::setModelDataNew(int column)
 void ConfigureTable::setModelData(int column)
 {
     Problem* problem = nullptr;
-    if (column < Global::g_contest.problem_num) problem = Global::g_contest.problems[column];
+    int p = Global::g_contest.ProblemIndex(model->horizontalHeaderItem(column)->text());
+    if (p != -1) problem = Global::g_contest.problems[p];
 
     if (!problem || !problem->TestCaseCount())
     {
@@ -390,9 +391,7 @@ void ConfigureTable::onDataChanged(const QModelIndex& topLeft, const QModelIndex
         }
         case 4: // Clean
         {
-            if (c >= Global::g_contest.problem_num)
-                setModelDataNew(c);
-            else if (ItemData(r, c).toBool())
+            if (ItemData(r, c).toBool())
             {
                 setModelDataNew(c);
                 SetItemData(4, c, 1);

@@ -398,7 +398,7 @@ static Problem* problemByAction;
 void MainWindow::onCreateFile()
 {
     CreateFileDialog dialog(this, playerByAction, problemByAction);
-    if (dialog.exec())
+    if (dialog.exec() == QDialog::Accepted)
     {
         if (!QDir(dirByAction).exists()) QDir().mkpath(dirByAction);
         QString s = dialog.GetSelectedFile();
@@ -621,13 +621,17 @@ void MainWindow::on_action_close_triggered()
 
 void MainWindow::on_action_configure_triggered()
 {
-    ConfigureDialog* dialog = new ConfigureDialog(this);
-    if (dialog->exec())
+    QStringList list;
+    for (auto i : Global::g_contest.problem_order) list.append(Global::g_contest.problems[i]->Name());
+    QStringList tmp = QDir(Global::g_contest.data_path).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    for (auto i : tmp) if (!list.count(i)) list.append(i);
+
+    ConfigureDialog dialog(list, this);
+    if (dialog.exec() == QDialog::Accepted)
     {
         LoadTable();
         detail_table->onShowConfigurationDetail();
     }
-    delete dialog;
 }
 
 void MainWindow::on_action_set_list_triggered()
@@ -722,22 +726,21 @@ void MainWindow::on_action_help_triggered()
 
 void MainWindow::on_action_about_triggered()
 {
-    QMessageBox* msgBox = new QMessageBox(this);
-    msgBox->setWindowTitle("关于 CCR Plus");
-    msgBox->setText(QString(
-                        "<h2>CCR Plus 测评器<br/></h2>"
-                        "<p>版本：%1</p>"
-                        "<p>构建时间：%2 - %3</p>"
-                        "<p>Copyright © 2016 绍兴一中 贾越凯。保留所有权利。<br/></p>"
-                        "<p>项目主页：<a href=\"https://github.com/sxyzccr/CCR-Plus\">https://github.com/sxyzccr/CCR-Plus</a></p>"
-                        "<p>作者邮箱：<a href=\"mailto:equation618@gmail.com\">equation618@gmail.com</a><br/></p>"
-                        "<p>本项目使用 <a href=\"http://www.gnu.org/licenses/gpl-3.0.html\">GNU 通用公共许可证</a>。</p>"
-                        "<p>感谢 <a href=\"http://code.google.com/p/project-lemon\">project-lemon</a> 等开源项目的支持。</p>"
-                    ).arg(VERSION).arg(__DATE__).arg(__TIME__));
-    msgBox->setStandardButtons(QMessageBox::Ok);
-    msgBox->setIconPixmap(QPixmap(":/icon/image/logo.png"));
-    msgBox->exec();
-    delete msgBox;
+    QMessageBox msgBox(this);
+    msgBox.setWindowTitle("关于 CCR Plus");
+    msgBox.setText(QString(
+                      "<h2>CCR Plus 测评器<br/></h2>"
+                      "<p>版本：%1</p>"
+                      "<p>构建时间：%2 - %3</p>"
+                      "<p>Copyright © 2016 绍兴一中 贾越凯。保留所有权利。<br/></p>"
+                      "<p>项目主页：<a href=\"https://github.com/sxyzccr/CCR-Plus\">https://github.com/sxyzccr/CCR-Plus</a></p>"
+                      "<p>作者邮箱：<a href=\"mailto:equation618@gmail.com\">equation618@gmail.com</a><br/></p>"
+                      "<p>本项目使用 <a href=\"http://www.gnu.org/licenses/gpl-3.0.html\">GNU 通用公共许可证</a>。</p>"
+                      "<p>感谢 <a href=\"http://code.google.com/p/project-lemon\">project-lemon</a> 等开源项目的支持。</p>"
+                      ).arg(VERSION).arg(__DATE__).arg(__TIME__));
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setIconPixmap(QPixmap(":/icon/image/logo.png"));
+    msgBox.exec();
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)

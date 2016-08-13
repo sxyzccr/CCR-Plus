@@ -29,6 +29,14 @@ struct Contest
     /// 清空信息
     void Clear();
 
+    /// 查找题目位置
+    int ProblemIndex(const QString& name)
+    {
+        for (int i = 0; i < problem_num; i++)
+            if (problems[i]->Name() == name) return i;
+        return -1;
+    }
+
     /// 读取目录下的所有文件夹
     QStringList ReadFolders(const QString& path);
 

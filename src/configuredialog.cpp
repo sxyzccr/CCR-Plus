@@ -1,5 +1,6 @@
 #include "global.h"
 #include "configuredialog.h"
+#include "advancedconfiguredialog.h"
 #include "ui_configuredialog.h"
 
 #include <QCheckBox>
@@ -7,16 +8,11 @@
 
 using namespace std;
 
-ConfigureDialog::ConfigureDialog(QWidget* parent) :
+ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
     QDialog(parent),
-    ui(new Ui::ConfigureDialog)
+    ui(new Ui::ConfigureDialog), problem_list(list)
 {
     ui->setupUi(this);
-
-    problem_list.clear();
-    for (auto i : Global::g_contest.problem_order) problem_list.append(Global::g_contest.problems[i]->Name());
-    QStringList tmp = QDir(Global::g_contest.data_path).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    for (auto i : tmp) if (!problem_list.count(i)) problem_list.append(i);
 
     configure_table = new ConfigureTable(problem_list, this);
     ui->widget_empty->hide();
@@ -86,5 +82,14 @@ void ConfigureDialog::accept()
 
 void ConfigureDialog::on_pushButton_clicked()
 {
-    QMessageBox::information(this, "Sorry", "Will coming soon...");
+
+    QStringList list;
+    for (int i = 0; i < problem_list.size(); i++)
+        list.append(problem_list[configure_table->horizontalHeader()->logicalIndex(i)]);
+
+    AdvancedConfigureDialog dialog(list, this);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+
+    }
 }
