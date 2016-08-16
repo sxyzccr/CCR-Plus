@@ -211,12 +211,15 @@ ConfigureTable::ConfigureTable(const QStringList& list, QWidget* parent) : QTabl
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setAlternatingRowColors(true);
     this->setSelectionMode(QAbstractItemView::NoSelection);
-    this->setStyleSheet(QLatin1String("QTableView\n"
-                                      "{\n"
-                                      "background-color:#F8F8F8;\n"
-                                      "alternate-background-color:#FFFFFF;\n"
-                                      "}\n"
-                                      ""));
+    this->setStyleSheet(QLatin1String("QHeaderView"
+                                      "{"
+                                      "  background:#FFFFFF;"
+                                      "}"
+                                      "QTableView\n"
+                                      "{"
+                                      "  background-color:#F8F8F8;"
+                                      "  alternate-background-color:#FFFFFF;"
+                                      "}"));
 
     this->horizontalHeader()->setSectionsMovable(true);
     this->horizontalHeader()->setTextElideMode(Qt::ElideRight);

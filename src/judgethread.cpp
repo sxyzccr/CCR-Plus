@@ -53,22 +53,10 @@ void JudgeThread::judgeProblem(Player* player, int column)
         judger = new TraditionalJudger(Global::g_contest.path, player, prob);
 
     connect(this, &JudgeThread::judgeStoped, judger, &BaseJudger::StopJudge);
-    connect(judger, &BaseJudger::titleDetailFinished, [this](const QString& title)
-    {
-        emit titleDetailFinished(title);
-    });
-    connect(judger, &BaseJudger::noteDetailFinished,  [this](const QString& note, const QString& state)
-    {
-        emit noteDetailFinished(note, state);
-    });
-    connect(judger, &BaseJudger::pointDetailFinished, [this](int num, const QString& note, const QString& state, const QString& inOut, int subTaskLen)
-    {
-        emit pointDetailFinished(num, note, state, inOut, subTaskLen);
-    });
-    connect(judger, &BaseJudger::scoreDetailFinished, [this](int subTaskLen, int score, int sumScore)
-    {
-        emit scoreDetailFinished(subTaskLen, score, sumScore);
-    });
+    connect(judger, &BaseJudger::titleDetailFinished, this, &JudgeThread::titleDetailFinished);
+    connect(judger, &BaseJudger::noteDetailFinished,  this, &JudgeThread::noteDetailFinished);
+    connect(judger, &BaseJudger::pointDetailFinished, this, &JudgeThread::pointDetailFinished);
+    connect(judger, &BaseJudger::scoreDetailFinished, this, &JudgeThread::scoreDetailFinished);
 
     ResultSummary res = judger->Judge();
     delete judger;

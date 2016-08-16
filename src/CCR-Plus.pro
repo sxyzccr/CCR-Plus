@@ -21,7 +21,8 @@ SOURCES += boardtable.cpp \
     answeronlyjudger.cpp \
     traditionaljudger.cpp \
     configuretable.cpp \
-    advancedconfiguredialog.cpp
+    advancedconfiguredialog.cpp \
+    testcasetable.cpp
 
 HEADERS += boardtable.h \
     createfiledialog.h \
@@ -39,7 +40,8 @@ HEADERS += boardtable.h \
     answeronlyjudger.h \
     traditionaljudger.h \
     configuretable.h \
-    advancedconfiguredialog.h
+    advancedconfiguredialog.h \
+    testcasetable.h
 
 UI_DIR = forms
 RCC_DIR = rcfile

@@ -14,43 +14,41 @@ BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),
     this->setFocusPolicy(Qt::NoFocus);
     this->setFrameShape(QFrame::NoFrame);
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->setProperty("showDropIndicator", QVariant(false));
-    this->setDragDropOverwriteMode(false);
     this->setAlternatingRowColors(true);
     this->setSelectionMode(QAbstractItemView::ExtendedSelection);
     this->setContextMenuPolicy(Qt::CustomContextMenu);
     this->setStyleSheet(QLatin1String(
                             "QHeaderView"
                             "{"
-                            "	background:#FFFFFF;"
+                            "  background:#FFFFFF;"
                             "}"
                             "QTableWidget"
                             "{"
-                            "	color:rgba(0,0,0,0);"
-                            "	gridline-color:#F2F2F2;"
+                            "  color:rgba(0,0,0,0);"
+                            "  gridline-color:#F2F2F2;"
                             "}"
                             "QTableWidget::item:alternate:!selected"
                             "{"
-                            "   background-color:#FFFFFF;"
+                            "  background-color:#FFFFFF;"
                             "}"
                             "QTableWidget::item:!alternate:!selected"
                             "{"
-                            "   background-color:#F8F8F8;"
+                            "  background-color:#F8F8F8;"
                             "}"
                             "QTableWidget::item:selected"
                             "{"
-                            "	color:rgba(0,0,0,0);"
-                            "	background-color:#CBE8F6;"
-                            "	border-width:1px;"
-                            "   border-style:solid;"
-                            "	border-color:#26A0DA;"
+                            "  color:rgba(0,0,0,0);"
+                            "  background-color:#CBE8F6;"
+                            "  border-width:1px;"
+                            "  border-style:solid;"
+                            "  border-color:#26A0DA;"
                             "}"
                             "QLabel"
                             "{"
-                            "	margin:1px;"
-                            "	border-radius:3px;"
-                            "   border-style:solid;"
-                            "	border-color:rgba(0,0,0,120);"
+                            "  margin:1px;"
+                            "  border-radius:3px;"
+                            "  border-style:solid;"
+                            "  border-color:rgba(0,0,0,120);"
                             "}"));
 
     this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
@@ -209,7 +207,7 @@ void BoardTable::ShowResult()
         for (int c = 0; c < Global::g_contest.problem_num + 2; c++)
         {
             QTableWidgetItem* bg = new QTableWidgetItem;
-            if (c <= 1) bg->setFlags(bg->flags()^Qt::ItemIsSelectable);
+            if (c <= 1) bg->setFlags(bg->flags() ^ Qt::ItemIsSelectable);
             this->setItem(r, c, bg);
             this->item(r, c)->setData(Qt::DisplayRole, r);
         }

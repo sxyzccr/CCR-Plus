@@ -2,10 +2,12 @@
 #define ADVANCEDCONFIGUREDIALOG_H
 
 #include "problem.h"
+#include "testcasetable.h"
 
 #include <QDialog>
 #include <QListWidget>
 #include <QTableWidget>
+#include <QDragLeaveEvent>
 
 namespace Ui
 {
@@ -24,16 +26,17 @@ public slots:
 
 private:
     Ui::AdvancedConfigureDialog *ui;
+    TestCaseTable* test_case_table;
     QStringList problem_list;
-    std::vector<int> row_span_top, row_span_bottom;
 
     void loadFromProblem(Problem *problem);
 
 private slots:
-    void on_listWidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
-    void on_tableWidget_testCase_itemSelectionChanged();
-    void on_tableWidget_testCase_currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous);
+    void onListWidgetCurrentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+    void onSetPushButtonsEnable();
+
     void on_pushButton_merge_clicked();
+    void on_pushButton_split_clicked();
 };
 
 #endif // ADVANCEDCONFIGUREDIALOG_H

@@ -18,13 +18,11 @@ DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->setProperty("showDropIndicator", QVariant(false));
-    this->setDragDropOverwriteMode(false);
     this->setSelectionMode(QAbstractItemView::NoSelection);
     this->setStyleSheet(QLatin1String(
-                            "QHeaderView\n"
-                            "{\n"
-                            "	background:#FFFFFF;\n"
+                            "QHeaderView"
+                            "{"
+                            "  background:#FFFFFF;"
                             "}"));
 
     this->horizontalHeader()->setDefaultSectionSize(45);
