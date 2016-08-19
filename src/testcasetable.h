@@ -4,8 +4,6 @@
 #include "problem.h"
 
 #include <QTableWidget>
-//#include <QDragEnterEvent>
-#include <QDebug>
 
 class TestCaseTable : public QTableWidget
 {
@@ -15,9 +13,10 @@ public:
     {
         NoSelection,
         SelectOnePackage,
-        SelectOneTestCase,
+        SelectOneSubTestCase,
         SelectOneTestCasePackage,
         SelectMultiplePackage,
+        SelectMultipleSubTestCase,
         SelectMultipleTestCasePackage,
         SelectDiscontinuous,
         OtherSelection
@@ -26,6 +25,8 @@ public:
     explicit TestCaseTable(QWidget* parent = 0);
     ~TestCaseTable() {}
 
+    // Getter member functions
+    int SumScore() const { return sum_score; }
     bool CanAddTestCase() const { return can_add; }
     bool CanAddSubTestCase() const { return can_add_sub; }
     bool CanRemoveTestCase() const { return can_remove; }
@@ -39,19 +40,37 @@ public:
     int ScoreItemBottomRow(int row)
     {
         int top = score_item[row]->row();
-        return top + this->rowSpan(top, score_column) - 1;
+        return top + this->rowSpan(top, 0) - 1;
     }
 
     void LoadTestCases(Problem* problem);
     TestCaseTable::SelectionType GetSelectionType(int *_top, int *_bottom);
+
+public slots:
+    void AddTestCase(TestCase* point, int score);
+    void AddSubTestCase(TestCase* point);
+    void RemoveSelection();
+    void MoveUpSelection();
+    void MoveDownSelection();
     void MergeSelection();
     void SplitSelection();
 
 private:
-    int score_column;
+    Problem* problem;
     std::vector<QTableWidgetItem*> score_item;
     QTableWidgetItem* unselect_score_item;
+    int sum_score;
     bool can_add, can_add_sub, can_remove, can_up, can_down, can_merge, can_split;
+
+    void addItem(int row, int column, const QString& text)
+    {
+        QTableWidgetItem* item = new QTableWidgetItem(text);
+        item->setTextAlignment(Qt::AlignCenter);
+        item->setToolTip(text);
+        this->setItem(row, column, item);
+    }
+    void swapTestCase(int row1, int row2);
+    void swapPackage(int topRow1, int topRow2);
 
 private slots:
     void onItemSelectionChanged();

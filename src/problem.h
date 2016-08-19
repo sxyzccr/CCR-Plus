@@ -26,11 +26,10 @@ private:
 class TestCase
 {
 public:
-    explicit TestCase(int id, double t, double m, const QString& in, const QString& out, const QString& sub = "") :
-        id(id), time_lim(t), mem_lim(m), in(in), out(out), sub(sub) {}
+    TestCase(double t, double m, const QString& in, const QString& out, const QString& sub = "") :
+        time_lim(t), mem_lim(m), in(in), out(out), sub(sub) {}
 
     // Getter member functions
-    int Id() const { return id; }
     double TimeLimit() const { return time_lim; }
     double MemoryLimit() const { return mem_lim; }
     QString InFile() const { return in; }
@@ -45,7 +44,6 @@ public:
     void SetSubmitFile(const QString& _sub) { sub = _sub; }
 
 private:
-    const int id;
     double time_lim, mem_lim;
     QString in, out, sub;
 };

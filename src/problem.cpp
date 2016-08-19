@@ -101,7 +101,7 @@ void Problem::ReadConfiguration()
                         QDomElement c = ll.item(k).toElement();
                         if (c.tagName() == "point")
                         {
-                            TestCase* x = new TestCase(this->cases.size() + 1, c.attribute("time").toDouble(), c.attribute("mem").toDouble(),
+                            TestCase* x = new TestCase(c.attribute("time").toDouble(), c.attribute("mem").toDouble(),
                                                        c.attribute("in"), c.attribute("out"), c.attribute("sub"));
                             sub->append(x);
                             this->cases.push_back(x);
@@ -224,7 +224,7 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
     for (int i = 0; i < num; i++)
     {
         Subtask* sub = new Subtask(scores[i]);
-        TestCase* point = new TestCase(i + 1, timeLim, memLim, list[i].first, list[i].second);
+        TestCase* point = new TestCase(timeLim, memLim, list[i].first, list[i].second);
         if (type == Global::AnswersOnly) point->SetSubmitFile(point->OutFile());
         sub->append(point);
         this->cases.push_back(point);

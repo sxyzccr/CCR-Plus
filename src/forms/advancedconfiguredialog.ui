@@ -151,7 +151,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="title">
@@ -403,15 +403,18 @@
 {
   background:#FFFFFF;
 }
-QTableWidget::item:alternate
+TableWidget::item:alternate:!selected
 {
-   color:rgb(0,0,0);
-   background-color:#FFFFFF;
+  background-color:#FFFFFF;
 }
-QTableWidget::item:!alternate
+QTableWidget::item:!alternate:!selected
 {
-  color:rgb(0,0,0);
   background-color:#F8F8F8;
+}
+QTableWidget::item:!selected:focus
+{
+  background-color:#FFFFFF;
+  selection-background-color:#FFFFFF;
 }</string>
          </property>
          <property name="editTriggers">
@@ -527,14 +530,14 @@ QTableWidget::item:!alternate
        <string>测试点</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_testCase">
-       <item row="11" column="2">
+       <item row="11" column="3">
         <widget class="QPushButton" name="pushButton_resetTestCase">
          <property name="text">
           <string>重置为默认</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="2">
+       <item row="9" column="3">
         <widget class="QPushButton" name="pushButton_split">
          <property name="enabled">
           <bool>false</bool>
@@ -544,7 +547,7 @@ QTableWidget::item:!alternate
          </property>
         </widget>
        </item>
-       <item row="3" column="2">
+       <item row="3" column="3">
         <widget class="QPushButton" name="pushButton_removeTestCase">
          <property name="enabled">
           <bool>false</bool>
@@ -554,10 +557,10 @@ QTableWidget::item:!alternate
          </property>
         </widget>
        </item>
-       <item row="1" column="0" rowspan="12" colspan="2">
+       <item row="1" column="0" rowspan="12" colspan="3">
         <widget class="QWidget" name="widget_empty" native="true"/>
        </item>
-       <item row="10" column="2">
+       <item row="10" column="3">
         <spacer name="verticalSpacer_5">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -573,7 +576,7 @@ QTableWidget::item:!alternate
          </property>
         </spacer>
        </item>
-       <item row="7" column="2">
+       <item row="7" column="3">
         <spacer name="verticalSpacer_4">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -596,20 +599,7 @@ QTableWidget::item:!alternate
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_score">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>0</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="2">
+       <item row="4" column="3">
         <spacer name="verticalSpacer_3">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -625,7 +615,7 @@ QTableWidget::item:!alternate
          </property>
         </spacer>
        </item>
-       <item row="5" column="2">
+       <item row="5" column="3">
         <widget class="QPushButton" name="pushButton_up">
          <property name="enabled">
           <bool>false</bool>
@@ -635,7 +625,7 @@ QTableWidget::item:!alternate
          </property>
         </widget>
        </item>
-       <item row="6" column="2">
+       <item row="6" column="3">
         <widget class="QPushButton" name="pushButton_down">
          <property name="enabled">
           <bool>false</bool>
@@ -645,17 +635,17 @@ QTableWidget::item:!alternate
          </property>
         </widget>
        </item>
-       <item row="2" column="2">
+       <item row="2" column="3">
         <widget class="QPushButton" name="pushButton_addSubTestCase">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
-          <string>添加子测试点...</string>
+          <string>添加测试数据...</string>
          </property>
         </widget>
        </item>
-       <item row="8" column="2">
+       <item row="8" column="3">
         <widget class="QPushButton" name="pushButton_merge">
          <property name="enabled">
           <bool>false</bool>
@@ -665,14 +655,14 @@ QTableWidget::item:!alternate
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
+       <item row="1" column="3">
         <widget class="QPushButton" name="pushButton_addTestCase">
          <property name="text">
           <string>添加测试点...</string>
          </property>
         </widget>
        </item>
-       <item row="12" column="2">
+       <item row="12" column="3">
         <spacer name="verticalSpacer_6">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -684,6 +674,29 @@ QTableWidget::item:!alternate
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_score">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_selectionInfo">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

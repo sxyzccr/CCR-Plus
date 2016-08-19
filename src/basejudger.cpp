@@ -474,7 +474,7 @@ ResultSummary BaseJudger::Judge()
             if (ignore)
             {
                 if (Global::g_is_judge_stoped) return ResultSummary();
-                emit pointDetailFinished(j->Id(), "忽略", "I", problem->GetInOutString(j), len);
+                emit pointDetailFinished(num, "忽略", "I", problem->GetInOutString(j), len);
 
                 result.detail += "I";
                 point.setAttribute("ratio", 0);
@@ -484,7 +484,7 @@ ResultSummary BaseJudger::Judge()
             }
             TestCaseResult res = judgeTestCaseEvent(j, num);
             if (Global::g_is_judge_stoped) return ResultSummary();
-            emit pointDetailFinished(j->Id(), res.note, QChar(res.state), problem->GetInOutString(j), len);
+            emit pointDetailFinished(num, res.note, QChar(res.state), problem->GetInOutString(j), len);
 
             result.time += res.time, result.detail += res.state;
             ratioMin = min(ratioMin, res.score);

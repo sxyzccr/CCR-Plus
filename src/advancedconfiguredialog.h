@@ -6,8 +6,6 @@
 
 #include <QDialog>
 #include <QListWidget>
-#include <QTableWidget>
-#include <QDragLeaveEvent>
 
 namespace Ui
 {
@@ -33,10 +31,11 @@ private:
 
 private slots:
     void onListWidgetCurrentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
-    void onSetPushButtonsEnable();
+    void onTestCaseSelectionChanged();
 
-    void on_pushButton_merge_clicked();
-    void on_pushButton_split_clicked();
+    void on_pushButton_addTestCase_clicked();
+    void on_pushButton_addSubTestCase_clicked();
+    void on_pushButton_removeTestCase_clicked();
 };
 
 #endif // ADVANCEDCONFIGUREDIALOG_H
