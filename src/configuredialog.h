@@ -23,7 +23,7 @@ public slots:
 private:
     Ui::ConfigureDialog* ui;
     ConfigureTable* configure_table;
-    QStringList problem_list;
+    std::vector<Problem*> problems;
 
 private slots:
     void on_pushButton_clicked();

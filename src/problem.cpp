@@ -22,12 +22,29 @@ QString Problem::FromInternalCheckerName(const QString& name)
 
 
 Problem::Problem(const QString& name) :
+    type(Global::OtherProblemType),
     name(name), dir(name), exe(name), checker(),
     in_file(name + ".in"), out_file(name + ".out"),
-    score(100), checker_time_lim(10), code_len_lim(100),
-    type(Global::OtherProblemType)
+    score(100), checker_time_lim(10), code_len_lim(100)
 {
 
+}
+
+Problem::Problem(Problem *problem) :
+    type(problem->type),
+    name(problem->name), dir(problem->dir), exe(problem->exe), checker(problem->checker),
+    in_file(problem->in_file), out_file(problem->out_file),
+    score(problem->score), checker_time_lim(problem->checker_time_lim), code_len_lim(problem->code_len_lim)
+{
+    for (auto i : problem->cases) cases.push_back(new TestCase(*i));
+    for (auto i : problem->compilers) compilers.push_back(new Compiler(*i));
+    int t = 0;
+    for (auto i : problem->subtasks)
+    {
+        Subtask* sub = new Subtask(i->Score());
+        for (int j = 0; j < i->Size(); j++) sub->Append(cases[t++]);
+        subtasks.push_back(sub);
+    }
 }
 
 void Problem::Clear()
@@ -83,8 +100,8 @@ void Problem::ReadConfiguration()
         }
         else if (a.tagName() == "task")
         {
-            in_file = a.attribute("input");
-            out_file = a.attribute("output");
+            if (a.hasAttribute("input"))  in_file  = a.attribute("input");
+            if (a.hasAttribute("output")) out_file = a.attribute("output");
             checker = FromInternalCheckerName(a.attribute("checker"));
             if (a.hasAttribute("time")) checker_time_lim = a.attribute("time").toInt();
 
@@ -103,7 +120,7 @@ void Problem::ReadConfiguration()
                         {
                             TestCase* x = new TestCase(c.attribute("time").toDouble(), c.attribute("mem").toDouble(),
                                                        c.attribute("in"), c.attribute("out"), c.attribute("sub"));
-                            sub->append(x);
+                            sub->Append(x);
                             this->cases.push_back(x);
                         }
                     }
@@ -182,8 +199,22 @@ bool Problem::SaveConfiguration()
 
 void Problem::Configure(const QString& typ, double timeLim, double memLim, const QString& check)
 {
-    if (typ == "传统型") type = Global::Traditional;
-    else if (typ == "提交答案型") type = Global::AnswersOnly;
+    if (typ == "传统型")
+    {
+        type = Global::Traditional;
+        if (!compilers.size())
+        {
+            compilers = { new Compiler(QString("gcc -o %1 %1.c -lm -static").arg(name), QString("%1.c").arg(name)),
+                          new Compiler(QString("g++ -o %1 %1.cpp -lm -static").arg(name), QString("%1.cpp").arg(name)),
+                          new Compiler(QString("fpc %1.pas").arg(name), QString("%1.pas").arg(name))
+                        };
+        }
+    }
+    else if (typ == "提交答案型")
+    {
+        type = Global::AnswersOnly;
+        compilers.clear();
+    }
 
     if (!check.isEmpty()) checker = FromInternalCheckerName(check);
     exe = AddFileExtension(exe);
@@ -192,6 +223,7 @@ void Problem::Configure(const QString& typ, double timeLim, double memLim, const
     {
         if (timeLim >= 0) i->SetTimeLimit(timeLim);
         if (memLim >= 0) i->SetMemoryLimit(memLim);
+        if (typ == "提交答案型" && i->SubmitFile().isEmpty()) i->SetSubmitFile(i->OutFile());
     }
 }
 
@@ -226,7 +258,7 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
         Subtask* sub = new Subtask(scores[i]);
         TestCase* point = new TestCase(timeLim, memLim, list[i].first, list[i].second);
         if (type == Global::AnswersOnly) point->SetSubmitFile(point->OutFile());
-        sub->append(point);
+        sub->Append(point);
         this->cases.push_back(point);
         this->subtasks.push_back(sub);
     }

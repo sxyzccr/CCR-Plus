@@ -35,7 +35,7 @@ class ConfigureTable : public QTableView
 {
     Q_OBJECT
 public:
-    explicit ConfigureTable(const QStringList& list, QWidget* parent = 0);
+    explicit ConfigureTable(const std::vector<Problem*>& problems, QWidget* parent = 0);
     ~ConfigureTable() {}
 
     // Getter member functions
@@ -64,11 +64,11 @@ public:
 
 private:
     QStandardItemModel* model;
-    QStringList problem_list;
+    std::vector<Problem*> problems;
     bool is_changing_data;
 
-    void setModelDataNew(int column);
-    void setModelData(int column);
+    void setColumnDataNew(int column);
+    void setColumnData(int column);
     void loadProblems();
 
 private slots:

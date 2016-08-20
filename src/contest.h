@@ -29,12 +29,12 @@ struct Contest
     /// 清空信息
     void Clear();
 
-    /// 查找题目位置
-    int ProblemIndex(const QString& name)
+    /// 根据名称查找题目
+    Problem* ProblemFromName(const QString& name)
     {
         for (int i = 0; i < problem_num; i++)
-            if (problems[i]->Name() == name) return i;
-        return -1;
+            if (problems[i]->Name() == name) return problems[i];
+        return nullptr;
     }
 
     /// 读取目录下的所有文件夹

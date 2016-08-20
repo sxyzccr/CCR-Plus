@@ -1,22 +1,22 @@
-#include "global.h"
+ #include "global.h"
 #include "problem.h"
 #include "advancedconfiguredialog.h"
 #include "ui_advancedconfiguredialog.h"
 
 using namespace std;
 
-AdvancedConfigureDialog::AdvancedConfigureDialog(const QStringList& list, QWidget *parent) :
+AdvancedConfigureDialog::AdvancedConfigureDialog(const vector<Problem*>& problems, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AdvancedConfigureDialog), problem_list(list)
+    ui(new Ui::AdvancedConfigureDialog), old_problems(problems)
 {
     ui->setupUi(this);
 
-    for (int i = 0; i < problem_list.size(); i++)
+    for (int i = 0; i < problems.size(); i++)
     {
-        QString name = problem_list[i];
-        ui->listWidget->addItem(name);
-        ui->listWidget->item(i)->setToolTip(name);
-        if (Global::g_contest.ProblemIndex(name) == -1) ui->listWidget->item(i)->setFont(Global::BOLD_FONT);
+        Problem* prob = new Problem(problems[i]);
+        this->problems.push_back(prob);
+        ui->listWidget->addItem(prob->Name());
+        ui->listWidget->item(i)->setToolTip(prob->Name());
     }
 
     ui->tableWidget_compiler->horizontalHeader()->setFixedHeight(22);
@@ -57,10 +57,9 @@ void AdvancedConfigureDialog::loadFromProblem(Problem* problem)
 
 void AdvancedConfigureDialog::onListWidgetCurrentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
 {
-    ui->label_problem->setText(current->text());
-
-    int p = Global::g_contest.ProblemIndex(current->text());
-    loadFromProblem(p == -1 ? nullptr : Global::g_contest.problems[p]);
+    current_problem = problems[ui->listWidget->row(current)];
+    ui->label_problem->setText(current_problem->Name());
+    loadFromProblem(current_problem);
 }
 
 void AdvancedConfigureDialog::onTestCaseSelectionChanged()

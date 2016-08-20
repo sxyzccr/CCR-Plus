@@ -8,8 +8,11 @@
 class Compiler
 {
 public:
-    explicit Compiler(QString cmd, QString file, int time = 10) :
+    explicit Compiler(const QString& cmd, const QString& file, int time = 10) :
         cmd(cmd), file(file), time_lim(time) {}
+
+    explicit Compiler(const Compiler& compiler) :
+        cmd(compiler.cmd), file(compiler.file), time_lim(compiler.time_lim) {}
 
     // Getter member functions
     QString Cmd() const { return cmd; }
@@ -26,8 +29,11 @@ private:
 class TestCase
 {
 public:
-    TestCase(double t, double m, const QString& in, const QString& out, const QString& sub = "") :
+    explicit TestCase(double t, double m, const QString& in, const QString& out, const QString& sub = "") :
         time_lim(t), mem_lim(m), in(in), out(out), sub(sub) {}
+
+    explicit TestCase(const TestCase& point) :
+        time_lim(point.time_lim), mem_lim(point.mem_lim), in(point.in), out(point.out), sub(point.sub) {}
 
     // Getter member functions
     double TimeLimit() const { return time_lim; }
@@ -60,7 +66,7 @@ public:
     int Size() const { return cases.size(); }
 
     /// 添加测试点
-    void append(TestCase* point) { cases.push_back(point); }
+    void Append(TestCase* point) { cases.push_back(point); }
 
     // Iterators
     std::vector<TestCase*>::const_iterator begin() const { return cases.begin(); }
@@ -77,6 +83,7 @@ class Problem
 {
 public:
     explicit Problem(const QString& name = "");
+    explicit Problem(Problem* problem);
     ~Problem() { Clear(); }
 
     /// 内置校验器列表，格式： <file, <name, toolTip>>
@@ -161,10 +168,10 @@ public:
     }
 
 private:
+    Global::ProblemType type;
     QString name, dir, exe, checker, in_file, out_file;
     int score, checker_time_lim;
     double code_len_lim;
-    Global::ProblemType type;
 
     std::vector<TestCase*> cases;
     std::vector<Subtask*> subtasks;

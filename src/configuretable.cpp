@@ -203,8 +203,8 @@ bool ConfigureTableItemDelegate::editorEvent(QEvent* event, QAbstractItemModel* 
 
 
 
-ConfigureTable::ConfigureTable(const QStringList& list, QWidget* parent) : QTableView(parent),
-    model(new QStandardItemModel(this)), problem_list(list), is_changing_data(false)
+ConfigureTable::ConfigureTable(const vector<Problem*>& problems, QWidget* parent) : QTableView(parent),
+    model(new QStandardItemModel(this)), problems(problems), is_changing_data(false)
 {
     this->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
     this->setFocusPolicy(Qt::NoFocus);
@@ -236,15 +236,20 @@ ConfigureTable::ConfigureTable(const QStringList& list, QWidget* parent) : QTabl
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     this->setModel(model);
-    this->setItemDelegate(new ConfigureTableItemDelegate(problem_list, this));
+
+    QStringList list;
+    for (auto i : problems) list.push_back(i->Name());
+    this->setItemDelegate(new ConfigureTableItemDelegate(list, this));
 
     loadProblems();
 
     connect(model, &QAbstractItemModel::dataChanged, this, &ConfigureTable::onDataChanged);
 }
 
-void ConfigureTable::setModelDataNew(int column)
+void ConfigureTable::setColumnDataNew(int column)
 {
+    problems[column]->ConfigureNew("传统型", 1, 128, "全文比较");
+
     SetItemText(0, column, "传统型");
     SetItemData(1, column, 1);
     SetItemData(2, column, 128);
@@ -258,15 +263,13 @@ void ConfigureTable::setModelDataNew(int column)
     }
 }
 
-void ConfigureTable::setModelData(int column)
+void ConfigureTable::setColumnData(int column)
 {
-    Problem* problem = nullptr;
-    int p = Global::g_contest.ProblemIndex(model->horizontalHeaderItem(column)->text());
-    if (p != -1) problem = Global::g_contest.problems[p];
+    Problem* problem = problems[column];
 
-    if (!problem || !problem->TestCaseCount())
+    if (!problem->TestCaseCount())
     {
-        setModelDataNew(column);
+        setColumnDataNew(column);
         return;
     }
 
@@ -283,11 +286,6 @@ void ConfigureTable::setModelData(int column)
                 TestCase* point = problem->TestCaseAt(i);
                 minT = min(minT, point->TimeLimit()), maxT = max(maxT, point->TimeLimit());
                 minM = min(minM, point->MemoryLimit()), maxM = max(maxM, point->MemoryLimit());
-            }
-            if (minT > maxT || minM > maxM)
-            {
-                setModelDataNew(column);
-                return;
             }
 
             if (minT == maxT)
@@ -344,13 +342,14 @@ void ConfigureTable::loadProblems()
     model->verticalHeaderItem(4)->setToolTip("清空原来的所有配置。");
     for (int i = 0; i < 5; i++) model->verticalHeaderItem(i)->setTextAlignment(Qt::AlignCenter);
 
-    int num = problem_list.size();
+    int num = problems.size();
     model->setColumnCount(num);
-    model->setHorizontalHeaderLabels(problem_list);
     for (int i = 0; i < num; i++)
     {
-        model->horizontalHeaderItem(i)->setToolTip(problem_list[i]);
-        setModelData(i);
+        QStandardItem* item = new QStandardItem(problems[i]->Name());
+        item->setToolTip(item->text());
+        model->setHorizontalHeaderItem(i, item);
+        setColumnData(i);
     }
 
     int w = min(max(num, 3), 12) * this->horizontalHeader()->defaultSectionSize() + this->verticalHeader()->width() + 2 * this->frameWidth();
@@ -380,6 +379,7 @@ void ConfigureTable::onDataChanged(const QModelIndex& topLeft, const QModelIndex
                 SetItemText(2, c, "");
                 model->item(1, c)->setEditable(false);
                 model->item(2, c)->setEditable(false);
+                problems[c]->Configure("提交答案型", 0, 0, "");
             }
             else if (ItemText(r, c) == "传统型")
             {
@@ -389,14 +389,24 @@ void ConfigureTable::onDataChanged(const QModelIndex& topLeft, const QModelIndex
                 SetItemChanged(2, c);
                 model->item(1, c)->setEditable(true);
                 model->item(2, c)->setEditable(true);
+                problems[c]->Configure("传统型", 1, 128, "");
             }
             break;
         }
+        case 1: // Time Limit
+            problems[c]->Configure("", ItemData(r, c).toDouble(), -1, "");
+            break;
+        case 2: // Memory Limit
+            problems[c]->Configure("", -1, ItemData(r, c).toDouble(), "");
+            break;
+        case 3: // Checker
+            problems[c]->Configure("", -1, -1, ItemText(r, c));
+            break;
         case 4: // Clean
         {
             if (ItemData(r, c).toBool())
             {
-                setModelDataNew(c);
+                setColumnDataNew(c);
                 SetItemData(4, c, 1);
             }
             break;
