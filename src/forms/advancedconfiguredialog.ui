@@ -56,13 +56,6 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="0" colspan="8">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="5">
     <widget class="QLabel" name="label_0">
      <property name="sizePolicy">
@@ -78,6 +71,13 @@
      </property>
      <property name="text">
       <string>题目类型:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="8">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>
@@ -112,16 +112,6 @@
        <pointsize>11</pointsize>
       </font>
      </property>
-     <item>
-      <property name="text">
-       <string>传统型</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>提交答案型</string>
-      </property>
-     </item>
     </widget>
    </item>
    <item row="0" column="0" colspan="5">
@@ -145,7 +135,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="title">
@@ -157,7 +147,7 @@
          <property name="minimumSize">
           <size>
            <width>135</width>
-           <height>0</height>
+           <height>107</height>
           </size>
          </property>
          <property name="title">
@@ -165,12 +155,18 @@
          </property>
          <layout class="QGridLayout" name="gridLayout_4">
           <item row="2" column="1">
-           <widget class="QDoubleSpinBox" name="doubleSpinBox">
+           <widget class="QDoubleSpinBox" name="spinBox_codeLim">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
             </property>
             <property name="suffix">
              <string> KB</string>
@@ -205,6 +201,12 @@
           </item>
           <item row="3" column="0">
            <widget class="QPushButton" name="pushButton_resetSubmit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>重置</string>
             </property>
@@ -218,7 +220,7 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>167</height>
+           <height>133</height>
           </size>
          </property>
          <property name="title">
@@ -257,6 +259,12 @@
           </item>
           <item row="3" column="0">
            <widget class="QPushButton" name="pushButton_resetRun">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
              <string>重置</string>
             </property>
@@ -270,45 +278,26 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>153</height>
+           <height>133</height>
           </size>
          </property>
          <property name="title">
           <string>校验器</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="0" column="1">
-           <widget class="QComboBox" name="comboBox_internal">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <item>
-             <property name="text">
-              <string>全文比较</string>
-             </property>
-            </item>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QRadioButton" name="radioButton_internal">
-            <property name="text">
-             <string>内置校验器</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item row="2" column="1">
            <widget class="QSpinBox" name="spinBox_checkerTimeLim">
             <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
             </property>
             <property name="suffix">
              <string> s</string>
@@ -321,23 +310,36 @@
             </property>
            </widget>
           </item>
+          <item row="0" column="0">
+           <widget class="QRadioButton" name="radioButton_internal">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>内置校验器</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="comboBox_internal">
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
+            </property>
+           </widget>
+          </item>
           <item row="1" column="1">
            <widget class="QComboBox" name="comboBox_custom">
             <property name="enabled">
              <bool>false</bool>
             </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QRadioButton" name="radioButton_custom">
-            <property name="text">
-             <string>自定义校验器</string>
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToContents</enum>
             </property>
            </widget>
           </item>
@@ -345,6 +347,19 @@
            <widget class="QLabel" name="label_16">
             <property name="text">
              <string>校验器时间限制:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QRadioButton" name="radioButton_custom">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>自定义校验器</string>
             </property>
            </widget>
           </item>
@@ -361,11 +376,24 @@
             </property>
            </spacer>
           </item>
+          <item row="3" column="0">
+           <widget class="QPushButton" name="pushButton_resetChecker">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>重置</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_1">
+        <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
@@ -397,7 +425,7 @@
 {
   background:#FFFFFF;
 }
-TableWidget::item:alternate:!selected
+QTableWidget::item:alternate:!selected
 {
   background-color:#FFFFFF;
 }
@@ -447,30 +475,6 @@ QTableWidget::item:!selected:focus
          <attribute name="verticalHeaderMinimumSectionSize">
           <number>22</number>
          </attribute>
-         <row>
-          <property name="text">
-           <string>C 语言</string>
-          </property>
-          <property name="textAlignment">
-           <set>AlignCenter</set>
-          </property>
-         </row>
-         <row>
-          <property name="text">
-           <string>C++ 语言</string>
-          </property>
-          <property name="textAlignment">
-           <set>AlignCenter</set>
-          </property>
-         </row>
-         <row>
-          <property name="text">
-           <string>Pascal 语言</string>
-          </property>
-          <property name="textAlignment">
-           <set>AlignCenter</set>
-          </property>
-         </row>
          <column>
           <property name="text">
            <string>源程序文件名</string>

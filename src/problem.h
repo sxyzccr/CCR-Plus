@@ -110,6 +110,12 @@ public:
     /// 尝试从内置校验器名称获取校验器文件名，不是内置校验器返回原始文件名
     static QString FromInternalCheckerName(const QString& name);
 
+    /// 是否是内置校验器
+    static bool IsInternalChecker(const QString& checker)
+    {
+        return INTERNAL_CHECKER_MAP.find(RemoveFileExtension(checker)) != INTERNAL_CHECKER_MAP.end();
+    }
+
     // Getter member functions
     QString Name() const { return name; }
     QString Directory() const { return dir; }

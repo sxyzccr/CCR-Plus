@@ -23,7 +23,7 @@ QString Problem::FromInternalCheckerName(const QString& name)
 
 Problem::Problem(const QString& name) :
     type(Global::OtherProblemType),
-    name(name), dir(name), exe(name), checker(),
+    name(name), dir(name), exe(AddFileExtension(name)), checker(),
     in_file(name + ".in"), out_file(name + ".out"),
     score(100), checker_time_lim(10), code_len_lim(100)
 {

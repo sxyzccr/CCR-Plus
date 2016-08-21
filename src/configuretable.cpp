@@ -32,8 +32,7 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
         case 0: // Type
         {
             QComboBox* editor = new QComboBox(parent);
-            QListView* view = new QListView(parent);
-            QStandardItemModel* model = new QStandardItemModel(parent);
+            QStandardItemModel* model = new QStandardItemModel(editor);
 
             QStandardItem* item;
             item = new QStandardItem("传统型");
@@ -43,15 +42,14 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
             item->setToolTip("提交答案型");
             model->appendRow(item);
 
-            editor->setView(view);
             editor->setModel(model);
+            editor->setView(new QListView(editor));
             return editor;
         }
         case 3: // Checker
         {
             QComboBox* editor = new QComboBox(parent);
-            QListView* view = new QListView(parent);
-            QStandardItemModel* model = new QStandardItemModel(parent);
+            QStandardItemModel* model = new QStandardItemModel(editor);
             auto& internal_checker = Problem::INTERNAL_CHECKER_MAP;
 
             QStandardItem* item;
@@ -79,7 +77,7 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
 #ifdef Q_OS_WIN
                     if (!checker.endsWith(".exe")) continue;
 #endif
-                    if (internal_checker.find(Problem::RemoveFileExtension(checker)) != internal_checker.end()) continue;
+                    if (Problem::IsInternalChecker(checker)) continue;
 
                     item = new QStandardItem(checker);
                     item->setToolTip(QString("%1 (位置: %2)").arg(checker, dir));
@@ -87,8 +85,8 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
                 }
             }
 
-            editor->setView(view);
             editor->setModel(model);
+            editor->setView(new QListView(editor));
             return editor;
         }
         case 1: // Time Limit

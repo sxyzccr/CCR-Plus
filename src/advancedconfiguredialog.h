@@ -36,6 +36,11 @@ private slots:
     void onListWidgetCurrentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
     void onTestCaseSelectionChanged();
 
+    void on_radioButton_internal_clicked();
+    void on_radioButton_custom_clicked();
+    void on_pushButton_resetSubmit_clicked();
+    void on_pushButton_resetRun_clicked();
+    void on_pushButton_resetChecker_clicked();
     void on_pushButton_addTestCase_clicked();
     void on_pushButton_addSubTestCase_clicked();
     void on_pushButton_removeTestCase_clicked();
