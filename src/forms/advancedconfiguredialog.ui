@@ -135,7 +135,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="title">
@@ -432,11 +432,6 @@ QTableWidget::item:alternate:!selected
 QTableWidget::item:!alternate:!selected
 {
   background-color:#F8F8F8;
-}
-QTableWidget::item:!selected:focus
-{
-  background-color:#FFFFFF;
-  selection-background-color:#FFFFFF;
 }</string>
          </property>
          <property name="editTriggers">
@@ -489,6 +484,9 @@ QTableWidget::item:!selected:focus
        </item>
        <item row="0" column="1">
         <widget class="QPushButton" name="pushButton_addCompiler">
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>添加...</string>
          </property>
@@ -496,6 +494,12 @@ QTableWidget::item:!selected:focus
        </item>
        <item row="1" column="1">
         <widget class="QPushButton" name="pushButton_removeCompiler">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>删除</string>
          </property>
@@ -503,6 +507,9 @@ QTableWidget::item:!selected:focus
        </item>
        <item row="2" column="1">
         <widget class="QPushButton" name="pushButton_resetCompiler">
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>重置为默认</string>
          </property>
@@ -530,6 +537,9 @@ QTableWidget::item:!selected:focus
       <layout class="QGridLayout" name="gridLayout_testCase">
        <item row="11" column="3">
         <widget class="QPushButton" name="pushButton_resetTestCase">
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>重置为默认</string>
          </property>
@@ -540,6 +550,9 @@ QTableWidget::item:!selected:focus
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>拆分</string>
          </property>
@@ -549,6 +562,9 @@ QTableWidget::item:!selected:focus
         <widget class="QPushButton" name="pushButton_removeTestCase">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
          </property>
          <property name="text">
           <string>删除</string>
@@ -618,6 +634,9 @@ QTableWidget::item:!selected:focus
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>上移</string>
          </property>
@@ -627,6 +646,9 @@ QTableWidget::item:!selected:focus
         <widget class="QPushButton" name="pushButton_down">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
          </property>
          <property name="text">
           <string>下移</string>
@@ -638,6 +660,9 @@ QTableWidget::item:!selected:focus
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>添加测试数据...</string>
          </property>
@@ -648,6 +673,9 @@ QTableWidget::item:!selected:focus
          <property name="enabled">
           <bool>false</bool>
          </property>
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>合并</string>
          </property>
@@ -655,6 +683,9 @@ QTableWidget::item:!selected:focus
        </item>
        <item row="1" column="3">
         <widget class="QPushButton" name="pushButton_addTestCase">
+         <property name="focusPolicy">
+          <enum>Qt::TabFocus</enum>
+         </property>
          <property name="text">
           <string>添加测试点...</string>
          </property>

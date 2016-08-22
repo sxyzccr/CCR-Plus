@@ -41,9 +41,12 @@ private slots:
     void on_pushButton_resetSubmit_clicked();
     void on_pushButton_resetRun_clicked();
     void on_pushButton_resetChecker_clicked();
+    void on_pushButton_addCompiler_clicked();
+    void on_pushButton_removeCompiler_clicked();
     void on_pushButton_addTestCase_clicked();
     void on_pushButton_addSubTestCase_clicked();
     void on_pushButton_removeTestCase_clicked();
+    void on_tableWidget_compiler_itemSelectionChanged();
 };
 
 #endif // ADVANCEDCONFIGUREDIALOG_H

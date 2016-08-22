@@ -1,9 +1,11 @@
 #include "global.h"
 #include "problem.h"
+#include "addtestcasedialog.h"
 #include "advancedconfiguredialog.h"
 #include "ui_advancedconfiguredialog.h"
 
 #include <QDebug>
+#include <QMessageBox>
 #include <QStandardItemModel>
 
 using namespace std;
@@ -13,6 +15,7 @@ AdvancedConfigureDialog::AdvancedConfigureDialog(const vector<Problem*>& problem
     ui(new Ui::AdvancedConfigureDialog), old_problems(problems)
 {
     ui->setupUi(this);
+    this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
     for (int i = 0; i < problems.size(); i++)
     {
@@ -184,25 +187,6 @@ void AdvancedConfigureDialog::onListWidgetCurrentItemChanged(QListWidgetItem *cu
     current_problem = problems[ui->listWidget->row(current)];
     ui->label_problem->setText(current_problem->Name());
     loadFromProblem(current_problem);
-    qDebug()<<test_case_table->sizeHint().height()<<' '<<test_case_table->height();
-}
-
-void AdvancedConfigureDialog::on_radioButton_internal_clicked()
-{
-    ui->radioButton_internal->setChecked(true);
-    ui->radioButton_custom->setChecked(false);
-    ui->comboBox_internal->setEnabled(true);
-    ui->comboBox_custom->setEnabled(false);
-    ui->comboBox_internal->setCurrentIndex(0);
-}
-
-void AdvancedConfigureDialog::on_radioButton_custom_clicked()
-{
-    ui->radioButton_internal->setChecked(false);
-    ui->radioButton_custom->setChecked(true);
-    ui->comboBox_internal->setEnabled(false);
-    ui->comboBox_custom->setEnabled(true);
-    ui->comboBox_custom->setCurrentIndex(0);
 }
 
 void AdvancedConfigureDialog::onTestCaseSelectionChanged()
@@ -247,21 +231,22 @@ void AdvancedConfigureDialog::onTestCaseSelectionChanged()
     }
 }
 
-void AdvancedConfigureDialog::on_pushButton_addTestCase_clicked()
+void AdvancedConfigureDialog::on_radioButton_internal_clicked()
 {
-    test_case_table->AddTestCase(new TestCase(1, 128, "a.in", "a.out"), 10);
-    ui->label_score->setText(QString::number(test_case_table->SumScore()));
+    ui->radioButton_internal->setChecked(true);
+    ui->radioButton_custom->setChecked(false);
+    ui->comboBox_internal->setEnabled(true);
+    ui->comboBox_custom->setEnabled(false);
+    ui->comboBox_internal->setCurrentIndex(0);
 }
 
-void AdvancedConfigureDialog::on_pushButton_addSubTestCase_clicked()
+void AdvancedConfigureDialog::on_radioButton_custom_clicked()
 {
-    test_case_table->AddSubTestCase(new TestCase(1, 128, "a.in", "a.out"));
-}
-
-void AdvancedConfigureDialog::on_pushButton_removeTestCase_clicked()
-{
-    test_case_table->RemoveSelection();
-    ui->label_score->setText(QString::number(test_case_table->SumScore()));
+    ui->radioButton_internal->setChecked(false);
+    ui->radioButton_custom->setChecked(true);
+    ui->comboBox_internal->setEnabled(false);
+    ui->comboBox_custom->setEnabled(true);
+    ui->comboBox_custom->setCurrentIndex(0);
 }
 
 void AdvancedConfigureDialog::on_pushButton_resetSubmit_clicked()
@@ -282,3 +267,93 @@ void AdvancedConfigureDialog::on_pushButton_resetChecker_clicked()
     on_radioButton_internal_clicked();
     ui->spinBox_checkerTimeLim->setValue(10);
 }
+
+void AdvancedConfigureDialog::on_tableWidget_compiler_itemSelectionChanged()
+{
+    ui->pushButton_removeCompiler->setEnabled(ui->tableWidget_compiler->selectedItems().size());
+}
+
+void AdvancedConfigureDialog::on_pushButton_addCompiler_clicked()
+{
+    auto list = ui->tableWidget_compiler->selectedItems();
+    int row;
+    if (!list.size()) row = 0; else row = list.first()->row() + 1;
+
+    Compiler compiler("python fuck.py", "fuck.py");
+    for (int i = 0; i < ui->tableWidget_compiler->rowCount(); i++)
+        if (ui->tableWidget_compiler->item(i, 0)->text() == compiler.SourceFile())
+        {
+            QMessageBox::critical(this, "添加编译器失败", "源程序文件名与已有编译器冲突！");
+            return;
+        }
+
+    QTableWidgetItem* item = new QTableWidgetItem;
+    ui->tableWidget_compiler->insertRow(row);
+
+    if (compiler.SourceFile().endsWith(".c"))
+        item->setText("C 语言");
+    else if (compiler.SourceFile().endsWith(".cpp"))
+        item->setText("C++ 语言");
+    else if (compiler.SourceFile().endsWith(".pas"))
+        item->setText("Pascal 语言");
+    else
+        item->setText("其他语言");
+    item->setToolTip(item->text());
+    item->setTextAlignment(Qt::AlignCenter);
+    ui->tableWidget_compiler->setVerticalHeaderItem(row, item);
+
+    item = new QTableWidgetItem(compiler.SourceFile());
+    item->setTextAlignment(Qt::AlignCenter);
+    ui->tableWidget_compiler->setItem(row, 0, item);
+
+    item = new QTableWidgetItem(compiler.Cmd());
+    ui->tableWidget_compiler->setItem(row, 1, item);
+
+    ui->tableWidget_compiler->selectRow(row);
+    if (!ui->tableWidget_compiler->hasFocus()) ui->tableWidget_compiler->setFocus();
+}
+
+void AdvancedConfigureDialog::on_pushButton_removeCompiler_clicked()
+{
+    auto list = ui->tableWidget_compiler->selectedItems();
+    if (list.size())
+    {
+        int row = list.first()->row();
+        ui->tableWidget_compiler->removeRow(row);
+        ui->tableWidget_compiler->selectRow(row);
+    }
+}
+
+void AdvancedConfigureDialog::on_pushButton_addTestCase_clicked()
+{
+    int id = 1;
+    auto list = test_case_table->selectedItems();
+    if (list.size()) id = list.first()->row() + 2;
+
+    TestCase* point;
+    if (current_problem->Type() == Global::Traditional)
+        point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
+                                     QString("%1%2.out").arg(current_problem->Name()).arg(id));
+    else
+        point = new TestCase(0, 0, QString("%1%2.in").arg(current_problem->Name()).arg(id),
+                                   QString("%1%2.out").arg(current_problem->Name()).arg(id),
+                                   QString("%1%2.out").arg(current_problem->Name()).arg(id));
+    AddTestCaseDialog dialog(current_problem, point, true, this);
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        test_case_table->AddTestCase(dialog.GetTestCase(), dialog.GetScore());
+        ui->label_score->setText(QString::number(test_case_table->SumScore()));
+    }
+}
+
+void AdvancedConfigureDialog::on_pushButton_addSubTestCase_clicked()
+{
+    test_case_table->AddSubTestCase(new TestCase(1, 128, "a.in", "a.out"));
+}
+
+void AdvancedConfigureDialog::on_pushButton_removeTestCase_clicked()
+{
+    test_case_table->RemoveSelection();
+    ui->label_score->setText(QString::number(test_case_table->SumScore()));
+}
+

@@ -13,6 +13,7 @@ ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
     ui(new Ui::ConfigureDialog)
 {
     ui->setupUi(this);
+    this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
     for (auto i : list)
     {
@@ -29,7 +30,6 @@ ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
     ui->gridLayout->addWidget(configure_table, 0, 0, 1, 2);
 
     this->setFixedSize(configure_table->width() + 22, configure_table->height() + 100);
-    this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 }
 
 ConfigureDialog::~ConfigureDialog()

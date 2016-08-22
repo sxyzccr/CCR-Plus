@@ -22,7 +22,8 @@ SOURCES += boardtable.cpp \
     traditionaljudger.cpp \
     configuretable.cpp \
     advancedconfiguredialog.cpp \
-    testcasetable.cpp
+    testcasetable.cpp \
+    addtestcasedialog.cpp
 
 HEADERS += boardtable.h \
     createfiledialog.h \
@@ -41,7 +42,8 @@ HEADERS += boardtable.h \
     traditionaljudger.h \
     configuretable.h \
     advancedconfiguredialog.h \
-    testcasetable.h
+    testcasetable.h \
+    addtestcasedialog.h
 
 UI_DIR = forms
 RCC_DIR = rcfile
@@ -49,7 +51,8 @@ RCC_DIR = rcfile
 FORMS += forms/mainwindow.ui \
     forms/configuredialog.ui \
     forms/createfiledialog.ui \
-    forms/advancedconfiguredialog.ui
+    forms/advancedconfiguredialog.ui \
+    forms/addtestcasedialog.ui
 
 RESOURCES = rcfile/image.qrc
 RC_FILE = rcfile/icon.rc

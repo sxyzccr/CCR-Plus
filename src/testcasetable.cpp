@@ -24,11 +24,6 @@ TestCaseTable::TestCaseTable(QWidget* parent) :
                             "QTableWidget::item:!alternate:!selected"
                             "{"
                             "  background-color:#F8F8F8;"
-                            "}"
-                            "QTableWidget::item:!selected:focus"
-                            "{"
-                            "  background-color:#FFFFFF;"
-                            "  selection-background-color:#FFFFFF;"
                             "}"));
 
     this->horizontalHeader()->setDefaultSectionSize(70);
@@ -208,7 +203,7 @@ void TestCaseTable::AddTestCase(TestCase* point, int score)
     score_item.insert(score_item.begin() + row, this->item(row, 0));
     sum_score += score;
     this->selectRow(row);
-    this->setFocus();
+    if (!this->hasFocus()) this->setFocus();
 }
 
 void TestCaseTable::AddSubTestCase(TestCase* point)
@@ -235,7 +230,6 @@ void TestCaseTable::AddSubTestCase(TestCase* point)
     this->setSpan(ScoreItemTopRow(top), 0, span, 1);
     score_item.insert(score_item.begin() + row, score_item[top]);
     this->selectRow(row);
-    this->setFocus();
 }
 
 void TestCaseTable::RemoveSelection()
@@ -277,7 +271,6 @@ void TestCaseTable::RemoveSelection()
         for (j = i; j < this->rowCount() && score_item[j] == score_item[i]; j++);
         if (j - i > 1) this->setSpan(i, 0, j - i, 1);
     }
-    this->setFocus();
 }
 
 void TestCaseTable::MoveUpSelection()
@@ -297,7 +290,6 @@ void TestCaseTable::MoveUpSelection()
         QTableWidgetSelectionRange range(p, 0, ScoreItemBottomRow(p), this->columnCount() - 1);
         this->setRangeSelected(range, true);
     }
-    this->setFocus();
 }
 
 void TestCaseTable::MoveDownSelection()
@@ -317,7 +309,6 @@ void TestCaseTable::MoveDownSelection()
         QTableWidgetSelectionRange range(p, 0, ScoreItemBottomRow(p), this->columnCount() - 1);
         this->setRangeSelected(range, true);
     }
-    this->setFocus();
 }
 
 void TestCaseTable::MergeSelection()
@@ -340,7 +331,6 @@ void TestCaseTable::MergeSelection()
     this->setSpan(top, 0, bottom - top + 1, 1);
     scoreItem->setText(QString::number(sum));
     scoreItem->setToolTip(scoreItem->text());
-    this->setFocus();
     onItemSelectionChanged();
 }
 
@@ -372,7 +362,6 @@ void TestCaseTable::SplitSelection()
             }
         }
     }
-    this->setFocus();
     onItemSelectionChanged();
 }
 
