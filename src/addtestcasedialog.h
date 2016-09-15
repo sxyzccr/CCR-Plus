@@ -14,7 +14,15 @@ class AddTestCaseDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit AddTestCaseDialog(Problem* problem, TestCase* point, bool isScoreShow, QWidget *parent = 0);
+    enum TestCaseType
+    {
+        AddTestCase,
+        AddSubTestCase,
+        EditScore,
+        EditSubTestCase
+    };
+
+    explicit AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, QWidget* parent = 0, int score = 10);
     ~AddTestCaseDialog();
 
     int GetScore() const { return score;}
@@ -24,12 +32,9 @@ protected:
     void accept() override;
 
 private slots:
-    void on_lineEdit_inFile_textChanged(const QString &arg1);
-
-    void on_lineEdit_outFile_textChanged(const QString &arg1);
-
+    void on_lineEdit_inFile_textChanged(const QString& arg1);
+    void on_lineEdit_outFile_textChanged(const QString& arg1);
     void on_pushButton_browseInFile_clicked();
-
     void on_pushButton_browseOutFile_clicked();
 
 private:
@@ -37,6 +42,7 @@ private:
     Problem* problem;
     TestCase* point;
     int score;
+    TestCaseType type;
 };
 
 #endif // ADDTESTCASEDIALOG_H

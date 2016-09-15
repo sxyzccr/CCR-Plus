@@ -1,44 +1,29 @@
 #include "testcasetable.h"
 
 #include <QHeaderView>
+#include <QDebug>
 
 using namespace std;
 
 TestCaseTable::TestCaseTable(QWidget* parent) :
     QTableWidget(parent), problem(nullptr), sum_score(0)
 {
-    this->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->setSelectionMode(QAbstractItemView::ContiguousSelection);
-    this->setSelectionBehavior(QAbstractItemView::SelectRows);
-    this->setAlternatingRowColors(true);
-    this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
-    this->setStyleSheet(QLatin1String(
-                            "QHeaderView"
-                            "{"
-                            "  background:#FFFFFF;"
-                            "}"
-                            "QTableWidget::item:alternate:!selected"
-                            "{"
-                            "  background-color:#FFFFFF;"
-                            "}"
-                            "QTableWidget::item:!alternate:!selected"
-                            "{"
-                            "  background-color:#F8F8F8;"
-                            "}"));
-
-    this->horizontalHeader()->setDefaultSectionSize(70);
-    this->horizontalHeader()->setMinimumSectionSize(70);
-    this->horizontalHeader()->setFixedHeight(22);
+    this->horizontalHeader()->setFixedHeight(25);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    this->horizontalHeader()->setHighlightSections(false);
 
-    this->verticalHeader()->setDefaultSectionSize(22);
-    this->verticalHeader()->setMinimumWidth(22);
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    this->verticalHeader()->setHighlightSections(false);
 
     connect(this, &QTableWidget::itemSelectionChanged, this, &TestCaseTable::onItemSelectionChanged);
+    connect(this, &QTableWidget::itemClicked, this, [this](QTableWidgetItem* item)
+    {
+        if (!item->column())
+        {
+            int p = item->row();
+            QTableWidgetSelectionRange range(p, 0, ScoreItemBottomRow(p), this->columnCount() - 1);
+            this->setRangeSelected(range, true);
+        }
+    });
     connect(this, &QTableWidget::currentItemChanged, this, [this]()
     {
         int top, bottom;
@@ -50,7 +35,7 @@ TestCaseTable::TestCaseTable(QWidget* parent) :
 
 void TestCaseTable::LoadTestCases(Problem *problem)
 {
-    score_item.clear();
+    score_items.clear();
 
     this->clear();
     this->setRowCount(0);
@@ -105,7 +90,7 @@ void TestCaseTable::LoadTestCases(Problem *problem)
             this->item(rows, 0)->setBackgroundColor(QColor(255, 255, 255));
 
             len++, rows++;
-            score_item.push_back(this->item(rows - len, 0));
+            score_items.push_back(this->item(rows - len, 0));
         }
         if (len > 1) this->setSpan(rows - len, 0, len, 1);
     }
@@ -144,6 +129,26 @@ TestCaseTable::SelectionType TestCaseTable::GetSelectionType(int* _top, int* _bo
     return OtherSelection;
 }
 
+void TestCaseTable::ChangeScore(int row, int score)
+{
+    sum_score += score - this->ScoreItemAt(row)->text().toInt();
+    this->ScoreItemAt(row)->setText(QString::number(score));
+}
+
+void TestCaseTable::ChangeTestCase(int row, TestCase* point)
+{
+    this->item(row, 1)->setText(point->InFile());
+    this->item(row, 2)->setText(point->OutFile());
+
+    if (problem->Type() == Global::Traditional)
+    {
+        this->item(row, 3)->setText(QString::number(point->TimeLimit()));
+        this->item(row, 4)->setText(QString::number(point->MemoryLimit()));
+    }
+    else if (problem->Type() == Global::AnswersOnly)
+        this->item(row, 3)->setText(point->SubmitFile());
+}
+
 void TestCaseTable::swapTestCase(int row1, int row2)
 {
     for (int c = 1; c < this->columnCount(); c++)
@@ -171,8 +176,8 @@ void TestCaseTable::swapPackage(int topRow1, int topRow2)
         for (int i = 0; i < s2; i++) this->setItem(p1 + i, c, this->takeItem(p2 + i, c));
         for (int i = 0; i < s1; i++) this->setItem(p3 + i, c, tmp[i]);
     }
-    for (int i = 0; i < s2; i++) score_item[p1 + i] = this->item(p1, 0);
-    for (int i = 0; i < s1; i++) score_item[p3 + i] = this->item(p3, 0);
+    for (int i = 0; i < s2; i++) score_items[p1 + i] = this->item(p1, 0);
+    for (int i = 0; i < s1; i++) score_items[p3 + i] = this->item(p3, 0);
     if (s2 > 1) this->setSpan(p1, 0, s2, 1);
     if (s1 > 1) this->setSpan(p3, 0, s1, 1);
 }
@@ -200,7 +205,7 @@ void TestCaseTable::AddTestCase(TestCase* point, int score)
         addItem(row, 3, point->SubmitFile());
 
     addItem(row, 0, QString::number(score));
-    score_item.insert(score_item.begin() + row, this->item(row, 0));
+    score_items.insert(score_items.begin() + row, this->item(row, 0));
     sum_score += score;
     this->selectRow(row);
     if (!this->hasFocus()) this->setFocus();
@@ -228,7 +233,7 @@ void TestCaseTable::AddSubTestCase(TestCase* point)
 
     addItem(row, 0, "");
     this->setSpan(ScoreItemTopRow(top), 0, span, 1);
-    score_item.insert(score_item.begin() + row, score_item[top]);
+    score_items.insert(score_items.begin() + row, score_items[top]);
     this->selectRow(row);
 }
 
@@ -247,7 +252,7 @@ void TestCaseTable::RemoveSelection()
             QTableWidgetItem* item = this->item(bottom + 1, 0);
             item->setText(ScoreItemAt(r)->text());
             item->setToolTip(item->text());
-            for (int i = bottom + 1; i <= scoreBottom; i++) score_item[i] = item;
+            for (int i = bottom + 1; i <= scoreBottom; i++) score_items[i] = item;
         }
         else if (ScoreItemTopRow(r) == r)
             sum_score -= this->item(r, 0)->text().toInt();
@@ -264,11 +269,11 @@ void TestCaseTable::RemoveSelection()
         if (this->rowSpan(r, 0) > 1) this->setSpan(r, 0, 1, 1);
 
     for (int i = top; i <= bottom; i++) this->removeRow(this->rowCount() - 1);
-    score_item.erase(score_item.begin() + top, score_item.begin() + bottom + 1);
+    score_items.erase(score_items.begin() + top, score_items.begin() + bottom + 1);
 
     for (int i = 0, j; i < this->rowCount(); i++) if (ScoreItemTopRow(i) == i)
     {
-        for (j = i; j < this->rowCount() && score_item[j] == score_item[i]; j++);
+        for (j = i; j < this->rowCount() && score_items[j] == score_items[i]; j++);
         if (j - i > 1) this->setSpan(i, 0, j - i, 1);
     }
 }
@@ -318,15 +323,15 @@ void TestCaseTable::MergeSelection()
     if (type != SelectMultiplePackage && type != SelectMultipleTestCasePackage) return;
 
     int sum = 0;
-    QTableWidgetItem* scoreItem = score_item[top];
+    QTableWidgetItem* scoreItem = score_items[top];
     for (int i = top; i <= bottom; i++)
     {
         if (ScoreItemTopRow(i) == i)
         {
-            sum += score_item[i]->text().toInt();
+            sum += score_items[i]->text().toInt();
             if (this->rowSpan(i, 0) > 1) this->setSpan(i, 0, 1, 1);
         }
-        score_item[i] = scoreItem;
+        score_items[i] = scoreItem;
     }
     this->setSpan(top, 0, bottom - top + 1, 1);
     scoreItem->setText(QString::number(sum));
@@ -346,19 +351,19 @@ void TestCaseTable::SplitSelection()
         if (ScoreItemTopRow(i) == i && this->rowSpan(i, 0) > 1)
         {
             int len = this->rowSpan(i, 0);
-            int sum = score_item[i]->text().toInt(), s = sum / len;
+            int sum = score_items[i]->text().toInt(), s = sum / len;
             this->setSpan(i, 0, 1, 1);
             score.clear();
             for (int j = 0; j < len; j++)
             {
-                score_item[i + j] = this->item(i + j, 0);
+                score_items[i + j] = this->item(i + j, 0);
                 score.push_back(s), sum -= s;
             }
             for (int j = len; sum; sum--) score[--j]++;
             for (int j = 0; j < len; j++)
             {
-                score_item[i + j]->setText(QString::number(score[j]));
-                score_item[i + j]->setToolTip(QString::number(score[j]));
+                score_items[i + j]->setText(QString::number(score[j]));
+                score_items[i + j]->setToolTip(QString::number(score[j]));
             }
         }
     }

@@ -53,26 +53,19 @@ AdvancedConfigureDialog::AdvancedConfigureDialog(const vector<Problem*>& problem
     ui->comboBox_internal->setView(new QListView(ui->comboBox_internal));
 
 
-    ui->tableWidget_compiler->horizontalHeader()->setFixedHeight(22);
+    ui->tableWidget_compiler->horizontalHeader()->setFixedHeight(25);
     ui->tableWidget_compiler->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     ui->tableWidget_compiler->verticalHeader()->setSectionsMovable(true);
     ui->tableWidget_compiler->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
 
-    ui->widget_empty->hide();
-    test_case_table = new TestCaseTable(ui->tab_testCase);
-    test_case_table->setMinimumHeight(test_case_table->verticalHeader()->defaultSectionSize() * 20 +
-                                      test_case_table->horizontalHeader()->height() +
-                                      test_case_table->frameWidth() * 2);
-    ui->gridLayout_testCase->addWidget(test_case_table, 1, 0, 12, 3);
+    ui->tableWidget_testcase->setMinimumHeight(ui->tableWidget_testcase->verticalHeader()->defaultSectionSize() * 20 +
+                                               ui->tableWidget_testcase->horizontalHeader()->height() +
+                                               ui->tableWidget_testcase->frameWidth() * 2);
 
     connect(ui->listWidget, &QListWidget::currentItemChanged, this, &AdvancedConfigureDialog::onListWidgetCurrentItemChanged);
-    connect(test_case_table, &TestCaseTable::testCaseSelectionChanged, this, &AdvancedConfigureDialog::onTestCaseSelectionChanged);
-    connect(ui->pushButton_up,    &QPushButton::clicked, test_case_table, &TestCaseTable::MoveUpSelection);
-    connect(ui->pushButton_down,  &QPushButton::clicked, test_case_table, &TestCaseTable::MoveDownSelection);
-    connect(ui->pushButton_merge, &QPushButton::clicked, test_case_table, &TestCaseTable::MergeSelection);
-    connect(ui->pushButton_split, &QPushButton::clicked, test_case_table, &TestCaseTable::SplitSelection);
+    connect(ui->tableWidget_testcase, &TestCaseTable::testCaseSelectionChanged, this, &AdvancedConfigureDialog::onTestCaseSelectionChanged);
 
     ui->listWidget->setCurrentRow(0);
 }
@@ -171,8 +164,8 @@ void AdvancedConfigureDialog::loadFromProblem(Problem* problem)
         ui->tableWidget_compiler->setItem(i, 1, item);
     }
 
-    ui->label_score->setText(QString::number(test_case_table->SumScore()));
-    test_case_table->LoadTestCases(problem);
+    ui->tableWidget_testcase->LoadTestCases(problem);
+    ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
 }
 
 
@@ -191,16 +184,16 @@ void AdvancedConfigureDialog::onListWidgetCurrentItemChanged(QListWidgetItem *cu
 
 void AdvancedConfigureDialog::onTestCaseSelectionChanged()
 {
-    ui->pushButton_addTestCase->setEnabled(test_case_table->CanAddTestCase());
-    ui->pushButton_addSubTestCase->setEnabled(test_case_table->CanAddSubTestCase());
-    ui->pushButton_removeTestCase->setEnabled(test_case_table->CanRemoveTestCase());
-    ui->pushButton_up->setEnabled(test_case_table->CanMoveUp());
-    ui->pushButton_down->setEnabled(test_case_table->CanMoveDown());
-    ui->pushButton_merge->setEnabled(test_case_table->CanMerge());
-    ui->pushButton_split->setEnabled(test_case_table->CanSplit());
+    ui->pushButton_addTestCase->setEnabled(ui->tableWidget_testcase->CanAddTestCase());
+    ui->pushButton_addSubTestCase->setEnabled(ui->tableWidget_testcase->CanAddSubTestCase());
+    ui->pushButton_removeTestCase->setEnabled(ui->tableWidget_testcase->CanRemoveTestCase());
+    ui->pushButton_up->setEnabled(ui->tableWidget_testcase->CanMoveUp());
+    ui->pushButton_down->setEnabled(ui->tableWidget_testcase->CanMoveDown());
+    ui->pushButton_merge->setEnabled(ui->tableWidget_testcase->CanMerge());
+    ui->pushButton_split->setEnabled(ui->tableWidget_testcase->CanSplit());
 
     int top, bottom;
-    TestCaseTable::SelectionType type = test_case_table->GetSelectionType(&top, &bottom);
+    TestCaseTable::SelectionType type = ui->tableWidget_testcase->GetSelectionType(&top, &bottom);
     switch (type)
     {
     case TestCaseTable::SelectOnePackage:
@@ -215,7 +208,7 @@ void AdvancedConfigureDialog::onTestCaseSelectionChanged()
     {
         int t = 0;
         for (int i = top; i <= bottom; i++)
-            if (test_case_table->ScoreItemTopRow(i) == i) t++;
+            if (ui->tableWidget_testcase->ScoreItemTopRow(i) == i) t++;
         ui->label_selectionInfo->setText(QString("已选择: %1 个测试点，%2 组测试数据").arg(t).arg(bottom - top + 1));
         break;
     }
@@ -230,6 +223,7 @@ void AdvancedConfigureDialog::onTestCaseSelectionChanged()
         break;
     }
 }
+
 
 void AdvancedConfigureDialog::on_radioButton_internal_clicked()
 {
@@ -267,6 +261,7 @@ void AdvancedConfigureDialog::on_pushButton_resetChecker_clicked()
     on_radioButton_internal_clicked();
     ui->spinBox_checkerTimeLim->setValue(10);
 }
+
 
 void AdvancedConfigureDialog::on_tableWidget_compiler_itemSelectionChanged()
 {
@@ -324,10 +319,33 @@ void AdvancedConfigureDialog::on_pushButton_removeCompiler_clicked()
     }
 }
 
+
+void AdvancedConfigureDialog::on_tableWidget_testcase_doubleClicked(const QModelIndex& index)
+{
+    int id = index.row();
+    if (!index.column())
+    {
+        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, this, ui->tableWidget_testcase->ScoreItemAt(id)->text().toInt());
+        if (dialog.exec() == QDialog::Accepted)
+        {
+            ui->tableWidget_testcase->ChangeScore(id, dialog.GetScore());
+            ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
+        }
+    }
+    else
+    {
+        TestCase* point = current_problem->TestCaseAt(id);
+
+        AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::EditSubTestCase, this);
+        if (dialog.exec() == QDialog::Accepted)
+            ui->tableWidget_testcase->ChangeTestCase(id, dialog.GetTestCase());
+    }
+}
+
 void AdvancedConfigureDialog::on_pushButton_addTestCase_clicked()
 {
     int id = 1;
-    auto list = test_case_table->selectedItems();
+    auto list = ui->tableWidget_testcase->selectedItems();
     if (list.size()) id = list.first()->row() + 2;
 
     TestCase* point;
@@ -338,22 +356,62 @@ void AdvancedConfigureDialog::on_pushButton_addTestCase_clicked()
         point = new TestCase(0, 0, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id));
-    AddTestCaseDialog dialog(current_problem, point, true, this);
+
+    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddTestCase, this);
     if (dialog.exec() == QDialog::Accepted)
     {
-        test_case_table->AddTestCase(dialog.GetTestCase(), dialog.GetScore());
-        ui->label_score->setText(QString::number(test_case_table->SumScore()));
+        ui->tableWidget_testcase->AddTestCase(dialog.GetTestCase(), dialog.GetScore());
+        ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
     }
 }
 
 void AdvancedConfigureDialog::on_pushButton_addSubTestCase_clicked()
 {
-    test_case_table->AddSubTestCase(new TestCase(1, 128, "a.in", "a.out"));
+    int id = 1;
+    auto list = ui->tableWidget_testcase->selectedItems();
+    if (list.size()) id = list.first()->row() + 2;
+
+    TestCase* point;
+    if (current_problem->Type() == Global::Traditional)
+        point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
+                                     QString("%1%2.out").arg(current_problem->Name()).arg(id));
+    else
+        point = new TestCase(0, 0, QString("%1%2.in").arg(current_problem->Name()).arg(id),
+                                   QString("%1%2.out").arg(current_problem->Name()).arg(id),
+                                   QString("%1%2.out").arg(current_problem->Name()).arg(id));
+
+    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddSubTestCase, this);
+    if (dialog.exec() == QDialog::Accepted)
+        ui->tableWidget_testcase->AddSubTestCase(dialog.GetTestCase());
 }
 
 void AdvancedConfigureDialog::on_pushButton_removeTestCase_clicked()
 {
-    test_case_table->RemoveSelection();
-    ui->label_score->setText(QString::number(test_case_table->SumScore()));
+    ui->tableWidget_testcase->RemoveSelection();
+    ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
 }
 
+void AdvancedConfigureDialog::on_pushButton_up_clicked()
+{
+    ui->tableWidget_testcase->MoveUpSelection();
+}
+
+void AdvancedConfigureDialog::on_pushButton_down_clicked()
+{
+    ui->tableWidget_testcase->MoveDownSelection();
+}
+
+void AdvancedConfigureDialog::on_pushButton_merge_clicked()
+{
+    ui->tableWidget_testcase->MergeSelection();
+}
+
+void AdvancedConfigureDialog::on_pushButton_split_clicked()
+{
+    ui->tableWidget_testcase->SplitSelection();
+}
+
+void AdvancedConfigureDialog::on_pushButton_resetTestCase_clicked()
+{
+
+}

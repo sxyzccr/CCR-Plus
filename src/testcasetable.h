@@ -35,16 +35,18 @@ public:
     bool CanMerge() const { return can_merge; }
     bool CanSplit() const { return can_split; }
 
-    QTableWidgetItem* ScoreItemAt(int row) { return score_item[row]; }
-    int ScoreItemTopRow(int row) { return score_item[row]->row(); }
+    QTableWidgetItem* ScoreItemAt(int row) { return score_items[row]; }
+    int ScoreItemTopRow(int row) { return score_items[row]->row(); }
     int ScoreItemBottomRow(int row)
     {
-        int top = score_item[row]->row();
+        int top = score_items[row]->row();
         return top + this->rowSpan(top, 0) - 1;
     }
 
     void LoadTestCases(Problem* problem);
     TestCaseTable::SelectionType GetSelectionType(int *_top, int *_bottom);
+    void ChangeScore(int row, int score);
+    void ChangeTestCase(int row, TestCase* point);
 
 public slots:
     void AddTestCase(TestCase* point, int score);
@@ -57,7 +59,7 @@ public slots:
 
 private:
     Problem* problem;
-    std::vector<QTableWidgetItem*> score_item;
+    std::vector<QTableWidgetItem*> score_items;
     QTableWidgetItem* unselect_score_item;
     int sum_score;
     bool can_add, can_add_sub, can_remove, can_up, can_down, can_merge, can_split;

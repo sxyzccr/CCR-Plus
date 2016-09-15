@@ -135,7 +135,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="title">
@@ -462,13 +462,13 @@ QTableWidget::item:!alternate:!selected
           <bool>true</bool>
          </attribute>
          <attribute name="verticalHeaderDefaultSectionSize">
-          <number>22</number>
+          <number>25</number>
          </attribute>
          <attribute name="verticalHeaderHighlightSections">
           <bool>false</bool>
          </attribute>
          <attribute name="verticalHeaderMinimumSectionSize">
-          <number>22</number>
+          <number>25</number>
          </attribute>
          <column>
           <property name="text">
@@ -572,7 +572,55 @@ QTableWidget::item:!alternate:!selected
         </widget>
        </item>
        <item row="1" column="0" rowspan="12" colspan="3">
-        <widget class="QWidget" name="widget_empty" native="true"/>
+        <widget class="TestCaseTable" name="tableWidget_testcase">
+         <property name="styleSheet">
+          <string notr="true">QHeaderView
+{
+  background:#FFFFFF;
+}
+QTableWidget::item:alternate:!selected
+{
+  background-color:#FFFFFF;
+}
+QTableWidget::item:!alternate:!selected
+{
+  background-color:#F8F8F8;
+}</string>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::ContiguousSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="verticalScrollMode">
+          <enum>QAbstractItemView::ScrollPerPixel</enum>
+         </property>
+         <attribute name="horizontalHeaderDefaultSectionSize">
+          <number>70</number>
+         </attribute>
+         <attribute name="horizontalHeaderHighlightSections">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="horizontalHeaderMinimumSectionSize">
+          <number>70</number>
+         </attribute>
+         <attribute name="verticalHeaderDefaultSectionSize">
+          <number>22</number>
+         </attribute>
+         <attribute name="verticalHeaderHighlightSections">
+          <bool>false</bool>
+         </attribute>
+         <attribute name="verticalHeaderMinimumSectionSize">
+          <number>22</number>
+         </attribute>
+        </widget>
        </item>
        <item row="10" column="3">
         <spacer name="verticalSpacer_5">
@@ -733,6 +781,13 @@ QTableWidget::item:!alternate:!selected
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TestCaseTable</class>
+   <extends>QTableWidget</extends>
+   <header>testcasetable.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
