@@ -35,6 +35,9 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="currentIndex">
+      <number>-1</number>
+     </property>
      <item>
       <property name="text">
        <string>C 语言</string>

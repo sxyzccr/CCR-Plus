@@ -16,7 +16,7 @@ class CreateFileDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit CreateFileDialog(QWidget* parent = 0, Player* ply = 0, Problem* prob = 0);
+    explicit CreateFileDialog(Player* player, Problem* problem, QWidget* parent = nullptr);
     ~CreateFileDialog();
 
     QString GetSelectedFile() const { return selected_file; }

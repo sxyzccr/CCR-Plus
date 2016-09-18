@@ -12,8 +12,6 @@
 #include <QCloseEvent>
 #include <QDesktopServices>
 
-using namespace std;
-
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -88,7 +86,7 @@ void MainWindow::UpdateRecentContest(bool updateRecentListWidget)
     QSettings set("ccr.ini", QSettings::IniFormat);
     QStringList list = set.value("RecentContestList").toStringList();
     lastContest = set.value("LastContest").toString();
-    int n = min(list.size(), Global::MAX_RECENT_CONTEST);
+    int n = std::min(list.size(), Global::MAX_RECENT_CONTEST);
     for (int i = 0; i < n; i++)
     {
         QString s = QString("&%1 %2").arg(i + 1).arg(list[i]);
@@ -397,7 +395,7 @@ static Problem* problemByAction;
 
 void MainWindow::onCreateFile()
 {
-    CreateFileDialog dialog(this, playerByAction, problemByAction);
+    CreateFileDialog dialog(playerByAction, problemByAction, this);
     if (dialog.exec() == QDialog::Accepted)
     {
         if (!QDir(dirByAction).exists()) QDir().mkpath(dirByAction);

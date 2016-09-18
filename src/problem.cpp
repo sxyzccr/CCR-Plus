@@ -5,17 +5,15 @@
 #include <QTextStream>
 #include <QDomDocument>
 
-using namespace std;
-
-const map<QString, pair<QString, QString>> Problem::INTERNAL_CHECKER_MAP =
+const QMap<QString, QPair<QString, QString>> Problem::INTERNAL_CHECKER_MAP =
 {
-    {"fulltext", make_pair("全文比较", "全文比较(过滤行末空格及文末回车)")}
+    {"fulltext", qMakePair(QString("全文比较"), QString("全文比较(过滤行末空格及文末回车)"))}
 };
 
 QString Problem::FromInternalCheckerName(const QString& name)
 {
-    for (auto i : INTERNAL_CHECKER_MAP)
-        if (name == i.second.first) return AddFileExtension(i.first);
+    for (auto i = INTERNAL_CHECKER_MAP.begin(); i != INTERNAL_CHECKER_MAP.end(); i++)
+        if (name == i.value().first) return AddFileExtension(i.key());
     return AddFileExtension(name);
 }
 
@@ -36,14 +34,14 @@ Problem::Problem(Problem *problem) :
     in_file(problem->in_file), out_file(problem->out_file),
     score(problem->score), checker_time_lim(problem->checker_time_lim), code_len_lim(problem->code_len_lim)
 {
-    for (auto i : problem->cases) cases.push_back(new TestCase(*i));
-    for (auto i : problem->compilers) compilers.push_back(new Compiler(*i));
+    for (auto i : problem->cases) cases.append(new TestCase(*i));
+    for (auto i : problem->compilers) compilers.append(new Compiler(*i));
     int t = 0;
     for (auto i : problem->subtasks)
     {
         Subtask* sub = new Subtask(i->Score());
         for (int j = 0; j < i->Size(); j++) sub->Append(cases[t++]);
-        subtasks.push_back(sub);
+        subtasks.append(sub);
     }
 }
 
@@ -94,7 +92,7 @@ void Problem::ReadConfiguration()
                     else
                         x =  new Compiler(b.attribute("cmd"), b.attribute("file"));
                     //if (x.file.endsWith(".cpp")||x.file.endsWith(".c")) x.cmd+=" -static";
-                    this->compilers.push_back(x);
+                    this->compilers.append(x);
                 }
             }
         }
@@ -121,11 +119,11 @@ void Problem::ReadConfiguration()
                             TestCase* x = new TestCase(c.attribute("time").toDouble(), c.attribute("mem").toDouble(),
                                                        c.attribute("in"), c.attribute("out"), c.attribute("sub"));
                             sub->Append(x);
-                            this->cases.push_back(x);
+                            this->cases.append(x);
                         }
                     }
                     score += sub->Score();
-                    this->subtasks.push_back(sub);
+                    this->subtasks.append(sub);
                 }
             }
         }
@@ -259,8 +257,8 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
         TestCase* point = new TestCase(timeLim, memLim, list[i].first, list[i].second);
         if (type == Global::AnswersOnly) point->SetSubmitFile(point->OutFile());
         sub->Append(point);
-        this->cases.push_back(point);
-        this->subtasks.push_back(sub);
+        this->cases.append(point);
+        this->subtasks.append(sub);
     }
 }
 
@@ -295,13 +293,13 @@ QList<QPair<QString, QString>> Problem::GetInAndOutFile()
             }
             for (auto k = F.constBegin(); k != F.constEnd(); k++)
                 if (k.value() == 2) Q[i][j].append(qMakePair(k.key().first + a + k.key().second, k.key().first + b + k.key().second));
-            ma = max(ma, Q[i][j].size());
+            ma = std::max(ma, Q[i][j].size());
         }
     for (int i = 0; i < in.size() && !res.size(); i++)
         for (int j = 0; j < out.size() && !res.size(); j++)
             if (ma - Q[i][j].size() <= 3) { res = Q[i][j]; break; }
 
-    sort(res.begin(), res.end(), [&](const InOutPair& a, const InOutPair& b)
+    qSort(res.begin(), res.end(), [&](const InOutPair& a, const InOutPair& b)
     {
         QCollator c;
         c.setNumericMode(true);

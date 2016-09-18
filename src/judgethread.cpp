@@ -6,8 +6,6 @@
 #include <QElapsedTimer>
 #include <QCoreApplication>
 
-using namespace std;
-
 bool JudgeThread::is_judging = false;
 
 JudgeThread::JudgeThread(int row, int column, QObject* parent) : QThread(parent),

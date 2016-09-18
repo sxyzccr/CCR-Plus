@@ -23,9 +23,10 @@ public:
         EditSubTestCase
     };
 
-    explicit AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, QWidget* parent = 0, int score = 10);
+    explicit AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, QWidget* parent = nullptr, int score = 10);
     ~AddTestCaseDialog();
 
+    // Getter member functions
     int GetScore() const { return score;}
     TestCase* GetTestCase() const { return point; }
 

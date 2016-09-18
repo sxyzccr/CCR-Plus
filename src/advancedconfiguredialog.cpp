@@ -9,9 +9,7 @@
 #include <QMessageBox>
 #include <QStandardItemModel>
 
-using namespace std;
-
-AdvancedConfigureDialog::AdvancedConfigureDialog(const vector<Problem*>& problems, QWidget *parent) :
+AdvancedConfigureDialog::AdvancedConfigureDialog(const QList<Problem*>& problems, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::AdvancedConfigureDialog), old_problems(problems)
 {
@@ -21,7 +19,7 @@ AdvancedConfigureDialog::AdvancedConfigureDialog(const vector<Problem*>& problem
     for (int i = 0; i < problems.size(); i++)
     {
         Problem* prob = new Problem(problems[i]);
-        this->problems.push_back(prob);
+        this->problems.append(prob);
         ui->listWidget->addItem(prob->Name());
         ui->listWidget->item(i)->setToolTip(prob->Name());
     }
@@ -43,9 +41,8 @@ AdvancedConfigureDialog::AdvancedConfigureDialog(const vector<Problem*>& problem
 
     model = new QStandardItemModel(ui->comboBox_internal);
     auto& internal_checker = Problem::INTERNAL_CHECKER_MAP;
-    for (auto i : internal_checker)
+    for (auto checker : internal_checker)
     {
-        auto checker = i.second;
         item = new QStandardItem(checker.first);
         item->setToolTip(checker.second);
         model->appendRow(item);
@@ -67,6 +64,10 @@ AdvancedConfigureDialog::AdvancedConfigureDialog(const vector<Problem*>& problem
 
     connect(ui->listWidget, &QListWidget::currentItemChanged, this, &AdvancedConfigureDialog::onListWidgetCurrentItemChanged);
     connect(ui->tableWidget_testcase, &TestCaseTable::testCaseSelectionChanged, this, &AdvancedConfigureDialog::onTestCaseSelectionChanged);
+    connect(ui->tableWidget_compiler->verticalHeader(), &QHeaderView::sectionMoved, this, [this](int /*logicalIndex*/, int oldVisualIndex, int newVisualIndex)
+    {
+        current_problem->MoveCompiler(oldVisualIndex, newVisualIndex);
+    });
 
     ui->listWidget->setCurrentRow(0);
 }
@@ -264,6 +265,28 @@ void AdvancedConfigureDialog::on_pushButton_resetChecker_clicked()
 }
 
 
+void AdvancedConfigureDialog::on_tableWidget_compiler_doubleClicked(const QModelIndex& index)
+{
+    int row = index.row(), visualRow = ui->tableWidget_compiler->visualRow(row);
+    Compiler* compiler = current_problem->CompilerAt(visualRow);
+    AddCompilerDialog dialog(current_problem, compiler, this);
+    if (dialog.exec() != QDialog::Accepted) return;
+
+    QTableWidgetItem* item = ui->tableWidget_compiler->verticalHeaderItem(row);
+    if (dialog.SourceFile().endsWith(".c"))
+        item->setText("C 语言");
+    else if (dialog.SourceFile().endsWith(".cpp"))
+        item->setText("C++ 语言");
+    else if (dialog.SourceFile().endsWith(".pas"))
+        item->setText("Pascal 语言");
+    else
+        item->setText("自定义");
+    item->setToolTip(item->text());
+
+    ui->tableWidget_compiler->item(row, 0)->setText(dialog.SourceFile());
+    ui->tableWidget_compiler->item(row, 1)->setText(dialog.Cmd());
+}
+
 void AdvancedConfigureDialog::on_tableWidget_compiler_itemSelectionChanged()
 {
     ui->pushButton_removeCompiler->setEnabled(ui->tableWidget_compiler->selectedItems().size());
@@ -275,7 +298,7 @@ void AdvancedConfigureDialog::on_pushButton_addCompiler_clicked()
     int row;
     if (!list.size()) row = 0; else row = ui->tableWidget_compiler->visualRow(list.first()->row()) + 1;
 
-    AddCompilerDialog dialog(current_problem, this);
+    AddCompilerDialog dialog(current_problem, nullptr, this);
     if (dialog.exec() != QDialog::Accepted) return;
 
     Compiler compiler(dialog.Cmd(), dialog.SourceFile(), dialog.TimeLimit());
@@ -310,6 +333,8 @@ void AdvancedConfigureDialog::on_pushButton_addCompiler_clicked()
 
     ui->tableWidget_compiler->selectRow(row);
     if (!ui->tableWidget_compiler->hasFocus()) ui->tableWidget_compiler->setFocus();
+
+    current_problem->InsertCompiler(row, new Compiler(compiler));
 }
 
 void AdvancedConfigureDialog::on_pushButton_removeCompiler_clicked()
@@ -319,6 +344,7 @@ void AdvancedConfigureDialog::on_pushButton_removeCompiler_clicked()
     {
         int row = list.first()->row(), visualRow = ui->tableWidget_compiler->visualRow(row), gotoRow = -1, end;
         ui->tableWidget_compiler->removeRow(row);
+        current_problem->RemoveCompiler(visualRow);
         for (int i = 0; i < ui->tableWidget_compiler->rowCount(); i++)
         {
             if (ui->tableWidget_compiler->visualRow(i) == visualRow) gotoRow = i;
@@ -425,3 +451,4 @@ void AdvancedConfigureDialog::on_pushButton_resetTestCase_clicked()
 {
 
 }
+

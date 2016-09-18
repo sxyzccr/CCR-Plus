@@ -1,13 +1,11 @@
 #include "basejudger.h"
 
-#include <set>
+#include <QSet>
 #include <QThread>
 #include <QTextStream>
 #include <QDomDocument>
 #include <QElapsedTimer>
 #include <QCoreApplication>
-
-using namespace std;
 
 BaseJudger::BaseJudger(const QString& testDir, Player* player, Problem* problem, QObject *parent) : QObject(parent),
     player(player), problem(problem),
@@ -112,10 +110,10 @@ TestCaseResult BaseJudger::judgeTestCaseEvent(TestCase* point, int testNum)
     else
         res = judgeTestCase(point);
 
-    static set<int> not_clean;
+    static QSet<int> not_clean;
     if (!waitForCleanWorkingDirectory(testNum, 2000)) not_clean.insert(testNum);
     for (auto i : not_clean)
-        if (waitForCleanWorkingDirectory(i, 2000)) not_clean.erase(i);
+        if (waitForCleanWorkingDirectory(i, 2000)) not_clean.remove(i);
 
     return res;
 }
@@ -487,7 +485,7 @@ ResultSummary BaseJudger::Judge()
             emit pointDetailFinished(num, res.note, QChar(res.state), problem->GetInOutString(j), len);
 
             result.time += res.time, result.detail += res.state;
-            ratioMin = min(ratioMin, res.score);
+            ratioMin = std::min(ratioMin, res.score);
             if (res.state == 'E') error = true;
             if (ratioMin == 0) ignore = true;
             point.setAttribute("ratio", res.score);

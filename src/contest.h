@@ -14,8 +14,8 @@ struct Contest
     QString name, path, src_path, data_path, result_path;
 
     int player_num, problem_num, sum_score;
-    std::vector<Player*> players;
-    std::vector<Problem*> problems;
+    QList<Player*> players;
+    QList<Problem*> problems;
 
     QList<int> problem_order;
     bool is_list_used;
@@ -47,7 +47,7 @@ struct Contest
     void ReadContestInfo();
 
     /// 选手排序
-    void SortPlayers(bool (*cmp)(Player* x, Player* y)) { sort(players.begin(), players.end(), cmp); }
+    void SortPlayers(bool (*cmp)(Player* x, Player* y)) { qSort(players.begin(), players.end(), cmp); }
 
     /// 缓存测评结果到 .reslist
     void SaveResultCache();

@@ -6,8 +6,6 @@
 #include <QDomDocument>
 #include <QCoreApplication>
 
-using namespace std;
-
 DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
     is_scrollBar_at_bottom(false), is_locked(false), rows(0)
 {
@@ -156,7 +154,7 @@ void DetailTable::onAddNoteDetail(const QString& note, const QString& state)
     if (state == " " || state.isEmpty()) tmp->setTextColor(QColor(100, 100, 100)), tmp->setBackgroundColor(QColor(235, 235, 235));
     if (state.isEmpty()) tmp->setTextAlignment(Qt::AlignCenter);
 
-    int a = tmp->text().split('\n').count(), b = min(a, 4) * 17 + 5;
+    int a = tmp->text().split('\n').count(), b = std::min(a, 4) * 17 + 5;
     this->insertRow(rows);
     this->setItem(rows, 0, tmp);
     this->setSpan(rows, 0, 1, 2);

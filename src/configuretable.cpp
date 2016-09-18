@@ -12,8 +12,6 @@
 #include <QMouseEvent>
 #include <QApplication>
 
-using namespace std;
-
 QRect ConfigureTableItemDelegate::checkBoxRect(const QStyleOptionViewItem& viewItemStyleOptions)
 {
     QStyleOptionButton checkBoxStyleOptionButton;
@@ -53,9 +51,8 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
             auto& internal_checker = Problem::INTERNAL_CHECKER_MAP;
 
             QStandardItem* item;
-            for (auto i : internal_checker)
+            for (auto checker : internal_checker)
             {
-                auto checker = i.second;
                 item = new QStandardItem(checker.first);
                 item->setToolTip(checker.second);
                 item->setFont(Global::BOLD_FONT);
@@ -201,7 +198,7 @@ bool ConfigureTableItemDelegate::editorEvent(QEvent* event, QAbstractItemModel* 
 
 
 
-ConfigureTable::ConfigureTable(const vector<Problem*>& problems, QWidget* parent) : QTableView(parent),
+ConfigureTable::ConfigureTable(const QList<Problem*>& problems, QWidget* parent) : QTableView(parent),
     model(new QStandardItemModel(this)), problems(problems), is_changing_data(false)
 {
     this->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
@@ -236,7 +233,7 @@ ConfigureTable::ConfigureTable(const vector<Problem*>& problems, QWidget* parent
     this->setModel(model);
 
     QStringList list;
-    for (auto i : problems) list.push_back(i->Name());
+    for (auto i : problems) list.append(i->Name());
     this->setItemDelegate(new ConfigureTableItemDelegate(list, this));
 
     loadProblems();
@@ -282,8 +279,8 @@ void ConfigureTable::setColumnData(int column)
             for (int i = 0; i < problem->TestCaseCount(); i++)
             {
                 TestCase* point = problem->TestCaseAt(i);
-                minT = min(minT, point->TimeLimit()), maxT = max(maxT, point->TimeLimit());
-                minM = min(minM, point->MemoryLimit()), maxM = max(maxM, point->MemoryLimit());
+                minT = std::min(minT, point->TimeLimit()),   maxT = std::max(maxT, point->TimeLimit());
+                minM = std::min(minM, point->MemoryLimit()), maxM = std::max(maxM, point->MemoryLimit());
             }
 
             if (minT == maxT)
@@ -350,7 +347,7 @@ void ConfigureTable::loadProblems()
         setColumnData(i);
     }
 
-    int w = min(max(num, 3), 12) * this->horizontalHeader()->defaultSectionSize() + this->verticalHeader()->width() + 2 * this->frameWidth();
+    int w = std::min(std::max(num, 3), 12) * this->horizontalHeader()->defaultSectionSize() + this->verticalHeader()->width() + 2 * this->frameWidth();
     int h = 5 * this->verticalHeader()->defaultSectionSize() + this->horizontalHeader()->height() + 2 * this->frameWidth();
     if (num > 12) h += this->horizontalScrollBar()->sizeHint().height();
     this->setFixedSize(w, h);

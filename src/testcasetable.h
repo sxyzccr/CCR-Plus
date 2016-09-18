@@ -22,7 +22,7 @@ public:
         OtherSelection
     };
 
-    explicit TestCaseTable(QWidget* parent = 0);
+    explicit TestCaseTable(QWidget* parent = nullptr);
     ~TestCaseTable() {}
 
     // Getter member functions
@@ -59,7 +59,7 @@ public slots:
 
 private:
     Problem* problem;
-    std::vector<QTableWidgetItem*> score_items;
+    QList<QTableWidgetItem*> score_items;
     QTableWidgetItem* unselect_score_item;
     int sum_score;
     bool can_add, can_add_sub, can_remove, can_up, can_down, can_merge, can_split;

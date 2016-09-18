@@ -14,7 +14,7 @@ class ConfigureDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ConfigureDialog(const QStringList& list, QWidget* parent = 0);
+    explicit ConfigureDialog(const QStringList& list, QWidget* parent = nullptr);
     ~ConfigureDialog();
 
 public slots:
@@ -23,7 +23,7 @@ public slots:
 private:
     Ui::ConfigureDialog* ui;
     ConfigureTable* configure_table;
-    std::vector<Problem*> problems;
+    QList<Problem*> problems;
 
 private slots:
     void on_pushButton_clicked();

@@ -124,7 +124,7 @@ private:
     QString name, name_in_list;
 
     ResultLabel *name_label, *sum_label;
-    std::vector<ResultLabel*> prob_label;
+    QList<ResultLabel*> prob_label;
 };
 
 inline bool CmpName(Player* x, Player* y)

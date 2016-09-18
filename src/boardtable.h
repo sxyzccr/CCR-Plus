@@ -9,7 +9,7 @@ class BoardTable : public QTableWidget
 {
     Q_OBJECT
 public:
-    explicit BoardTable(QWidget* parent = 0);
+    explicit BoardTable(QWidget* parent = nullptr);
     ~BoardTable() {}
 
     // 上锁与解锁，防止测评时点击
@@ -49,7 +49,7 @@ public slots:
     void onSectionMove(int logicalIndex, int oldVisualIndex, int newVisualIndex);
 
     /// 表格排序
-    void onSortTable(int);
+    void onSortTable(int column);
 
     /// 取消选中单元格
     void onSetItemUnselected(int row, int column);

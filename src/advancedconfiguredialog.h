@@ -16,10 +16,10 @@ class AdvancedConfigureDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit AdvancedConfigureDialog(const std::vector<Problem*>& problems, QWidget *parent = 0);
+    explicit AdvancedConfigureDialog(const QList<Problem*>& problems, QWidget* parent = nullptr);
     ~AdvancedConfigureDialog();
 
-    std::vector<Problem*> Problems() const { return problems; }
+    QList<Problem*> Problems() const { return problems; }
 
 public slots:
     void accept() override;
@@ -27,7 +27,7 @@ public slots:
 private:
     Ui::AdvancedConfigureDialog *ui;
     Problem* current_problem;
-    std::vector<Problem*> old_problems, problems;
+    QList<Problem*> old_problems, problems;
 
     void loadFromProblem(Problem *problem);
 
@@ -41,9 +41,10 @@ private slots:
     void on_pushButton_resetRun_clicked();
     void on_pushButton_resetChecker_clicked();
 
+    void on_tableWidget_compiler_doubleClicked(const QModelIndex& index);
+    void on_tableWidget_compiler_itemSelectionChanged();
     void on_pushButton_addCompiler_clicked();
     void on_pushButton_removeCompiler_clicked();
-    void on_tableWidget_compiler_itemSelectionChanged();
 
     void on_tableWidget_testcase_doubleClicked(const QModelIndex& index);
     void on_pushButton_addTestCase_clicked();

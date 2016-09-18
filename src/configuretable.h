@@ -11,7 +11,7 @@ class ConfigureTableItemDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    explicit ConfigureTableItemDelegate(const QStringList& list, QObject* parent = 0) :
+    explicit ConfigureTableItemDelegate(const QStringList& list, QObject* parent = nullptr) :
         QStyledItemDelegate(parent), problem_list(list) {}
     ~ConfigureTableItemDelegate() {}
 
@@ -35,7 +35,7 @@ class ConfigureTable : public QTableView
 {
     Q_OBJECT
 public:
-    explicit ConfigureTable(const std::vector<Problem*>& problems, QWidget* parent = 0);
+    explicit ConfigureTable(const QList<Problem*>& problems, QWidget* parent = nullptr);
     ~ConfigureTable() {}
 
     // Getter member functions
@@ -64,7 +64,7 @@ public:
 
 private:
     QStandardItemModel* model;
-    std::vector<Problem*> problems;
+    QList<Problem*> problems;
     bool is_changing_data;
 
     void setColumnDataNew(int column);

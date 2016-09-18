@@ -11,7 +11,7 @@ class DetailTable : public QTableWidget
 {
     Q_OBJECT
 public:
-    explicit DetailTable(QWidget* parent = 0);
+    explicit DetailTable(QWidget* parent = nullptr);
     ~DetailTable() {}
 
     // 上锁与解锁，防止测评时点击

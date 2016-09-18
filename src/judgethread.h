@@ -10,14 +10,14 @@ class JudgeThread: public QThread
 {
     Q_OBJECT
 public:
-    explicit JudgeThread(int row, int column, QObject* parent = 0);
+    explicit JudgeThread(int row, int column, QObject* parent = nullptr);
     ~JudgeThread() {}
 
     /// 阻塞最多 ms 毫秒，直到线程结束
     bool WaitForFinished(int ms);
 
     /// 添加要测评的项
-    void AppendProblem(int row, int column) { judge_list.append(std::make_pair(row, column)); }
+    void AppendProblem(int row, int column) { judge_list.append(qMakePair(row, column)); }
 
     /// 停止测评(目前没什么卵用~)
     void StopJudge() { emit judgeStoped(); }
@@ -26,10 +26,10 @@ private:
     static bool is_judging;
 
     int row, column;
-    QList<std::pair<int, int>> judge_list;
+    QList<QPair<int, int>> judge_list;
 
     /// 清空正在测评项的 ResultLabel
-    void cleanResultLabel(Player *player, int column);
+    void cleanResultLabel(Player* player, int column);
 
     /// 测评一位选手的一道题
     void judgeProblem(Player* player, int column);

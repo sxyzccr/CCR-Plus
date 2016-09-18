@@ -15,9 +15,10 @@ class AddCompilerDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit AddCompilerDialog(Problem* problem, QWidget *parent = 0);
+    explicit AddCompilerDialog(Problem* problem, Compiler* compiler, QWidget* parent = nullptr);
     ~AddCompilerDialog();
 
+    // Getter member functions
     QString Cmd() const { return cmd; }
     QString SourceFile() const { return file; }
     int TimeLimit() const { return time_lim; }
@@ -28,8 +29,11 @@ protected:
 private:
     Ui::AddCompilerDialog *ui;
     Problem* problem;
+    Compiler* compiler;
     QString cmd, file;
     int time_lim;
+
+    void initCompiler(Compiler *compiler);
 
 private slots:
     void onChangeCmd();

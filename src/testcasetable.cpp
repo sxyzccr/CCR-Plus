@@ -3,8 +3,6 @@
 #include <QHeaderView>
 #include <QDebug>
 
-using namespace std;
-
 TestCaseTable::TestCaseTable(QWidget* parent) :
     QTableWidget(parent), problem(nullptr), sum_score(0)
 {
@@ -90,7 +88,7 @@ void TestCaseTable::LoadTestCases(Problem *problem)
             this->item(rows, 0)->setBackgroundColor(QColor(255, 255, 255));
 
             len++, rows++;
-            score_items.push_back(this->item(rows - len, 0));
+            score_items.append(this->item(rows - len, 0));
         }
         if (len > 1) this->setSpan(rows - len, 0, len, 1);
     }
@@ -102,8 +100,8 @@ TestCaseTable::SelectionType TestCaseTable::GetSelectionType(int* _top, int* _bo
     int top = 1e9, bottom = -1e9;
     for (auto i : list)
     {
-        top = min(top, i.topRow());
-        bottom = max(bottom, i.bottomRow());
+        top = std::min(top, i.topRow());
+        bottom = std::max(bottom, i.bottomRow());
     }
     *_top = top, *_bottom = bottom;
     if (top > bottom) return NoSelection;
@@ -162,7 +160,7 @@ void TestCaseTable::swapTestCase(int row1, int row2)
 
 void TestCaseTable::swapPackage(int topRow1, int topRow2)
 {
-    vector<QTableWidgetItem*> tmp;
+    QList<QTableWidgetItem*> tmp;
     int p1 = topRow1, s1 = ScoreItemBottomRow(topRow1) - topRow1 + 1,
         p2 = topRow2, s2 = ScoreItemBottomRow(topRow2) - topRow2 + 1,
         p3 = p1 + s2;
@@ -172,7 +170,7 @@ void TestCaseTable::swapPackage(int topRow1, int topRow2)
     for (int c = 0; c < this->columnCount(); c++)
     {
         tmp.clear();
-        for (int i = 0; i < s1; i++) tmp.push_back(this->takeItem(p1 + i, c));
+        for (int i = 0; i < s1; i++) tmp.append(this->takeItem(p1 + i, c));
         for (int i = 0; i < s2; i++) this->setItem(p1 + i, c, this->takeItem(p2 + i, c));
         for (int i = 0; i < s1; i++) this->setItem(p3 + i, c, tmp[i]);
     }
@@ -345,7 +343,7 @@ void TestCaseTable::SplitSelection()
     SelectionType type = GetSelectionType(&top, &bottom);
     if (type != SelectOnePackage && type != SelectMultiplePackage) return;
 
-    vector<int> score;
+    QList<int> score;
     for (int i = top; i <= bottom; i++)
     {
         if (ScoreItemTopRow(i) == i && this->rowSpan(i, 0) > 1)
@@ -357,7 +355,7 @@ void TestCaseTable::SplitSelection()
             for (int j = 0; j < len; j++)
             {
                 score_items[i + j] = this->item(i + j, 0);
-                score.push_back(s), sum -= s;
+                score.append(s), sum -= s;
             }
             for (int j = len; sum; sum--) score[--j]++;
             for (int j = 0; j < len; j++)

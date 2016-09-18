@@ -6,7 +6,7 @@
 class AnswerOnlyJudger : public BaseJudger
 {
 public:
-    explicit AnswerOnlyJudger(const QString& testDir, Player* player, Problem* problem, QObject *parent = 0) :
+    explicit AnswerOnlyJudger(const QString& testDir, Player* player, Problem* problem, QObject* parent = nullptr) :
         BaseJudger(testDir, player, problem, parent) {}
 
 protected:

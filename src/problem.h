@@ -3,7 +3,7 @@
 
 #include "const.h"
 
-#include <map>
+#include <QMap>
 
 class Compiler
 {
@@ -20,8 +20,8 @@ public:
     int TimeLimit() const { return time_lim; }
 
 private:
-    const QString cmd, file;
-    const int time_lim;
+    QString cmd, file;
+    int time_lim;
 };
 
 
@@ -66,15 +66,15 @@ public:
     int Size() const { return cases.size(); }
 
     /// 添加测试点
-    void Append(TestCase* point) { cases.push_back(point); }
+    void Append(TestCase* point) { cases.append(point); }
 
     // Iterators
-    std::vector<TestCase*>::const_iterator begin() const { return cases.begin(); }
-    std::vector<TestCase*>::const_iterator end() const { return cases.end(); }
+    QList<TestCase*>::const_iterator begin() const { return cases.begin(); }
+    QList<TestCase*>::const_iterator end() const { return cases.end(); }
 
 private:
     const int score;
-    std::vector<TestCase*> cases;
+    QList<TestCase*> cases;
 };
 
 
@@ -87,7 +87,7 @@ public:
     ~Problem() { Clear(); }
 
     /// 内置校验器列表，格式： <file, <name, toolTip>>
-    static const std::map<QString, std::pair<QString, QString>> INTERNAL_CHECKER_MAP;
+    static const QMap<QString, QPair<QString, QString>> INTERNAL_CHECKER_MAP;
 
     /// 增加扩展名
     static QString AddFileExtension(QString file)
@@ -136,6 +136,15 @@ public:
     Subtask* SubtaskAt(int t) const { return subtasks[t]; }
     Compiler* CompilerAt(int t) const { return compilers[t]; }
 
+    // Compiler operations
+    void InsertCompiler(int p, Compiler* compiler) { compilers.insert(p, compiler); }
+    void RemoveCompiler(int p)
+    {
+        delete compilers[p];
+        compilers.removeAt(p);
+    }
+    void MoveCompiler(int from, int to) { compilers.move(from, to); }
+
     /// 清空
     void Clear();
 
@@ -161,7 +170,7 @@ public:
     QString InternalCheckerName() const
     {
         auto p = INTERNAL_CHECKER_MAP.find(RemoveFileExtension(checker));
-        if (p != INTERNAL_CHECKER_MAP.end()) return p->second.first; else return checker;
+        if (p != INTERNAL_CHECKER_MAP.end()) return p.value().first; else return checker;
     }
 
     /// InOutString，格式如下
@@ -179,9 +188,9 @@ private:
     int score, checker_time_lim;
     double code_len_lim;
 
-    std::vector<TestCase*> cases;
-    std::vector<Subtask*> subtasks;
-    std::vector<Compiler*> compilers;
+    QList<TestCase*> cases;
+    QList<Subtask*> subtasks;
+    QList<Compiler*> compilers;
 };
 
 #endif // PROBLEM_H

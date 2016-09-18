@@ -6,8 +6,6 @@
 #include <QCheckBox>
 #include <QMessageBox>
 
-using namespace std;
-
 ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::ConfigureDialog)
@@ -22,7 +20,7 @@ ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
             prob = new Problem(i);
         else
             prob = new Problem(prob);
-        problems.push_back(prob);
+        problems.append(prob);
     }
 
     configure_table = new ConfigureTable(problems, this);

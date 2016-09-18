@@ -5,8 +5,6 @@
 #include <QTextStream>
 #include <QDomDocument>
 
-using namespace std;
-
 const QStringList ResultLabel::COLOR_NAME_LIST =
 {
     "#EB1D00", // StyleScore_1_9
@@ -31,7 +29,7 @@ const QStringList ResultLabel::COLOR_NAME_LIST =
 QString ResultLabel::GetLabelStyleSheet(Global::LabelStyle style, bool isHighlighted)
 {
     if (style == Global::StyleNone) return "";
-    QColor color(0, 0, 0), background(COLOR_NAME_LIST[(int)style]);
+    QColor color(0, 0, 0), background(COLOR_NAME_LIST[(size_t)style]);
     if (!isHighlighted) color.setAlpha(128), background.setAlpha(192);
 
     QString s = QString("QLabel{color:%1;background:%2;}").arg(color.name(QColor::HexArgb)).arg(background.name(QColor::HexArgb));
@@ -45,7 +43,7 @@ Player::Player(const QString& name, int id, int probNum) :
     id(id), priority(0), name(name), name_in_list(""),
     name_label(new ResultLabel(name)), sum_label(new ResultLabel)
 {
-    for (int i = 0; i < probNum; i++) prob_label.push_back(new ResultLabel);
+    for (int i = 0; i < probNum; i++) prob_label.append(new ResultLabel);
 }
 
 void Player::CalcSum()
@@ -99,7 +97,7 @@ void Player::SetNameLabelWithList(const QString& nameInList)
 void Player::SetSpecialNameLabel()
 {
     struct SpecialNameMap{ QString name_orig, name_show, style; int priority; };
-    const vector<SpecialNameMap> list =
+    const QList<SpecialNameMap> list =
     {
         {"std",    "标准程序", "QLabel{color:blue;font:bold;}",     1},
         {"jyk",    "",        "QLabel{color:red;font:bold;}",      2},
@@ -303,8 +301,8 @@ bool CmpProblem(Player* x,Player* y)
                 *b = y->ProblemLabelAt(Global::g_sort_key_col);
 
     if (!a->Score() && !b->Score())
-        return  F[a->State()] <  F[b->State()] ||
-               (F[a->State()] == F[b->State()] && CmpSumScore(x, y));
+        return  F[(size_t)a->State()] <  F[(size_t)b->State()] ||
+               (F[(size_t)a->State()] == F[(size_t)b->State()] && CmpSumScore(x, y));
     else
         return  a->Result() <  b->Result() ||
                (a->Result() == b->Result() && CmpSumScore(x, y));

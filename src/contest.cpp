@@ -5,8 +5,6 @@
 #include <QTextStream>
 #include <QDomDocument>
 
-using namespace std;
-
 QPixmap Contest::CreateIcon(const QString& contestPath)
 {
     QStringList list = ReadProblemOrder(contestPath);
@@ -15,11 +13,11 @@ QPixmap Contest::CreateIcon(const QString& contestPath)
     painter.setFont(QFont("Times New Roman", 15, 0, true));
     QFontMetrics fm = painter.fontMetrics();
     QPair<int, int> pos[3] = {{15, 38}, {15, 60}, {15, 82}};
-    int n = min(list.size(), 3);
+    int n = std::min(list.size(), 3);
     for (int i = 0; i < n; i++)
     {
         QString text = QString(" %1 ").arg(list[i]);
-        int width = min(fm.width(text), 109 - pos[i].first);
+        int width = std::min(fm.width(text), 109 - pos[i].first);
         int height = fm.height();
         painter.drawText(QRectF(pos[i].first, pos[i].second, width, height), text);
     }
@@ -110,7 +108,7 @@ void Contest::ReadContestInfo()
                 problemName = ReadFolders(data_path),
                 order = ReadProblemOrder(path);
 
-    map<QString, int> playerID, problemID;
+    QMap<QString, int> playerID, problemID;
     problemID.clear();
     playerID.clear();
 
@@ -122,9 +120,9 @@ void Contest::ReadContestInfo()
 
     for (auto name : problemName)
     {
-        problem_order.push_back(problem_num);
+        problem_order.append(problem_num);
         problemID[name] = problem_num;
-        problems.push_back(new Problem(name));
+        problems.append(new Problem(name));
 
         problem_num++;
     }
@@ -132,7 +130,7 @@ void Contest::ReadContestInfo()
     for (auto name : playerName)
     {
         playerID[name] = player_num;
-        players.push_back(new Player(name, player_num, problem_num));
+        players.append(new Player(name, player_num, problem_num));
 
         player_num++;
     }
@@ -162,11 +160,11 @@ void Contest::ReadContestInfo()
         }
         file.close();
     }
-    for (auto i : problemID)
-        for (auto j : playerID)
-            if (players[j.second]->ProblemLabelAt(i.second)->State() == ' ')
+    for (auto i = problemID.begin(); i != problemID.end(); i++)
+        for (auto j = playerID.begin(); j != playerID.end(); j++)
+            if (players[j.value()]->ProblemLabelAt(i.value())->State() == ' ')
             {
-                file.setFileName(result_path + i.first + "/" + j.first + ".res");
+                file.setFileName(result_path + i.key() + "/" + j.key() + ".res");
                 if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
                 QDomDocument doc;
                 if (!doc.setContent(&file)) {file.close(); continue;}
@@ -176,7 +174,7 @@ void Contest::ReadContestInfo()
                 int s = root.attribute("score").toInt();
                 double t = root.attribute("time").toDouble();
                 char c = root.attribute("state")[0].toLatin1();
-                int x = j.second, y = i.second;
+                int x = j.value(), y = i.value();
 
                 // 兼容旧版
                 if (c == 'R') c = 'N';
@@ -217,7 +215,7 @@ void Contest::SaveResultCache()
 
 void Contest::ReadPlayerList(QFile& file, bool isSaveList)
 {
-    map<QString, QString> list;
+    QMap<QString, QString> list;
     list.clear();
     QTextStream in(&file);
     //in.setCodec("UTF-8");
@@ -236,7 +234,7 @@ void Contest::ReadPlayerList(QFile& file, bool isSaveList)
         {
             QTextStream out(&f);
             //out.setCodec("UTF-8");
-            for (auto i : list) out << i.first << "," << i.second << endl;
+            for (auto i = list.begin(); i != list.end(); i++) out << i.key() << "," << i.value() << endl;
             f.close();
         }
     }

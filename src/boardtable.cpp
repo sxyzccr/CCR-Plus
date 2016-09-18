@@ -5,8 +5,6 @@
 #include <QScrollBar>
 #include <QHeaderView>
 
-using namespace std;
-
 BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),
     pre_highlighted_col(-1), already_moving_section(false), is_locked(false)
 {
@@ -91,7 +89,7 @@ void BoardTable::ResizePlayerLabel()
     for (auto i : Global::g_contest.players)
     {
         QLabel* tmp = i->NameLabel();
-        len = max(len, QFontMetrics(Global::FONT).width(tmp->text()) + 30);
+        len = std::max(len, QFontMetrics(Global::FONT).width(tmp->text()) + 30);
     }
     this->horizontalHeader()->resizeSection(0, len);
 }

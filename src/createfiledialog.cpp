@@ -1,10 +1,10 @@
 #include "createfiledialog.h"
 #include "ui_createfiledialog.h"
 
-CreateFileDialog::CreateFileDialog(QWidget* parent, Player* ply, Problem* prob) :
+CreateFileDialog::CreateFileDialog(Player* player, Problem* problem, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::CreateFileDialog),
-    player(ply), problem(prob)
+    player(player), problem(problem)
 {
     ui->setupUi(this);
 
