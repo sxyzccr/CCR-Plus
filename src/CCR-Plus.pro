@@ -23,7 +23,8 @@ SOURCES += boardtable.cpp \
     configuretable.cpp \
     advancedconfiguredialog.cpp \
     testcasetable.cpp \
-    addtestcasedialog.cpp
+    addtestcasedialog.cpp \
+    addcompilerdialog.cpp
 
 HEADERS += boardtable.h \
     createfiledialog.h \
@@ -43,7 +44,8 @@ HEADERS += boardtable.h \
     configuretable.h \
     advancedconfiguredialog.h \
     testcasetable.h \
-    addtestcasedialog.h
+    addtestcasedialog.h \
+    addcompilerdialog.h
 
 UI_DIR = forms
 RCC_DIR = rcfile
@@ -52,7 +54,8 @@ FORMS += forms/mainwindow.ui \
     forms/configuredialog.ui \
     forms/createfiledialog.ui \
     forms/advancedconfiguredialog.ui \
-    forms/addtestcasedialog.ui
+    forms/addtestcasedialog.ui \
+    forms/addcompilerdialog.ui
 
 RESOURCES = rcfile/image.qrc
 RC_FILE = rcfile/icon.rc

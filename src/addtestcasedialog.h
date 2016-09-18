@@ -13,6 +13,7 @@ class AddTestCaseDialog;
 class AddTestCaseDialog : public QDialog
 {
     Q_OBJECT
+
 public:
     enum TestCaseType
     {

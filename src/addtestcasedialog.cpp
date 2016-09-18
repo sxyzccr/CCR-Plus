@@ -3,6 +3,7 @@
 #include "ui_addtestcasedialog.h"
 
 #include <QFile>
+#include <QDebug>
 #include <QFileDialog>
 
 AddTestCaseDialog::AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, QWidget* parent, int score) :
@@ -78,7 +79,7 @@ AddTestCaseDialog::AddTestCaseDialog(Problem* problem, TestCase* point, TestCase
             line -= 2;
         }
     }
-    this->setFixedHeight(line * 23 + 12 + 26 + (line + 1) * 6 + 18);
+    this->setFixedHeight((line + 1) * 26 + 12 + (line + 1) * 6 + 18);
 }
 
 AddTestCaseDialog::~AddTestCaseDialog()
@@ -137,9 +138,9 @@ void AddTestCaseDialog::on_lineEdit_inFile_textChanged(const QString& arg1)
     if (arg1.isEmpty())
     {
         ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
-        ui->lineEdit_inFile->setToolTip(QString("输入文件不能为空。").arg(arg1).arg(dir));
+        ui->lineEdit_inFile->setToolTip(QString("输入文件不能为空。"));
     }
-    if (!QFile::exists(dir + arg1))
+    else if (!QFile::exists(dir + arg1))
     {
         ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
         ui->lineEdit_inFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(arg1).arg(dir));
@@ -157,9 +158,9 @@ void AddTestCaseDialog::on_lineEdit_outFile_textChanged(const QString& arg1)
     if (arg1.isEmpty())
     {
         ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
-        ui->lineEdit_outFile->setToolTip(QString("输出文件不能为空。").arg(arg1).arg(dir));
+        ui->lineEdit_outFile->setToolTip(QString("输出文件不能为空。"));
     }
-    if (!QFile::exists(dir + arg1))
+    else if (!QFile::exists(dir + arg1))
     {
         ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
         ui->lineEdit_outFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(arg1).arg(dir));

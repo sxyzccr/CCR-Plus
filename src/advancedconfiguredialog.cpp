@@ -1,5 +1,6 @@
 #include "global.h"
 #include "problem.h"
+#include "addcompilerdialog.h"
 #include "addtestcasedialog.h"
 #include "advancedconfiguredialog.h"
 #include "ui_advancedconfiguredialog.h"
@@ -151,7 +152,7 @@ void AdvancedConfigureDialog::loadFromProblem(Problem* problem)
         else if (compiler->SourceFile().endsWith(".pas"))
             item->setText("Pascal 语言");
         else
-            item->setText("其他语言");
+            item->setText("自定义");
         item->setToolTip(item->text());
         item->setTextAlignment(Qt::AlignCenter);
         ui->tableWidget_compiler->setVerticalHeaderItem(i, item);
@@ -175,7 +176,7 @@ void AdvancedConfigureDialog::accept()
     QDialog::accept();
 }
 
-void AdvancedConfigureDialog::onListWidgetCurrentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)
+void AdvancedConfigureDialog::onListWidgetCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* /*previous*/)
 {
     current_problem = problems[ui->listWidget->row(current)];
     ui->label_problem->setText(current_problem->Name());
@@ -272,9 +273,12 @@ void AdvancedConfigureDialog::on_pushButton_addCompiler_clicked()
 {
     auto list = ui->tableWidget_compiler->selectedItems();
     int row;
-    if (!list.size()) row = 0; else row = list.first()->row() + 1;
+    if (!list.size()) row = 0; else row = ui->tableWidget_compiler->visualRow(list.first()->row()) + 1;
 
-    Compiler compiler("python fuck.py", "fuck.py");
+    AddCompilerDialog dialog(current_problem, this);
+    if (dialog.exec() != QDialog::Accepted) return;
+
+    Compiler compiler(dialog.Cmd(), dialog.SourceFile(), dialog.TimeLimit());
     for (int i = 0; i < ui->tableWidget_compiler->rowCount(); i++)
         if (ui->tableWidget_compiler->item(i, 0)->text() == compiler.SourceFile())
         {
@@ -292,7 +296,7 @@ void AdvancedConfigureDialog::on_pushButton_addCompiler_clicked()
     else if (compiler.SourceFile().endsWith(".pas"))
         item->setText("Pascal 语言");
     else
-        item->setText("其他语言");
+        item->setText("自定义");
     item->setToolTip(item->text());
     item->setTextAlignment(Qt::AlignCenter);
     ui->tableWidget_compiler->setVerticalHeaderItem(row, item);
@@ -313,9 +317,15 @@ void AdvancedConfigureDialog::on_pushButton_removeCompiler_clicked()
     auto list = ui->tableWidget_compiler->selectedItems();
     if (list.size())
     {
-        int row = list.first()->row();
+        int row = list.first()->row(), visualRow = ui->tableWidget_compiler->visualRow(row), gotoRow = -1, end;
         ui->tableWidget_compiler->removeRow(row);
-        ui->tableWidget_compiler->selectRow(row);
+        for (int i = 0; i < ui->tableWidget_compiler->rowCount(); i++)
+        {
+            if (ui->tableWidget_compiler->visualRow(i) == visualRow) gotoRow = i;
+            if (ui->tableWidget_compiler->visualRow(i) == ui->tableWidget_compiler->rowCount() - 1) end = i;
+        }
+        if (gotoRow < 0) gotoRow = end;
+        ui->tableWidget_compiler->selectRow(gotoRow);
     }
 }
 

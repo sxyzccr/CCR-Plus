@@ -135,7 +135,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab_general">
       <attribute name="title">
@@ -165,7 +165,7 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>20</height>
+              <height>23</height>
              </size>
             </property>
             <property name="suffix">
@@ -296,7 +296,7 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>20</height>
+              <height>23</height>
              </size>
             </property>
             <property name="suffix">

@@ -32,7 +32,7 @@ private:
     void loadFromProblem(Problem *problem);
 
 private slots:
-    void onListWidgetCurrentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
+    void onListWidgetCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
     void onTestCaseSelectionChanged();
 
     void on_radioButton_internal_clicked();
