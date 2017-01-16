@@ -8,6 +8,9 @@
 log.*
 *.log
 
+# Test files
+[Tt]est/
+
 # *nix related
 # Common convention for backup or temporary files
 *~
