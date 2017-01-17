@@ -14,7 +14,7 @@ class AddCompilerDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit AddCompilerDialog(Problem* problem, Compiler* compiler, QWidget* parent = nullptr);
+    explicit AddCompilerDialog(Problem* problem, Compiler* compiler, int focusRow, QWidget* parent = nullptr);
     ~AddCompilerDialog();
 
     // Getter member functions

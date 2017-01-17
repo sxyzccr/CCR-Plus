@@ -22,7 +22,7 @@ public:
         EditSubTestCase
     };
 
-    explicit AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, QWidget* parent = nullptr, int score = 10);
+    explicit AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, int focusRow, QWidget* parent = nullptr, int score = 10);
     ~AddTestCaseDialog();
 
     // Getter member functions

@@ -6,7 +6,7 @@
 #include "configure/testcase/addtestcasedialog.h"
 #include "ui_addtestcasedialog.h"
 
-AddTestCaseDialog::AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, QWidget* parent, int score) :
+AddTestCaseDialog::AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, int focusRow, QWidget* parent, int score) :
     QDialog(parent),
     ui(new Ui::AddTestCaseDialog), problem(problem), point(point), score(score), type(type)
 {
@@ -79,6 +79,18 @@ AddTestCaseDialog::AddTestCaseDialog(Problem* problem, TestCase* point, TestCase
             line -= 2;
         }
     }
+
+    if (focusRow == 1)
+        ui->lineEdit_inFile->setFocus();
+    else if (focusRow == 2)
+        ui->lineEdit_outFile->setFocus();
+    else if (focusRow == 3 && problem->Type() == Global::AnswersOnly)
+        ui->lineEdit_submitFile->setFocus();
+    else if (focusRow == 3 && problem->Type() == Global::Traditional)
+        ui->spinBox_timeLim->setFocus();
+    else if (focusRow == 4)
+        ui->spinBox_memLim->setFocus();
+
     this->setFixedHeight((line + 1) * 26 + 12 + (line + 1) * 6 + 18);
 }
 

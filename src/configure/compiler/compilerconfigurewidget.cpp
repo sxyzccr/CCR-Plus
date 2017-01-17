@@ -67,7 +67,7 @@ void CompilerConfigureWidget::on_tableWidget_compiler_doubleClicked(const QModel
 {
     int row = index.row(), visualRow = ui->tableWidget_compiler->visualRow(row);
     Compiler* compiler = current_problem->CompilerAt(visualRow);
-    AddCompilerDialog dialog(current_problem, compiler, this);
+    AddCompilerDialog dialog(current_problem, compiler, index.column(), this);
     if (dialog.exec() != QDialog::Accepted) return;
 
     QTableWidgetItem* item = ui->tableWidget_compiler->verticalHeaderItem(row);
@@ -96,7 +96,7 @@ void CompilerConfigureWidget::on_pushButton_addCompiler_clicked()
     int row;
     if (!list.size()) row = 0; else row = ui->tableWidget_compiler->visualRow(list.first()->row()) + 1;
 
-    AddCompilerDialog dialog(current_problem, nullptr, this);
+    AddCompilerDialog dialog(current_problem, nullptr, -1, this);
     if (dialog.exec() != QDialog::Accepted) return;
 
     Compiler compiler(dialog.Cmd(), dialog.SourceFile(), dialog.TimeLimit());

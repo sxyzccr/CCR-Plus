@@ -3,7 +3,7 @@
 #include "configure/compiler/addcompilerdialog.h"
 #include "ui_addcompilerdialog.h"
 
-AddCompilerDialog::AddCompilerDialog(Problem* problem, Compiler* compiler, QWidget* parent) :
+AddCompilerDialog::AddCompilerDialog(Problem* problem, Compiler* compiler, int focusRow, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::AddCompilerDialog), problem(problem), compiler(compiler)
 {
@@ -17,6 +17,13 @@ AddCompilerDialog::AddCompilerDialog(Problem* problem, Compiler* compiler, QWidg
         this->setWindowTitle("编辑编译器 - " + problem->Name());
 
     initCompiler(compiler);
+
+    if (!focusRow)
+        ui->lineEdit_file->setFocus();
+    else if (focusRow == 1 && ui->comboBox_type->currentIndex() == 3)
+        ui->lineEdit_cmd->setFocus();
+    else if (focusRow == 1 && ui->comboBox_type->currentIndex() != 3)
+        ui->lineEdit_args->setFocus();
 }
 
 AddCompilerDialog::~AddCompilerDialog()

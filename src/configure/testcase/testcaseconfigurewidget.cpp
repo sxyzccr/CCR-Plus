@@ -78,7 +78,7 @@ void TestCaseConfigureWidget::on_tableWidget_testcase_doubleClicked(const QModel
     int id = index.row();
     if (!index.column())
     {
-        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, this, ui->tableWidget_testcase->ScoreAt(id));
+        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, -1, this, ui->tableWidget_testcase->ScoreAt(id));
         if (dialog.exec() == QDialog::Accepted)
         {
             ui->tableWidget_testcase->ChangeScore(id, dialog.GetScore());
@@ -89,7 +89,7 @@ void TestCaseConfigureWidget::on_tableWidget_testcase_doubleClicked(const QModel
     {
         TestCase* point = current_problem->TestCaseAt(id);
 
-        AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::EditSubTestCase, this);
+        AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::EditSubTestCase, index.column(), this);
         if (dialog.exec() == QDialog::Accepted)
             ui->tableWidget_testcase->ChangeTestCase(id, dialog.GetTestCase());
     }
@@ -111,7 +111,7 @@ void TestCaseConfigureWidget::on_pushButton_addTestCase_clicked()
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id));
 
-    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddTestCase, this);
+    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddTestCase, -1, this);
     if (dialog.exec() == QDialog::Accepted)
     {
         ui->tableWidget_testcase->AddTestCase(dialog.GetTestCase(), dialog.GetScore());
@@ -134,7 +134,7 @@ void TestCaseConfigureWidget::on_pushButton_addSubTestCase_clicked()
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id));
 
-    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddSubTestCase, this);
+    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddSubTestCase, -1, this);
     if (dialog.exec() == QDialog::Accepted)
         ui->tableWidget_testcase->AddSubTestCase(dialog.GetTestCase());
 }
