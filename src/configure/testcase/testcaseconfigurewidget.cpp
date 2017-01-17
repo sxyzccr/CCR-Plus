@@ -45,7 +45,7 @@ void TestCaseConfigureWidget::onTestCaseSelectionChanged()
     {
     case TestCaseTable::SelectOnePackage:
     case TestCaseTable::SelectOneTestCasePackage:
-        ui->label_selectionInfo->setText(QString("已选择: 1 个测试点，%1 组测试数据").arg(bottom - top + 1));
+        ui->label_selectionInfo->setText(QString("已选择: 1 个测试点，%1 组测试数据，共 %2 分").arg(bottom - top + 1).arg(ui->tableWidget_testcase->ScoreAt(top)));
         break;
     case TestCaseTable::SelectOneSubTestCase:
         ui->label_selectionInfo->setText("已选择: 1 组测试数据");
@@ -53,10 +53,10 @@ void TestCaseConfigureWidget::onTestCaseSelectionChanged()
     case TestCaseTable::SelectMultiplePackage:
     case TestCaseTable::SelectMultipleTestCasePackage:
     {
-        int t = 0;
+        int t = 0, s = 0;
         for (int i = top; i <= bottom; i++)
-            if (ui->tableWidget_testcase->ScoreItemTopRow(i) == i) t++;
-        ui->label_selectionInfo->setText(QString("已选择: %1 个测试点，%2 组测试数据").arg(t).arg(bottom - top + 1));
+            if (ui->tableWidget_testcase->ScoreItemTopRow(i) == i) t++, s += ui->tableWidget_testcase->ScoreAt(i);
+        ui->label_selectionInfo->setText(QString("已选择: %1 个测试点，%2 组测试数据，共 %3 分").arg(t).arg(bottom - top + 1).arg(s));
         break;
     }
     case TestCaseTable::SelectMultipleSubTestCase:
@@ -78,7 +78,7 @@ void TestCaseConfigureWidget::on_tableWidget_testcase_doubleClicked(const QModel
     int id = index.row();
     if (!index.column())
     {
-        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, this, ui->tableWidget_testcase->ScoreItemAt(id)->text().toInt());
+        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, this, ui->tableWidget_testcase->ScoreAt(id));
         if (dialog.exec() == QDialog::Accepted)
         {
             ui->tableWidget_testcase->ChangeScore(id, dialog.GetScore());
@@ -93,6 +93,7 @@ void TestCaseConfigureWidget::on_tableWidget_testcase_doubleClicked(const QModel
         if (dialog.exec() == QDialog::Accepted)
             ui->tableWidget_testcase->ChangeTestCase(id, dialog.GetTestCase());
     }
+    onTestCaseSelectionChanged();
 }
 
 void TestCaseConfigureWidget::on_pushButton_addTestCase_clicked()

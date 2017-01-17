@@ -7,6 +7,7 @@
 # Log files
 log.*
 *.log
+.~log.*
 
 # Test files
 [Tt]est/

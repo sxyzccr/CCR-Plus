@@ -36,6 +36,7 @@ public:
     bool CanSplit() const { return can_split; }
 
     QTableWidgetItem* ScoreItemAt(int row) { return score_items[row]; }
+    int ScoreAt(int row) { return score_items[row]->text().toInt(); }
     int ScoreItemTopRow(int row) { return score_items[row]->row(); }
     int ScoreItemBottomRow(int row)
     {
