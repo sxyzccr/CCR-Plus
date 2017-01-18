@@ -19,6 +19,10 @@ public:
     QString SourceFile() const { return file; }
     int TimeLimit() const { return time_lim; }
 
+    static const int BUILTIN_COMPILER_COUNT = 3;
+    static const QStringList BUILTIN_COMPILER_CMD;
+    static const QStringList BUILTIN_COMPILER_FILE;
+
 private:
     QString cmd, file;
     int time_lim;
@@ -87,7 +91,7 @@ public:
     ~Problem() { Clear(); }
 
     /// 内置校验器列表，格式： <file, <name, toolTip>>
-    static const QMap<QString, QPair<QString, QString>> INTERNAL_CHECKER_MAP;
+    static const QMap<QString, QPair<QString, QString>> BUILTIN_CHECKER_MAP;
 
     /// 增加扩展名
     static QString AddFileExtension(QString file)
@@ -108,12 +112,12 @@ public:
     }
 
     /// 尝试从内置校验器名称获取校验器文件名，不是内置校验器返回原始文件名
-    static QString FromInternalCheckerName(const QString& name);
+    static QString FromBuiltinCheckerName(const QString& name);
 
     /// 是否是内置校验器
-    static bool IsInternalChecker(const QString& checker)
+    static bool IsBuiltinChecker(const QString& checker)
     {
-        return INTERNAL_CHECKER_MAP.find(RemoveFileExtension(checker)) != INTERNAL_CHECKER_MAP.end();
+        return BUILTIN_CHECKER_MAP.find(RemoveFileExtension(checker)) != BUILTIN_CHECKER_MAP.end();
     }
 
     // Getter member functions
@@ -146,6 +150,8 @@ public:
     void MoveCompiler(int from, int to) { compilers.move(from, to); }
 
     /// 清空
+    void ClearCompilers();
+    void ClearTestCases();
     void Clear();
 
     /// 读入配置文件
@@ -153,6 +159,12 @@ public:
 
     /// 保存配置文件
     bool SaveConfiguration();
+
+    /// 重置编译器
+    void ResetCompilers();
+
+    /// 重置测试点
+    void ResetTestCases(double timeLim, double memLim);
 
     /// 配置试题，只修改时间限制 、内存限制、校验器等
     void Configure(const QString& typ, double timeLim, double memLim, const QString& check);
@@ -163,14 +175,11 @@ public:
     /// 根据选手目录下的源文件自动选择编译器
     Compiler* GetCompiler(const QString& playerName);
 
-    /// 自动获取输入输出文件对
-    QList<QPair<QString, QString>> GetInAndOutFile();
-
     /// 尝试获取内置校验器名称，不是内置校验器返回原始文件名
-    QString InternalCheckerName() const
+    QString BuiltinCheckerName() const
     {
-        auto p = INTERNAL_CHECKER_MAP.find(RemoveFileExtension(checker));
-        if (p != INTERNAL_CHECKER_MAP.end()) return p.value().first; else return checker;
+        auto p = BUILTIN_CHECKER_MAP.find(RemoveFileExtension(checker));
+        if (p != BUILTIN_CHECKER_MAP.end()) return p.value().first; else return checker;
     }
 
     /// InOutString，格式如下
@@ -192,6 +201,9 @@ private:
     QList<TestCase*> cases;
     QList<Subtask*> subtasks;
     QList<Compiler*> compilers;
+
+    /// 自动获取输入输出文件对
+    QList<QPair<QString, QString>> getInAndOutFile();
 };
 
 #endif // PROBLEM_H

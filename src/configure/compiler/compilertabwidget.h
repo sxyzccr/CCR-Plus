@@ -1,27 +1,27 @@
 #ifndef COMPILERCONFIGUREWIDGET_H
 #define COMPILERCONFIGUREWIDGET_H
 
-#include <QWidget>
-
-#include "common/problem.h"
+#include "configure/configuretabwidget.h"
 
 namespace Ui
 {
-class CompilerConfigureWidget;
+class CompilerTabWidget;
 }
 
-class CompilerConfigureWidget : public QWidget
+class CompilerTabWidget : public ConfigureTabWidget
 {
     Q_OBJECT
 public:
-    explicit CompilerConfigureWidget(QWidget* parent = nullptr);
-    ~CompilerConfigureWidget();
+    explicit CompilerTabWidget(QWidget* parent = nullptr);
+    ~CompilerTabWidget();
 
-    void LoadFromProblem(Problem* problem);
+    /// 载入 problem，显示具体配置
+    void ShowProblemConfiguration(Problem* problem) override;
+    /// 重置为默认
+    void Reset() override;
 
 private:
-    Ui::CompilerConfigureWidget* ui;
-    Problem* current_problem;
+    Ui::CompilerTabWidget* ui;
 
 private slots:
     void on_tableWidget_compiler_doubleClicked(const QModelIndex& index);

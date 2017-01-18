@@ -48,10 +48,10 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
         {
             QComboBox* editor = new QComboBox(parent);
             QStandardItemModel* model = new QStandardItemModel(editor);
-            auto& internal_checker = Problem::INTERNAL_CHECKER_MAP;
+            auto& builtin_checker = Problem::BUILTIN_CHECKER_MAP;
 
             QStandardItem* item;
-            for (auto checker : internal_checker)
+            for (auto checker : builtin_checker)
             {
                 item = new QStandardItem(checker.first);
                 item->setToolTip(checker.second);
@@ -74,7 +74,7 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
 #ifdef Q_OS_WIN
                     if (!checker.endsWith(".exe")) continue;
 #endif
-                    if (Problem::IsInternalChecker(checker)) continue;
+                    if (Problem::IsBuiltinChecker(checker)) continue;
 
                     item = new QStandardItem(checker);
                     item->setToolTip(QString("%1 (位置: %2)").arg(checker, dir));
@@ -269,7 +269,7 @@ void ConfigureTable::setColumnData(int column)
     }
 
     SetItemData(4, column, 0);
-    SetItemText(3, column, problem->InternalCheckerName());
+    SetItemText(3, column, problem->BuiltinCheckerName());
     switch (problem->Type())
     {
         case Global::Traditional:

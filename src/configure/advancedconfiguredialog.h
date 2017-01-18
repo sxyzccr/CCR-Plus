@@ -5,9 +5,6 @@
 #include <QListWidget>
 
 #include "common/problem.h"
-#include "configure/general/generalconfigurewidget.h"
-#include "configure/compiler/compilerconfigurewidget.h"
-#include "configure/testcase/testcaseconfigurewidget.h"
 
 namespace Ui
 {
@@ -28,9 +25,6 @@ public slots:
 
 private:
     Ui::AdvancedConfigureDialog* ui;
-    GeneralConfigureWidget* general_configure_widget;
-    CompilerConfigureWidget* compiler_configure_widget;
-    TestCaseConfigureWidget* testcase_configure_widget;
     Problem* current_problem;
     QList<Problem*> old_problems, problems;
 
@@ -38,6 +32,8 @@ private:
 
 private slots:
     void onListWidgetCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
+
+    void on_pushButton_reset_clicked();
 };
 
 #endif // ADVANCEDCONFIGUREDIALOG_H

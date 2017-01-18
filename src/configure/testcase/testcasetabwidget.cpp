@@ -1,11 +1,11 @@
 #include "configure/testcase/testcasetable.h"
 #include "configure/testcase/addtestcasedialog.h"
-#include "configure/testcase/testcaseconfigurewidget.h"
-#include "ui_testcaseconfigurewidget.h"
+#include "configure/testcase/testcasetabwidget.h"
+#include "ui_testcasetabwidget.h"
 
-TestCaseConfigureWidget::TestCaseConfigureWidget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::TestCaseConfigureWidget)
+TestCaseTabWidget::TestCaseTabWidget(QWidget *parent) :
+    ConfigureTabWidget(parent),
+    ui(new Ui::TestCaseTabWidget)
 {
     ui->setupUi(this);
 
@@ -13,15 +13,15 @@ TestCaseConfigureWidget::TestCaseConfigureWidget(QWidget *parent) :
                                                ui->tableWidget_testcase->horizontalHeader()->height() +
                                                ui->tableWidget_testcase->frameWidth() * 2);
 
-    connect(ui->tableWidget_testcase, &TestCaseTable::testCaseSelectionChanged, this, &TestCaseConfigureWidget::onTestCaseSelectionChanged);
+    connect(ui->tableWidget_testcase, &TestCaseTable::testCaseSelectionChanged, this, &TestCaseTabWidget::onTestCaseSelectionChanged);
 }
 
-TestCaseConfigureWidget::~TestCaseConfigureWidget()
+TestCaseTabWidget::~TestCaseTabWidget()
 {
     delete ui;
 }
 
-void TestCaseConfigureWidget::LoadFromProblem(Problem* problem)
+void TestCaseTabWidget::ShowProblemConfiguration(Problem* problem)
 {
     current_problem = problem;
 
@@ -29,7 +29,14 @@ void TestCaseConfigureWidget::LoadFromProblem(Problem* problem)
     ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
 }
 
-void TestCaseConfigureWidget::onTestCaseSelectionChanged()
+void TestCaseTabWidget::Reset()
+{
+    on_pushButton_resetTestCase_clicked();
+}
+
+
+
+void TestCaseTabWidget::onTestCaseSelectionChanged()
 {
     ui->pushButton_addTestCase->setEnabled(ui->tableWidget_testcase->CanAddTestCase());
     ui->pushButton_addSubTestCase->setEnabled(ui->tableWidget_testcase->CanAddSubTestCase());
@@ -73,7 +80,7 @@ void TestCaseConfigureWidget::onTestCaseSelectionChanged()
 
 
 
-void TestCaseConfigureWidget::on_tableWidget_testcase_doubleClicked(const QModelIndex& index)
+void TestCaseTabWidget::on_tableWidget_testcase_doubleClicked(const QModelIndex& index)
 {
     int id = index.row();
     if (!index.column())
@@ -96,7 +103,7 @@ void TestCaseConfigureWidget::on_tableWidget_testcase_doubleClicked(const QModel
     onTestCaseSelectionChanged();
 }
 
-void TestCaseConfigureWidget::on_pushButton_addTestCase_clicked()
+void TestCaseTabWidget::on_pushButton_addTestCase_clicked()
 {
     int id = 1;
     auto list = ui->tableWidget_testcase->selectedItems();
@@ -106,7 +113,7 @@ void TestCaseConfigureWidget::on_pushButton_addTestCase_clicked()
     if (current_problem->Type() == Global::Traditional)
         point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                      QString("%1%2.out").arg(current_problem->Name()).arg(id));
-    else
+    else if (current_problem->Type() == Global::AnswersOnly)
         point = new TestCase(0, 0, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id));
@@ -119,7 +126,7 @@ void TestCaseConfigureWidget::on_pushButton_addTestCase_clicked()
     }
 }
 
-void TestCaseConfigureWidget::on_pushButton_addSubTestCase_clicked()
+void TestCaseTabWidget::on_pushButton_addSubTestCase_clicked()
 {
     int id = 1;
     auto list = ui->tableWidget_testcase->selectedItems();
@@ -129,7 +136,7 @@ void TestCaseConfigureWidget::on_pushButton_addSubTestCase_clicked()
     if (current_problem->Type() == Global::Traditional)
         point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                      QString("%1%2.out").arg(current_problem->Name()).arg(id));
-    else
+    else if (current_problem->Type() == Global::AnswersOnly)
         point = new TestCase(0, 0, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id));
@@ -139,33 +146,37 @@ void TestCaseConfigureWidget::on_pushButton_addSubTestCase_clicked()
         ui->tableWidget_testcase->AddSubTestCase(dialog.GetTestCase());
 }
 
-void TestCaseConfigureWidget::on_pushButton_removeTestCase_clicked()
+void TestCaseTabWidget::on_pushButton_removeTestCase_clicked()
 {
     ui->tableWidget_testcase->RemoveSelection();
     ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
 }
 
-void TestCaseConfigureWidget::on_pushButton_up_clicked()
+void TestCaseTabWidget::on_pushButton_up_clicked()
 {
     ui->tableWidget_testcase->MoveUpSelection();
 }
 
-void TestCaseConfigureWidget::on_pushButton_down_clicked()
+void TestCaseTabWidget::on_pushButton_down_clicked()
 {
     ui->tableWidget_testcase->MoveDownSelection();
 }
 
-void TestCaseConfigureWidget::on_pushButton_merge_clicked()
+void TestCaseTabWidget::on_pushButton_merge_clicked()
 {
     ui->tableWidget_testcase->MergeSelection();
 }
 
-void TestCaseConfigureWidget::on_pushButton_split_clicked()
+void TestCaseTabWidget::on_pushButton_split_clicked()
 {
     ui->tableWidget_testcase->SplitSelection();
 }
 
-void TestCaseConfigureWidget::on_pushButton_resetTestCase_clicked()
+void TestCaseTabWidget::on_pushButton_resetTestCase_clicked()
 {
-
+    if (current_problem->Type() == Global::Traditional)
+        current_problem->ResetTestCases(1, 128);
+    else if (current_problem->Type() == Global::AnswersOnly)
+        current_problem->ResetTestCases(0, 0);
+    ShowProblemConfiguration(current_problem);
 }

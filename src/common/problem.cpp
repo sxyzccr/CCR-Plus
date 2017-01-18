@@ -5,14 +5,30 @@
 #include "common/global.h"
 #include "common/problem.h"
 
-const QMap<QString, QPair<QString, QString>> Problem::INTERNAL_CHECKER_MAP =
+const QStringList Compiler::BUILTIN_COMPILER_CMD =
+{
+    "gcc -o %1 %1.c -lm -static",
+    "g++ -o %1 %1.cpp -lm -static",
+    "fpc %1.pas",
+};
+
+const QStringList Compiler::BUILTIN_COMPILER_FILE =
+{
+    "%1.c",
+    "%1.cpp",
+    "%1.pas",
+};
+
+
+
+const QMap<QString, QPair<QString, QString>> Problem::BUILTIN_CHECKER_MAP =
 {
     {"fulltext", qMakePair(QString("全文比较"), QString("全文比较(过滤行末空格及文末回车)"))}
 };
 
-QString Problem::FromInternalCheckerName(const QString& name)
+QString Problem::FromBuiltinCheckerName(const QString& name)
 {
-    for (auto i = INTERNAL_CHECKER_MAP.begin(); i != INTERNAL_CHECKER_MAP.end(); i++)
+    for (auto i = BUILTIN_CHECKER_MAP.begin(); i != BUILTIN_CHECKER_MAP.end(); i++)
         if (name == i.value().first) return AddFileExtension(i.key());
     return AddFileExtension(name);
 }
@@ -45,14 +61,24 @@ Problem::Problem(Problem *problem) :
     }
 }
 
-void Problem::Clear()
+void Problem::ClearCompilers()
+{
+    for (auto i : compilers) delete i;
+    compilers.clear();
+}
+
+void Problem::ClearTestCases()
 {
     for (auto i : cases) delete i;
     for (auto i : subtasks) delete i;
-    for (auto i : compilers) delete i;
     cases.clear();
     subtasks.clear();
-    compilers.clear();
+}
+
+void Problem::Clear()
+{
+    ClearCompilers();
+    ClearTestCases();
 }
 
 void Problem::ReadConfiguration()
@@ -100,7 +126,7 @@ void Problem::ReadConfiguration()
         {
             if (a.hasAttribute("input"))  in_file  = a.attribute("input");
             if (a.hasAttribute("output")) out_file = a.attribute("output");
-            checker = FromInternalCheckerName(a.attribute("checker"));
+            checker = FromBuiltinCheckerName(a.attribute("checker"));
             if (a.hasAttribute("time")) checker_time_lim = a.attribute("time").toInt();
 
             QDomNodeList l = a.childNodes();
@@ -195,61 +221,27 @@ bool Problem::SaveConfiguration()
     return true;
 }
 
-void Problem::Configure(const QString& typ, double timeLim, double memLim, const QString& check)
+void Problem::ResetCompilers()
 {
-    if (typ == "传统型")
-    {
-        type = Global::Traditional;
-        if (!compilers.size())
-        {
-            compilers = { new Compiler(QString("gcc -o %1 %1.c -lm -static").arg(name), QString("%1.c").arg(name)),
-                          new Compiler(QString("g++ -o %1 %1.cpp -lm -static").arg(name), QString("%1.cpp").arg(name)),
-                          new Compiler(QString("fpc %1.pas").arg(name), QString("%1.pas").arg(name))
-                        };
-        }
-    }
-    else if (typ == "提交答案型")
-    {
-        type = Global::AnswersOnly;
-        compilers.clear();
-    }
+    ClearCompilers();
 
-    if (!check.isEmpty()) checker = FromInternalCheckerName(check);
-    exe = AddFileExtension(exe);
-
-    for (auto i : cases)
+    if (type == Global::Traditional)
     {
-        if (timeLim >= 0) i->SetTimeLimit(timeLim);
-        if (memLim >= 0) i->SetMemoryLimit(memLim);
-        if (typ == "提交答案型" && i->SubmitFile().isEmpty()) i->SetSubmitFile(i->OutFile());
+        for (int i = 0; i < Compiler::BUILTIN_COMPILER_COUNT; i++)
+            compilers.append(new Compiler(Compiler::BUILTIN_COMPILER_CMD[i].arg(name), Compiler::BUILTIN_COMPILER_FILE[i].arg(name)));
     }
 }
 
-void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check)
+void Problem::ResetTestCases(double timeLim, double memLim)
 {
-    Clear();
+    ClearTestCases();
 
-    if (typ == "传统型") type = Global::Traditional;
-    else if (typ == "提交答案型") type = Global::AnswersOnly;
-
-    if (!check.isEmpty()) checker = FromInternalCheckerName(check);
-    exe = AddFileExtension(exe);
-
-    QList<QPair<QString, QString>> list = GetInAndOutFile();
-    //qDebug()<<list;
+    QList<QPair<QString, QString>> list = getInAndOutFile();
 
     int num = list.size(), sum = score;
     QList<int> scores;
     for (int i = 0; i < num; i++) scores.append(score / num), sum -= scores[i];
     for (int i = num - 1; sum && i >= 0; i--) scores[i]++, sum--;
-
-    if (type == Global::Traditional)
-    {
-        compilers = { new Compiler(QString("gcc -o %1 %1.c -lm -static").arg(name), QString("%1.c").arg(name)),
-                      new Compiler(QString("g++ -o %1 %1.cpp -lm -static").arg(name), QString("%1.cpp").arg(name)),
-                      new Compiler(QString("fpc %1.pas").arg(name), QString("%1.pas").arg(name))
-                    };
-    }
 
     for (int i = 0; i < num; i++)
     {
@@ -262,6 +254,42 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
     }
 }
 
+void Problem::Configure(const QString& typ, double timeLim, double memLim, const QString& check)
+{
+    if (typ == "传统型")
+    {
+        type = Global::Traditional;
+        if (!compilers.size()) ResetCompilers();
+    }
+    else if (typ == "提交答案型")
+    {
+        type = Global::AnswersOnly;
+        ClearCompilers();
+    }
+
+    if (!check.isEmpty()) checker = FromBuiltinCheckerName(check);
+    exe = AddFileExtension(exe);
+
+    for (auto i : cases)
+    {
+        if (timeLim >= 0) i->SetTimeLimit(timeLim);
+        if (memLim >= 0) i->SetMemoryLimit(memLim);
+        if (typ == "提交答案型" && i->SubmitFile().isEmpty()) i->SetSubmitFile(i->OutFile());
+    }
+}
+
+void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check)
+{
+    if (typ == "传统型") type = Global::Traditional;
+    else if (typ == "提交答案型") type = Global::AnswersOnly;
+
+    if (!check.isEmpty()) checker = FromBuiltinCheckerName(check);
+    exe = AddFileExtension(exe);
+
+    ResetCompilers();
+    ResetTestCases(timeLim, memLim);
+}
+
 Compiler* Problem::GetCompiler(const QString& playerName)
 {
     for (auto i : compilers)
@@ -269,7 +297,9 @@ Compiler* Problem::GetCompiler(const QString& playerName)
     return nullptr;
 }
 
-QList<QPair<QString, QString>> Problem::GetInAndOutFile()
+
+
+QList<QPair<QString, QString>> Problem::getInAndOutFile()
 {
     typedef QPair<QString, QString> InOutPair;
 

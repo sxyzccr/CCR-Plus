@@ -14,15 +14,16 @@ SOURCES += common/const.cpp \
     judge/judger/basejudger.cpp \
     judge/judger/answeronlyjudger.cpp \
     judge/judger/traditionaljudger.cpp \
-    configure/configuredialog.cpp \
     configure/configuretable.cpp \
+    configure/configuredialog.cpp \
+    configure/configuretabwidget.cpp \
     configure/advancedconfiguredialog.cpp \
-    configure/general/generalconfigurewidget.cpp \
+    configure/general/generaltabwidget.cpp \
     configure/compiler/addcompilerdialog.cpp \
-    configure/compiler/compilerconfigurewidget.cpp \
+    configure/compiler/compilertabwidget.cpp \
     configure/testcase/testcasetable.cpp \
     configure/testcase/addtestcasedialog.cpp \
-    configure/testcase/testcaseconfigurewidget.cpp \
+    configure/testcase/testcasetabwidget.cpp \
     mainwindow/main.cpp\
     mainwindow/mainwindow.cpp \
     mainwindow/boardtable.cpp \
@@ -39,15 +40,16 @@ HEADERS += common/const.h \
     judge/judger/basejudger.h \
     judge/judger/answeronlyjudger.h \
     judge/judger/traditionaljudger.h \
-    configure/configuredialog.h \
     configure/configuretable.h \
+    configure/configuredialog.h \
+    configure/configuretabwidget.h \
     configure/advancedconfiguredialog.h \
-    configure/general/generalconfigurewidget.h \
+    configure/general/generaltabwidget.h \
     configure/compiler/addcompilerdialog.h \
-    configure/compiler/compilerconfigurewidget.h \
+    configure/compiler/compilertabwidget.h \
     configure/testcase/testcasetable.h \
     configure/testcase/addtestcasedialog.h \
-    configure/testcase/testcaseconfigurewidget.h \
+    configure/testcase/testcasetabwidget.h \
     mainwindow/mainwindow.h \
     mainwindow/boardtable.h \
     mainwindow/detailtable.h \
@@ -55,11 +57,11 @@ HEADERS += common/const.h \
 
 FORMS += configure/configuredialog.ui \
     configure/advancedconfiguredialog.ui \
-    configure/general/generalconfigurewidget.ui \
+    configure/general/generaltabwidget.ui \
     configure/compiler/addcompilerdialog.ui \
-    configure/compiler/compilerconfigurewidget.ui \
+    configure/compiler/compilertabwidget.ui \
     configure/testcase/addtestcasedialog.ui \
-    configure/testcase/testcaseconfigurewidget.ui \
+    configure/testcase/testcasetabwidget.ui \
     mainwindow/mainwindow.ui \
     mainwindow/createfiledialog.ui
 

@@ -1,27 +1,27 @@
 #ifndef TESTCASECONFIGUREWIDGET_H
 #define TESTCASECONFIGUREWIDGET_H
 
-#include <QWidget>
-
-#include "common/problem.h"
+#include "configure/configuretabwidget.h"
 
 namespace Ui
 {
-class TestCaseConfigureWidget;
+class TestCaseTabWidget;
 }
 
-class TestCaseConfigureWidget : public QWidget
+class TestCaseTabWidget : public ConfigureTabWidget
 {
     Q_OBJECT
 public:
-    explicit TestCaseConfigureWidget(QWidget* parent = nullptr);
-    ~TestCaseConfigureWidget();
+    explicit TestCaseTabWidget(QWidget* parent = nullptr);
+    ~TestCaseTabWidget();
 
-    void LoadFromProblem(Problem* problem);
+    /// 载入 problem，显示具体配置
+    void ShowProblemConfiguration(Problem* problem) override;
+    /// 重置为默认
+    void Reset() override;
 
 private:
-    Ui::TestCaseConfigureWidget* ui;
-    Problem* current_problem;
+    Ui::TestCaseTabWidget* ui;
 
 private slots:
     void onTestCaseSelectionChanged();

@@ -1,12 +1,12 @@
 #include <QMessageBox>
 
 #include "configure/compiler/addcompilerdialog.h"
-#include "configure/compiler/compilerconfigurewidget.h"
-#include "ui_compilerconfigurewidget.h"
+#include "configure/compiler/compilertabwidget.h"
+#include "ui_compilertabwidget.h"
 
-CompilerConfigureWidget::CompilerConfigureWidget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::CompilerConfigureWidget)
+CompilerTabWidget::CompilerTabWidget(QWidget *parent) :
+    ConfigureTabWidget(parent),
+    ui(new Ui::CompilerTabWidget)
 {
     ui->setupUi(this);
 
@@ -22,12 +22,12 @@ CompilerConfigureWidget::CompilerConfigureWidget(QWidget *parent) :
     });
 }
 
-CompilerConfigureWidget::~CompilerConfigureWidget()
+CompilerTabWidget::~CompilerTabWidget()
 {
     delete ui;
 }
 
-void CompilerConfigureWidget::LoadFromProblem(Problem* problem)
+void CompilerTabWidget::ShowProblemConfiguration(Problem* problem)
 {
     current_problem = problem;
 
@@ -61,9 +61,14 @@ void CompilerConfigureWidget::LoadFromProblem(Problem* problem)
     }
 }
 
+void CompilerTabWidget::Reset()
+{
+    on_pushButton_resetCompiler_clicked();
+}
 
 
-void CompilerConfigureWidget::on_tableWidget_compiler_doubleClicked(const QModelIndex& index)
+
+void CompilerTabWidget::on_tableWidget_compiler_doubleClicked(const QModelIndex& index)
 {
     int row = index.row(), visualRow = ui->tableWidget_compiler->visualRow(row);
     Compiler* compiler = current_problem->CompilerAt(visualRow);
@@ -85,12 +90,12 @@ void CompilerConfigureWidget::on_tableWidget_compiler_doubleClicked(const QModel
     ui->tableWidget_compiler->item(row, 1)->setText(dialog.Cmd());
 }
 
-void CompilerConfigureWidget::on_tableWidget_compiler_itemSelectionChanged()
+void CompilerTabWidget::on_tableWidget_compiler_itemSelectionChanged()
 {
     ui->pushButton_removeCompiler->setEnabled(ui->tableWidget_compiler->selectedItems().size());
 }
 
-void CompilerConfigureWidget::on_pushButton_addCompiler_clicked()
+void CompilerTabWidget::on_pushButton_addCompiler_clicked()
 {
     auto list = ui->tableWidget_compiler->selectedItems();
     int row;
@@ -135,7 +140,7 @@ void CompilerConfigureWidget::on_pushButton_addCompiler_clicked()
     current_problem->InsertCompiler(row, new Compiler(compiler));
 }
 
-void CompilerConfigureWidget::on_pushButton_removeCompiler_clicked()
+void CompilerTabWidget::on_pushButton_removeCompiler_clicked()
 {
     auto list = ui->tableWidget_compiler->selectedItems();
     if (list.size())
@@ -153,7 +158,8 @@ void CompilerConfigureWidget::on_pushButton_removeCompiler_clicked()
     }
 }
 
-void CompilerConfigureWidget::on_pushButton_resetCompiler_clicked()
+void CompilerTabWidget::on_pushButton_resetCompiler_clicked()
 {
-
+    current_problem->ResetCompilers();
+    ShowProblemConfiguration(current_problem);
 }

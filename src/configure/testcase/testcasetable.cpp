@@ -30,7 +30,7 @@ TestCaseTable::TestCaseTable(QWidget* parent) :
     });
 }
 
-void TestCaseTable::LoadTestCases(Problem *problem)
+void TestCaseTable::LoadTestCases(Problem* problem)
 {
     score_items.clear();
 
