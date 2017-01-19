@@ -1,6 +1,6 @@
 #include "judge/judger/traditionaljudger.h"
 
-TestCaseResult TraditionalJudger::judgeTestCase(TestCase* point) const
+TestCaseResult TraditionalJudger::judgeTestCase(const TestCase* point) const
 {
     QFile file(this->DataDirectory() + point->InFile());
     if (!file.exists()) return TestCaseResult(0, 0, 'E', "找不到标准输入文件: " + point->InFile());

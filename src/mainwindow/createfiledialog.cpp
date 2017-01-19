@@ -1,7 +1,7 @@
 #include "mainwindow/createfiledialog.h"
 #include "ui_createfiledialog.h"
 
-CreateFileDialog::CreateFileDialog(Player* player, Problem* problem, QWidget* parent) :
+CreateFileDialog::CreateFileDialog(const Player* player, const Problem* problem, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::CreateFileDialog),
     player(player), problem(problem)
@@ -12,7 +12,7 @@ CreateFileDialog::CreateFileDialog(Player* player, Problem* problem, QWidget* pa
 
     for (int i = 0; i < problem->CompilerCount(); i++)
     {
-        Compiler* compiler = problem->CompilerAt(i);
+        const Compiler* compiler = problem->CompilerAt(i);
         ui->listWidget->addItem(compiler->SourceFile());
         ui->listWidget->item(i)->setToolTip(compiler->SourceFile());
     }

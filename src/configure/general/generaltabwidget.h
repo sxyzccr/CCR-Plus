@@ -16,12 +16,13 @@ public:
     ~GeneralTabWidget();
 
     /// 载入 problem，显示具体配置
-    void ShowProblemConfiguration(Problem* problem) override;
+    virtual void ShowProblemConfiguration(Problem* problem) override;
     /// 重置为默认
-    void Reset() override;
+    virtual void Reset() override;
 
 private:
     Ui::GeneralTabWidget* ui;
+    bool load_finished;
 
 private slots:
     void on_radioButton_builtin_clicked();
@@ -29,6 +30,14 @@ private slots:
     void on_pushButton_resetSubmit_clicked();
     void on_pushButton_resetRun_clicked();
     void on_pushButton_resetChecker_clicked();
+    void on_lineEdit_dir_textChanged(const QString &text);
+    void on_spinBox_codeLim_valueChanged(double val);
+    void on_lineEdit_exe_textChanged(const QString &text);
+    void on_lineEdit_inFile_textChanged(const QString &text);
+    void on_lineEdit_outFile_textChanged(const QString &text);
+    void on_comboBox_builtin_currentIndexChanged(const QString &text);
+    void on_comboBox_custom_currentIndexChanged(const QString &text);
+    void on_spinBox_checkerTimeLim_valueChanged(int val);
 };
 
 #endif // GENERALCONFIGUREWIDGET_H

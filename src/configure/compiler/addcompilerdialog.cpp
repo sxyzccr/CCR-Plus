@@ -3,9 +3,9 @@
 #include "configure/compiler/addcompilerdialog.h"
 #include "ui_addcompilerdialog.h"
 
-AddCompilerDialog::AddCompilerDialog(Problem* problem, Compiler* compiler, int focusRow, QWidget* parent) :
+AddCompilerDialog::AddCompilerDialog(const Problem* problem, const Compiler* compiler, int focusRow, QWidget* parent) :
     QDialog(parent),
-    ui(new Ui::AddCompilerDialog), problem(problem), compiler(compiler)
+    ui(new Ui::AddCompilerDialog), problem(problem), compiler(nullptr)
 {
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
@@ -28,6 +28,7 @@ AddCompilerDialog::AddCompilerDialog(Problem* problem, Compiler* compiler, int f
 
 AddCompilerDialog::~AddCompilerDialog()
 {
+    if (compiler) delete compiler;
     delete ui;
 }
 
@@ -36,6 +37,7 @@ void AddCompilerDialog::accept()
     file = ui->lineEdit_file->text();
     cmd = ui->lineEdit_cmd->text();
     time_lim = ui->spinBox_timeLim->value();
+    compiler = new Compiler(cmd, file, time_lim);
 
     if (file.isEmpty())
     {
@@ -71,12 +73,11 @@ void AddCompilerDialog::accept()
         break;
     }
     if (!ui->label_error->text().isEmpty()) return;
-    if (compiler) *compiler = Compiler(cmd, file, time_lim);
     QDialog::accept();
 }
 
 
-void AddCompilerDialog::initCompiler(Compiler *compiler)
+void AddCompilerDialog::initCompiler(const Compiler *compiler)
 {
     if (!compiler)
     {
@@ -199,13 +200,13 @@ void AddCompilerDialog::on_comboBox_type_currentIndexChanged(int index)
     }
 }
 
-void AddCompilerDialog::on_lineEdit_file_textChanged(const QString& /*arg1*/)
+void AddCompilerDialog::on_lineEdit_file_textChanged(const QString& /*text*/)
 {
     onChangeCmd();
     ui->label_error->setText("");
 }
 
-void AddCompilerDialog::on_lineEdit_args_textChanged(const QString& /*arg1*/)
+void AddCompilerDialog::on_lineEdit_args_textChanged(const QString& /*text  */)
 {
     onChangeCmd();
 }

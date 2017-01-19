@@ -16,9 +16,12 @@ public:
     ~TestCaseTabWidget();
 
     /// 载入 problem，显示具体配置
-    void ShowProblemConfiguration(Problem* problem) override;
+    virtual void ShowProblemConfiguration(Problem* problem) override;
     /// 重置为默认
-    void Reset() override;
+    virtual void Reset() override;
+
+    /// 缓存配置，只在切换题目时进行
+    void ChacheConfiguration();
 
 private:
     Ui::TestCaseTabWidget* ui;
@@ -26,15 +29,15 @@ private:
 private slots:
     void onTestCaseSelectionChanged();
 
-    void on_tableWidget_testcase_doubleClicked(const QModelIndex& index);
+    void on_tableWidget_doubleClicked(const QModelIndex& index);
     void on_pushButton_addTestCase_clicked();
     void on_pushButton_addSubTestCase_clicked();
-    void on_pushButton_removeTestCase_clicked();
+    void on_pushButton_delete_clicked();
     void on_pushButton_up_clicked();
     void on_pushButton_down_clicked();
     void on_pushButton_merge_clicked();
     void on_pushButton_split_clicked();
-    void on_pushButton_resetTestCase_clicked();
+    void on_pushButton_reset_clicked();
 };
 
 #endif // TESTCASECONFIGUREWIDGET_H

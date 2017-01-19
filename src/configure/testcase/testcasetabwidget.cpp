@@ -9,11 +9,11 @@ TestCaseTabWidget::TestCaseTabWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    ui->tableWidget_testcase->setMinimumHeight(ui->tableWidget_testcase->verticalHeader()->defaultSectionSize() * 20 +
-                                               ui->tableWidget_testcase->horizontalHeader()->height() +
-                                               ui->tableWidget_testcase->frameWidth() * 2);
+    ui->tableWidget->setMinimumHeight(ui->tableWidget->verticalHeader()->defaultSectionSize() * 20 +
+                                      ui->tableWidget->horizontalHeader()->height() +
+                                      ui->tableWidget->frameWidth() * 2);
 
-    connect(ui->tableWidget_testcase, &TestCaseTable::testCaseSelectionChanged, this, &TestCaseTabWidget::onTestCaseSelectionChanged);
+    connect(ui->tableWidget, &TestCaseTable::testCaseSelectionChanged, this, &TestCaseTabWidget::onTestCaseSelectionChanged);
 }
 
 TestCaseTabWidget::~TestCaseTabWidget()
@@ -23,36 +23,58 @@ TestCaseTabWidget::~TestCaseTabWidget()
 
 void TestCaseTabWidget::ShowProblemConfiguration(Problem* problem)
 {
+    if (current_problem) ChacheConfiguration();
     current_problem = problem;
 
-    ui->tableWidget_testcase->LoadTestCases(problem);
-    ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
+    ui->tableWidget->LoadTestCases(problem);
+    ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
 }
 
 void TestCaseTabWidget::Reset()
 {
-    on_pushButton_resetTestCase_clicked();
+    on_pushButton_reset_clicked();
+}
+
+void TestCaseTabWidget::ChacheConfiguration()
+{
+    current_problem->ClearTestCases();
+    current_problem->SetScore(ui->tableWidget->SumScore());
+
+    Subtask* sub = nullptr;
+    for (int i = 0; i < ui->tableWidget->rowCount(); i++)
+    {
+
+        if (ui->tableWidget->ScoreItemTopRow(i) == i)
+        {
+            sub = new Subtask(ui->tableWidget->ScoreAt(i));
+            current_problem->AppendSubtask(sub);
+        }
+
+        TestCase* point = new TestCase(ui->tableWidget->TestCaseAt(i));
+        sub->Append(point);
+        current_problem->AppendTestCase(point);
+    }
 }
 
 
 
 void TestCaseTabWidget::onTestCaseSelectionChanged()
 {
-    ui->pushButton_addTestCase->setEnabled(ui->tableWidget_testcase->CanAddTestCase());
-    ui->pushButton_addSubTestCase->setEnabled(ui->tableWidget_testcase->CanAddSubTestCase());
-    ui->pushButton_removeTestCase->setEnabled(ui->tableWidget_testcase->CanRemoveTestCase());
-    ui->pushButton_up->setEnabled(ui->tableWidget_testcase->CanMoveUp());
-    ui->pushButton_down->setEnabled(ui->tableWidget_testcase->CanMoveDown());
-    ui->pushButton_merge->setEnabled(ui->tableWidget_testcase->CanMerge());
-    ui->pushButton_split->setEnabled(ui->tableWidget_testcase->CanSplit());
+    ui->pushButton_addTestCase->setEnabled(ui->tableWidget->CanAddTestCase());
+    ui->pushButton_addSubTestCase->setEnabled(ui->tableWidget->CanAddSubTestCase());
+    ui->pushButton_delete->setEnabled(ui->tableWidget->CanDelete());
+    ui->pushButton_up->setEnabled(ui->tableWidget->CanMoveUp());
+    ui->pushButton_down->setEnabled(ui->tableWidget->CanMoveDown());
+    ui->pushButton_merge->setEnabled(ui->tableWidget->CanMerge());
+    ui->pushButton_split->setEnabled(ui->tableWidget->CanSplit());
 
     int top, bottom;
-    TestCaseTable::SelectionType type = ui->tableWidget_testcase->GetSelectionType(&top, &bottom);
+    TestCaseTable::SelectionType type = ui->tableWidget->GetSelectionType(&top, &bottom);
     switch (type)
     {
     case TestCaseTable::SelectOnePackage:
     case TestCaseTable::SelectOneTestCasePackage:
-        ui->label_selectionInfo->setText(QString("已选择: 1 个测试点，%1 组测试数据，共 %2 分").arg(bottom - top + 1).arg(ui->tableWidget_testcase->ScoreAt(top)));
+        ui->label_selectionInfo->setText(QString("已选择: 1 个测试点，%1 组测试数据，共 %2 分").arg(bottom - top + 1).arg(ui->tableWidget->ScoreAt(top)));
         break;
     case TestCaseTable::SelectOneSubTestCase:
         ui->label_selectionInfo->setText("已选择: 1 组测试数据");
@@ -62,7 +84,7 @@ void TestCaseTabWidget::onTestCaseSelectionChanged()
     {
         int t = 0, s = 0;
         for (int i = top; i <= bottom; i++)
-            if (ui->tableWidget_testcase->ScoreItemTopRow(i) == i) t++, s += ui->tableWidget_testcase->ScoreAt(i);
+            if (ui->tableWidget->ScoreItemTopRow(i) == i) t++, s += ui->tableWidget->ScoreAt(i);
         ui->label_selectionInfo->setText(QString("已选择: %1 个测试点，%2 组测试数据，共 %3 分").arg(t).arg(bottom - top + 1).arg(s));
         break;
     }
@@ -80,25 +102,25 @@ void TestCaseTabWidget::onTestCaseSelectionChanged()
 
 
 
-void TestCaseTabWidget::on_tableWidget_testcase_doubleClicked(const QModelIndex& index)
+void TestCaseTabWidget::on_tableWidget_doubleClicked(const QModelIndex& index)
 {
     int id = index.row();
-    if (!index.column())
+    if (!index.column()) // 编辑分值
     {
-        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, -1, this, ui->tableWidget_testcase->ScoreAt(id));
+        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, -1, this, ui->tableWidget->ScoreAt(id));
         if (dialog.exec() == QDialog::Accepted)
         {
-            ui->tableWidget_testcase->ChangeScore(id, dialog.GetScore());
-            ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
+            ui->tableWidget->ChangeScore(id, dialog.GetScore());
+            ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
         }
     }
-    else
+    else // 编辑测试数据
     {
-        TestCase* point = current_problem->TestCaseAt(id);
+        TestCase point = ui->tableWidget->TestCaseAt(id);
 
-        AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::EditSubTestCase, index.column(), this);
+        AddTestCaseDialog dialog(current_problem, &point, AddTestCaseDialog::EditSubTestCase, index.column(), this);
         if (dialog.exec() == QDialog::Accepted)
-            ui->tableWidget_testcase->ChangeTestCase(id, dialog.GetTestCase());
+            ui->tableWidget->ChangeTestCase(id, dialog.GetTestCase());
     }
     onTestCaseSelectionChanged();
 }
@@ -106,10 +128,10 @@ void TestCaseTabWidget::on_tableWidget_testcase_doubleClicked(const QModelIndex&
 void TestCaseTabWidget::on_pushButton_addTestCase_clicked()
 {
     int id = 1;
-    auto list = ui->tableWidget_testcase->selectedItems();
+    auto list = ui->tableWidget->selectedItems();
     if (list.size()) id = list.first()->row() + 2;
 
-    TestCase* point;
+    const TestCase* point;
     if (current_problem->Type() == Global::Traditional)
         point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                      QString("%1%2.out").arg(current_problem->Name()).arg(id));
@@ -121,18 +143,18 @@ void TestCaseTabWidget::on_pushButton_addTestCase_clicked()
     AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddTestCase, -1, this);
     if (dialog.exec() == QDialog::Accepted)
     {
-        ui->tableWidget_testcase->AddTestCase(dialog.GetTestCase(), dialog.GetScore());
-        ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
+        ui->tableWidget->AddTestCase(dialog.GetTestCase(), dialog.GetScore());
+        ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
     }
 }
 
 void TestCaseTabWidget::on_pushButton_addSubTestCase_clicked()
 {
     int id = 1;
-    auto list = ui->tableWidget_testcase->selectedItems();
+    auto list = ui->tableWidget->selectedItems();
     if (list.size()) id = list.first()->row() + 2;
 
-    TestCase* point;
+    const TestCase* point;
     if (current_problem->Type() == Global::Traditional)
         point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                      QString("%1%2.out").arg(current_problem->Name()).arg(id));
@@ -143,40 +165,42 @@ void TestCaseTabWidget::on_pushButton_addSubTestCase_clicked()
 
     AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddSubTestCase, -1, this);
     if (dialog.exec() == QDialog::Accepted)
-        ui->tableWidget_testcase->AddSubTestCase(dialog.GetTestCase());
+        ui->tableWidget->AddSubTestCase(dialog.GetTestCase());
 }
 
-void TestCaseTabWidget::on_pushButton_removeTestCase_clicked()
+void TestCaseTabWidget::on_pushButton_delete_clicked()
 {
-    ui->tableWidget_testcase->RemoveSelection();
-    ui->label_score->setText(QString::number(ui->tableWidget_testcase->SumScore()));
+    ui->tableWidget->DeleteSelection();
+    ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
 }
 
 void TestCaseTabWidget::on_pushButton_up_clicked()
 {
-    ui->tableWidget_testcase->MoveUpSelection();
+    ui->tableWidget->MoveUpSelection();
 }
 
 void TestCaseTabWidget::on_pushButton_down_clicked()
 {
-    ui->tableWidget_testcase->MoveDownSelection();
+    ui->tableWidget->MoveDownSelection();
 }
 
 void TestCaseTabWidget::on_pushButton_merge_clicked()
 {
-    ui->tableWidget_testcase->MergeSelection();
+    ui->tableWidget->MergeSelection();
 }
 
 void TestCaseTabWidget::on_pushButton_split_clicked()
 {
-    ui->tableWidget_testcase->SplitSelection();
+    ui->tableWidget->SplitSelection();
 }
 
-void TestCaseTabWidget::on_pushButton_resetTestCase_clicked()
+void TestCaseTabWidget::on_pushButton_reset_clicked()
 {
     if (current_problem->Type() == Global::Traditional)
         current_problem->ResetTestCases(1, 128);
     else if (current_problem->Type() == Global::AnswersOnly)
         current_problem->ResetTestCases(0, 0);
-    ShowProblemConfiguration(current_problem);
+
+    ui->tableWidget->LoadTestCases(current_problem);
+    ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
 }

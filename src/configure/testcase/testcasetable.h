@@ -29,7 +29,7 @@ public:
     int SumScore() const { return sum_score; }
     bool CanAddTestCase() const { return can_add; }
     bool CanAddSubTestCase() const { return can_add_sub; }
-    bool CanRemoveTestCase() const { return can_remove; }
+    bool CanDelete() const { return can_delete; }
     bool CanMoveUp() const { return can_up; }
     bool CanMoveDown() const { return can_down; }
     bool CanMerge() const { return can_merge; }
@@ -44,26 +44,27 @@ public:
         return top + this->rowSpan(top, 0) - 1;
     }
 
-    void LoadTestCases(Problem* problem);
+    void LoadTestCases(const Problem* problem);
     TestCaseTable::SelectionType GetSelectionType(int *_top, int *_bottom);
+    TestCase TestCaseAt(int row);
     void ChangeScore(int row, int score);
-    void ChangeTestCase(int row, TestCase* point);
+    void ChangeTestCase(int row, const TestCase& point);
 
 public slots:
-    void AddTestCase(TestCase* point, int score);
-    void AddSubTestCase(TestCase* point);
-    void RemoveSelection();
+    void AddTestCase(const TestCase& point, int score);
+    void AddSubTestCase(const TestCase& point);
+    void DeleteSelection();
     void MoveUpSelection();
     void MoveDownSelection();
     void MergeSelection();
     void SplitSelection();
 
 private:
-    Problem* problem;
+    const Problem* problem; // 只管显示，禁止修改 problem
     QList<QTableWidgetItem*> score_items;
     QTableWidgetItem* unselect_score_item;
     int sum_score;
-    bool can_add, can_add_sub, can_remove, can_up, can_down, can_merge, can_split;
+    bool can_add, can_add_sub, can_delete, can_up, can_down, can_merge, can_split;
 
     void addItem(int row, int column, const QString& text)
     {

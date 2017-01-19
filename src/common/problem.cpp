@@ -157,7 +157,7 @@ void Problem::ReadConfiguration()
     file.close();
 }
 
-bool Problem::SaveConfiguration()
+bool Problem::SaveConfiguration() const
 {
     QDomDocument doc;
     QDomProcessingInstruction xml = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
@@ -290,7 +290,7 @@ void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, co
     ResetTestCases(timeLim, memLim);
 }
 
-Compiler* Problem::GetCompiler(const QString& playerName)
+const Compiler* Problem::GetCompiler(const QString& playerName) const
 {
     for (auto i : compilers)
         if (QFile(Global::g_contest.src_path + playerName + "/" + dir + "/" + i->SourceFile()).exists()) return i;

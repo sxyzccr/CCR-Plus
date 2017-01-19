@@ -257,15 +257,15 @@ void DetailTable::onShowConfigurationDetail()
     rows = this->rowCount();
     for (auto i : Global::g_contest.problem_order)
     {
-        Problem* prob = Global::g_contest.problems[i];
+        const Problem* prob = Global::g_contest.problems[i];
         onAddTitleDetail(QString("\"%1\" 的配置结果").arg(prob->Name()));
 
         int t = 0;
         for (int i = 0; i < prob->SubtaskCount(); i++)
         {
-            Subtask* sub = prob->SubtaskAt(i);
+            const Subtask* sub = prob->SubtaskAt(i);
             int len = 0;
-            for (TestCase* point : *sub) onAddPointDetail(++t, prob->GetInOutString(point), "conf", prob->GetInOutString(point), ++len);
+            for (auto point : *sub) onAddPointDetail(++t, prob->GetInOutString(point), "conf", prob->GetInOutString(point), ++len);
             onAddScoreDetail(sub->Size(), sub->Score(), sub->Score());
         }
     }

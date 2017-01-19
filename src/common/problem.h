@@ -11,7 +11,7 @@ public:
     explicit Compiler(const QString& cmd, const QString& file, int time = 10) :
         cmd(cmd), file(file), time_lim(time) {}
 
-    explicit Compiler(const Compiler& compiler) :
+    Compiler(const Compiler& compiler) :
         cmd(compiler.cmd), file(compiler.file), time_lim(compiler.time_lim) {}
 
     // Getter member functions
@@ -36,7 +36,7 @@ public:
     explicit TestCase(double t, double m, const QString& in, const QString& out, const QString& sub = "") :
         time_lim(t), mem_lim(m), in(in), out(out), sub(sub) {}
 
-    explicit TestCase(const TestCase& point) :
+    TestCase(const TestCase& point) :
         time_lim(point.time_lim), mem_lim(point.mem_lim), in(point.in), out(point.out), sub(point.sub) {}
 
     // Getter member functions
@@ -70,15 +70,15 @@ public:
     int Size() const { return cases.size(); }
 
     /// 添加测试点
-    void Append(TestCase* point) { cases.append(point); }
+    void Append(const TestCase* point) { cases.append(point); }
 
     // Iterators
-    QList<TestCase*>::const_iterator begin() const { return cases.begin(); }
-    QList<TestCase*>::const_iterator end() const { return cases.end(); }
+    QList<const TestCase*>::const_iterator begin() const { return cases.begin(); }
+    QList<const TestCase*>::const_iterator end() const { return cases.end(); }
 
 private:
     const int score;
-    QList<TestCase*> cases;
+    QList<const TestCase*> cases;
 };
 
 
@@ -124,25 +124,40 @@ public:
     QString Name() const { return name; }
     QString Directory() const { return dir; }
     QString ExecutableFile() const { return exe; }
-    QString Checker() const { return checker; }
     QString InFile() const { return in_file; }
     QString OutFile() const { return out_file; }
+    QString Checker() const { return checker; }
     int Score() const { return score; }
     int CheckerTimeLimit() const { return checker_time_lim; }
     double CodeLengthLimit() const { return code_len_lim; }
     Global::ProblemType Type() const { return type; }
 
-    // Vector traversal interface
+    // Setter memeber functions
+    void SetDirectory(const QString& _dir) { dir = _dir; }
+    QString SetExecutableFile(const QString& _exe) { return exe = _exe; }
+    QString SetInFile(const QString& in) { return in_file = in; }
+    QString SetOutFile(const QString& out) { return out_file = out; }
+    void SetScore(int _score) { score = _score; }
+    void SetChecker(const QString& check) { checker = check; }
+    void SetCheckerTimeLimit(int t) { checker_time_lim = t; }
+    void SetCodeLengthLimit(double t) { code_len_lim = t; }
+
+    // Vector operations
     int TestCaseCount() const { return cases.size(); }
     int SubtaskCount() const { return subtasks.size(); }
     int CompilerCount() const { return compilers.size(); }
-    TestCase* TestCaseAt(int t) const { return cases[t]; }
-    Subtask* SubtaskAt(int t) const { return subtasks[t]; }
-    Compiler* CompilerAt(int t) const { return compilers[t]; }
+    TestCase* TestCaseAt(int t) { return cases[t]; }
+    Subtask* SubtaskAt(int t) { return subtasks[t]; }
+    Compiler* CompilerAt(int t) { return compilers[t]; }
+    const TestCase* TestCaseAt(int t) const { return cases[t]; }
+    const Subtask* SubtaskAt(int t) const { return subtasks[t]; }
+    const Compiler* CompilerAt(int t) const { return compilers[t]; }
+    void AppendTestCase(TestCase* point) { cases.append(point); }
+    void AppendSubtask(Subtask* sub) { subtasks.append(sub); }
 
     // Compiler operations
     void InsertCompiler(int p, Compiler* compiler) { compilers.insert(p, compiler); }
-    void RemoveCompiler(int p)
+    void DeleteCompiler(int p)
     {
         delete compilers[p];
         compilers.removeAt(p);
@@ -158,7 +173,7 @@ public:
     void ReadConfiguration();
 
     /// 保存配置文件
-    bool SaveConfiguration();
+    bool SaveConfiguration() const;
 
     /// 重置编译器
     void ResetCompilers();
@@ -173,7 +188,7 @@ public:
     void ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check);
 
     /// 根据选手目录下的源文件自动选择编译器
-    Compiler* GetCompiler(const QString& playerName);
+    const Compiler* GetCompiler(const QString& playerName) const;
 
     /// 尝试获取内置校验器名称，不是内置校验器返回原始文件名
     QString BuiltinCheckerName() const
@@ -183,7 +198,7 @@ public:
     }
 
     /// InOutString，格式如下
-    QString GetInOutString(TestCase *point) const
+    QString GetInOutString(const TestCase *point) const
     {
         if (!point) return "";
         QString s = QString("标准输入:\"%1\" 标准输出:\"%2\"").arg(point->InFile()).arg(point->OutFile());

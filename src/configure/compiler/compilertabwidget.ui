@@ -7,7 +7,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" rowspan="4">
-    <widget class="QTableWidget" name="tableWidget_compiler">
+    <widget class="QTableWidget" name="tableWidget">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
        <horstretch>0</horstretch>
@@ -77,7 +77,7 @@ QTableWidget::item:!alternate:!selected
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QPushButton" name="pushButton_addCompiler">
+    <widget class="QPushButton" name="pushButton_add">
      <property name="focusPolicy">
       <enum>Qt::TabFocus</enum>
      </property>
@@ -87,7 +87,7 @@ QTableWidget::item:!alternate:!selected
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QPushButton" name="pushButton_removeCompiler">
+    <widget class="QPushButton" name="pushButton_delete">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -100,7 +100,7 @@ QTableWidget::item:!alternate:!selected
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QPushButton" name="pushButton_resetCompiler">
+    <widget class="QPushButton" name="pushButton_reset">
      <property name="focusPolicy">
       <enum>Qt::TabFocus</enum>
      </property>

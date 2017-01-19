@@ -18,7 +18,7 @@ public:
     ~ConfigureDialog();
 
 public slots:
-    void accept() override;
+    virtual void accept() override;
 
 private:
     Ui::ConfigureDialog* ui;

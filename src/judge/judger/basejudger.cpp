@@ -7,7 +7,7 @@
 
 #include "judge/judger/basejudger.h"
 
-BaseJudger::BaseJudger(const QString& testDir, Player* player, Problem* problem, QObject *parent) : QObject(parent),
+BaseJudger::BaseJudger(const QString& testDir, Player* player, const Problem* problem, QObject *parent) : QObject(parent),
     player(player), problem(problem),
     test_dir(testDir), tmp_dir(testDir + ".tmp/"),
     data_dir(testDir + "data/" + problem->Name() + "/"),
@@ -100,7 +100,7 @@ bool BaseJudger::monitorProcess(QProcess* process, int ms) const
     return false;
 }
 
-TestCaseResult BaseJudger::judgeTestCaseEvent(TestCase* point, int testNum)
+TestCaseResult BaseJudger::judgeTestCaseEvent(const TestCase* point, int testNum)
 {
     if (Global::g_is_judge_stoped) return TestCaseResult();
 
@@ -169,7 +169,7 @@ TestCaseResult BaseJudger::checkOutput(const QString& inFile, const QString& ans
     return TestCaseResult(score, 0, score == 0 ? 'W' : score == 1.0 ? 'A' : 'P', note);
 }
 
-Global::CompileResult BaseJudger::compile(Compiler* compiler, QString& resultNote) const
+Global::CompileResult BaseJudger::compile(const Compiler* compiler, QString& resultNote) const
 {
     QFile file(src_dir + compiler->SourceFile());
     if (!file.copy(tmp_dir + compiler->SourceFile()))
@@ -386,7 +386,7 @@ ResultSummary BaseJudger::Judge()
 
     if (needCompile())
     {
-        Compiler* compiler = problem->GetCompiler(player->Name());
+        const Compiler* compiler = problem->GetCompiler(player->Name());
         if (!compiler || compiler->SourceFile().isEmpty())
         {
             note = "找不到文件";
@@ -458,13 +458,13 @@ ResultSummary BaseJudger::Judge()
     ResultSummary result;
     for (int i = 0; i < problem->SubtaskCount(); i++)
     {
-        Subtask* sub = problem->SubtaskAt(i);
+        const Subtask* sub = problem->SubtaskAt(i);
         double ratioMin = 1e9;
         bool ignore = false;
         int len = 0;
         QDomElement subtask = doc.createElement("subtask");
         root.appendChild(subtask);
-        for (TestCase* j : *sub)
+        for (auto j : *sub)
         {
             len++, num++;
             QDomElement point = doc.createElement("point");

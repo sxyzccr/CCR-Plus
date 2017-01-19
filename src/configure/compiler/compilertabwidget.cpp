@@ -10,13 +10,13 @@ CompilerTabWidget::CompilerTabWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    ui->tableWidget_compiler->horizontalHeader()->setFixedHeight(25);
-    ui->tableWidget_compiler->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->tableWidget->horizontalHeader()->setFixedHeight(25);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
-    ui->tableWidget_compiler->verticalHeader()->setSectionsMovable(true);
-    ui->tableWidget_compiler->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->tableWidget->verticalHeader()->setSectionsMovable(true);
+    ui->tableWidget->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
-    connect(ui->tableWidget_compiler->verticalHeader(), &QHeaderView::sectionMoved, this, [this](int /*logicalIndex*/, int oldVisualIndex, int newVisualIndex)
+    connect(ui->tableWidget->verticalHeader(), &QHeaderView::sectionMoved, this, [this](int /*logicalIndex*/, int oldVisualIndex, int newVisualIndex)
     {
         current_problem->MoveCompiler(oldVisualIndex, newVisualIndex);
     });
@@ -31,13 +31,13 @@ void CompilerTabWidget::ShowProblemConfiguration(Problem* problem)
 {
     current_problem = problem;
 
-    ui->tableWidget_compiler->clearContents();
-    ui->tableWidget_compiler->setRowCount(0);
+    ui->tableWidget->clearContents();
+    ui->tableWidget->setRowCount(0);
     for (int i = 0; i < problem->CompilerCount(); i++)
     {
         Compiler* compiler = problem->CompilerAt(i);
         QTableWidgetItem* item;
-        ui->tableWidget_compiler->insertRow(i);
+        ui->tableWidget->insertRow(i);
 
         item = new QTableWidgetItem;
         if (compiler->SourceFile().endsWith(".c"))
@@ -50,115 +50,116 @@ void CompilerTabWidget::ShowProblemConfiguration(Problem* problem)
             item->setText("自定义");
         item->setToolTip(item->text());
         item->setTextAlignment(Qt::AlignCenter);
-        ui->tableWidget_compiler->setVerticalHeaderItem(i, item);
+        ui->tableWidget->setVerticalHeaderItem(i, item);
 
         item = new QTableWidgetItem(compiler->SourceFile());
         item->setTextAlignment(Qt::AlignCenter);
-        ui->tableWidget_compiler->setItem(i, 0, item);
+        ui->tableWidget->setItem(i, 0, item);
 
         item = new QTableWidgetItem(compiler->Cmd());
-        ui->tableWidget_compiler->setItem(i, 1, item);
+        ui->tableWidget->setItem(i, 1, item);
     }
 }
 
 void CompilerTabWidget::Reset()
 {
-    on_pushButton_resetCompiler_clicked();
+    on_pushButton_reset_clicked();
 }
 
 
 
-void CompilerTabWidget::on_tableWidget_compiler_doubleClicked(const QModelIndex& index)
+void CompilerTabWidget::on_tableWidget_doubleClicked(const QModelIndex& index)
 {
-    int row = index.row(), visualRow = ui->tableWidget_compiler->visualRow(row);
+    int row = index.row(), visualRow = ui->tableWidget->visualRow(row);
     Compiler* compiler = current_problem->CompilerAt(visualRow);
     AddCompilerDialog dialog(current_problem, compiler, index.column(), this);
     if (dialog.exec() != QDialog::Accepted) return;
+    *compiler = dialog.GetCompiler();
 
-    QTableWidgetItem* item = ui->tableWidget_compiler->verticalHeaderItem(row);
-    if (dialog.SourceFile().endsWith(".c"))
+    QTableWidgetItem* item = ui->tableWidget->verticalHeaderItem(row);
+    if (compiler->SourceFile().endsWith(".c"))
         item->setText("C 语言");
-    else if (dialog.SourceFile().endsWith(".cpp"))
+    else if (compiler->SourceFile().endsWith(".cpp"))
         item->setText("C++ 语言");
-    else if (dialog.SourceFile().endsWith(".pas"))
+    else if (compiler->SourceFile().endsWith(".pas"))
         item->setText("Pascal 语言");
     else
         item->setText("自定义");
     item->setToolTip(item->text());
 
-    ui->tableWidget_compiler->item(row, 0)->setText(dialog.SourceFile());
-    ui->tableWidget_compiler->item(row, 1)->setText(dialog.Cmd());
+    ui->tableWidget->item(row, 0)->setText(compiler->SourceFile());
+    ui->tableWidget->item(row, 1)->setText(compiler->Cmd());
 }
 
-void CompilerTabWidget::on_tableWidget_compiler_itemSelectionChanged()
+void CompilerTabWidget::on_tableWidget_itemSelectionChanged()
 {
-    ui->pushButton_removeCompiler->setEnabled(ui->tableWidget_compiler->selectedItems().size());
+    ui->pushButton_delete->setEnabled(ui->tableWidget->selectedItems().size());
 }
 
-void CompilerTabWidget::on_pushButton_addCompiler_clicked()
+void CompilerTabWidget::on_pushButton_add_clicked()
 {
-    auto list = ui->tableWidget_compiler->selectedItems();
+    auto list = ui->tableWidget->selectedItems();
     int row;
-    if (!list.size()) row = 0; else row = ui->tableWidget_compiler->visualRow(list.first()->row()) + 1;
+    if (!list.size()) row = 0; else row = ui->tableWidget->visualRow(list.first()->row()) + 1;
 
     AddCompilerDialog dialog(current_problem, nullptr, -1, this);
     if (dialog.exec() != QDialog::Accepted) return;
 
-    Compiler compiler(dialog.Cmd(), dialog.SourceFile(), dialog.TimeLimit());
-    for (int i = 0; i < ui->tableWidget_compiler->rowCount(); i++)
-        if (ui->tableWidget_compiler->item(i, 0)->text() == compiler.SourceFile())
+    Compiler* compiler = new Compiler(dialog.GetCompiler());
+    for (int i = 0; i < ui->tableWidget->rowCount(); i++)
+        if (ui->tableWidget->item(i, 0)->text() == compiler->SourceFile())
         {
             QMessageBox::critical(this, "添加编译器失败", "源程序文件名与已有编译器冲突！");
             return;
         }
 
     QTableWidgetItem* item = new QTableWidgetItem;
-    ui->tableWidget_compiler->insertRow(row);
+    ui->tableWidget->insertRow(row);
 
-    if (compiler.SourceFile().endsWith(".c"))
+    if (compiler->SourceFile().endsWith(".c"))
         item->setText("C 语言");
-    else if (compiler.SourceFile().endsWith(".cpp"))
+    else if (compiler->SourceFile().endsWith(".cpp"))
         item->setText("C++ 语言");
-    else if (compiler.SourceFile().endsWith(".pas"))
+    else if (compiler->SourceFile().endsWith(".pas"))
         item->setText("Pascal 语言");
     else
         item->setText("自定义");
     item->setToolTip(item->text());
     item->setTextAlignment(Qt::AlignCenter);
-    ui->tableWidget_compiler->setVerticalHeaderItem(row, item);
+    ui->tableWidget->setVerticalHeaderItem(row, item);
 
-    item = new QTableWidgetItem(compiler.SourceFile());
+    item = new QTableWidgetItem(compiler->SourceFile());
     item->setTextAlignment(Qt::AlignCenter);
-    ui->tableWidget_compiler->setItem(row, 0, item);
+    ui->tableWidget->setItem(row, 0, item);
 
-    item = new QTableWidgetItem(compiler.Cmd());
-    ui->tableWidget_compiler->setItem(row, 1, item);
+    item = new QTableWidgetItem(compiler->Cmd());
+    ui->tableWidget->setItem(row, 1, item);
 
-    ui->tableWidget_compiler->selectRow(row);
-    if (!ui->tableWidget_compiler->hasFocus()) ui->tableWidget_compiler->setFocus();
+    ui->tableWidget->selectRow(row);
+    if (!ui->tableWidget->hasFocus()) ui->tableWidget->setFocus();
 
-    current_problem->InsertCompiler(row, new Compiler(compiler));
+    current_problem->InsertCompiler(row, compiler);
 }
 
-void CompilerTabWidget::on_pushButton_removeCompiler_clicked()
+void CompilerTabWidget::on_pushButton_delete_clicked()
 {
-    auto list = ui->tableWidget_compiler->selectedItems();
+    auto list = ui->tableWidget->selectedItems();
     if (list.size())
     {
-        int row = list.first()->row(), visualRow = ui->tableWidget_compiler->visualRow(row), gotoRow = -1, end;
-        ui->tableWidget_compiler->removeRow(row);
-        current_problem->RemoveCompiler(visualRow);
-        for (int i = 0; i < ui->tableWidget_compiler->rowCount(); i++)
+        int row = list.first()->row(), visualRow = ui->tableWidget->visualRow(row), gotoRow = -1, end;
+        ui->tableWidget->removeRow(row);
+        current_problem->DeleteCompiler(visualRow);
+        for (int i = 0; i < ui->tableWidget->rowCount(); i++)
         {
-            if (ui->tableWidget_compiler->visualRow(i) == visualRow) gotoRow = i;
-            if (ui->tableWidget_compiler->visualRow(i) == ui->tableWidget_compiler->rowCount() - 1) end = i;
+            if (ui->tableWidget->visualRow(i) == visualRow) gotoRow = i;
+            if (ui->tableWidget->visualRow(i) == ui->tableWidget->rowCount() - 1) end = i;
         }
         if (gotoRow < 0) gotoRow = end;
-        ui->tableWidget_compiler->selectRow(gotoRow);
+        ui->tableWidget->selectRow(gotoRow);
     }
 }
 
-void CompilerTabWidget::on_pushButton_resetCompiler_clicked()
+void CompilerTabWidget::on_pushButton_reset_clicked()
 {
     current_problem->ResetCompilers();
     ShowProblemConfiguration(current_problem);

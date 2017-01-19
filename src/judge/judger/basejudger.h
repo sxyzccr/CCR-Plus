@@ -23,7 +23,7 @@ class BaseJudger : public QObject
 {
     Q_OBJECT
 public:
-    explicit BaseJudger(const QString& testDir, Player* player, Problem* problem, QObject *parent = 0);
+    explicit BaseJudger(const QString& testDir, Player* player, const Problem* problem, QObject *parent = 0);
     virtual ~BaseJudger();
 
     // Getter member functions
@@ -40,13 +40,13 @@ public:
 
 protected:
     Player* player;
-    Problem* problem;
+    const Problem* problem;
 
     /// 检查输出文件
     TestCaseResult checkOutput(const QString& inFile, const QString& ansFile, const QString& outFile) const;
 
     /// 编译
-    Global::CompileResult compile(Compiler* compiler, QString& resultNote) const;
+    Global::CompileResult compile(const Compiler* compiler, QString& resultNote) const;
 
     /// 在时间内存限制下运行程序
     TestCaseResult runProgram(const QString& exe, double timeLim, double memLim) const;
@@ -55,7 +55,7 @@ protected:
     virtual bool needCompile() const = 0;
 
     /// 一个测试点的测评
-    virtual TestCaseResult judgeTestCase(TestCase* point) const = 0;
+    virtual TestCaseResult judgeTestCase(const TestCase* point) const = 0;
 
 private:
     QString test_dir, tmp_dir, data_dir, src_dir, working_dir;
@@ -70,7 +70,7 @@ private:
     bool monitorProcess(QProcess* process, int ms) const;
 
     /// 一个测试点的测评，多一些准备和收尾工作
-    TestCaseResult judgeTestCaseEvent(TestCase* point, int num);
+    TestCaseResult judgeTestCaseEvent(const TestCase* point, int num);
 
 signals:
     void judgeStoped();

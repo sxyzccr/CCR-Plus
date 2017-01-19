@@ -10,6 +10,7 @@ class ConfigureTabWidget : public QWidget
     Q_OBJECT
 public:
     explicit ConfigureTabWidget(QWidget* parent = nullptr);
+    virtual ~ConfigureTabWidget() {}
 
     /// 载入 problem，显示具体配置
     virtual void ShowProblemConfiguration(Problem* problem) = 0;

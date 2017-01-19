@@ -7,7 +7,7 @@
 
 GeneralTabWidget::GeneralTabWidget(QWidget* parent) :
     ConfigureTabWidget(parent),
-    ui(new Ui::GeneralTabWidget)
+    ui(new Ui::GeneralTabWidget), load_finished(false)
 {
     ui->setupUi(this);
 
@@ -33,6 +33,7 @@ GeneralTabWidget::~GeneralTabWidget()
 
 void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
 {
+    load_finished = false;
     current_problem = problem;
 
     ui->lineEdit_dir->setText(problem->Directory());
@@ -87,6 +88,8 @@ void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
         ui->comboBox_custom->setCurrentText(problem->Checker());
     }
     ui->spinBox_checkerTimeLim->setValue(problem->CheckerTimeLimit());
+
+    load_finished = true;
 }
 
 void GeneralTabWidget::Reset()
@@ -105,6 +108,7 @@ void GeneralTabWidget::on_radioButton_builtin_clicked()
     ui->comboBox_builtin->setEnabled(true);
     ui->comboBox_custom->setEnabled(false);
     ui->comboBox_builtin->setCurrentIndex(0);
+    on_comboBox_builtin_currentIndexChanged(ui->comboBox_builtin->currentText());
 }
 
 void GeneralTabWidget::on_radioButton_custom_clicked()
@@ -114,6 +118,7 @@ void GeneralTabWidget::on_radioButton_custom_clicked()
     ui->comboBox_builtin->setEnabled(false);
     ui->comboBox_custom->setEnabled(true);
     ui->comboBox_custom->setCurrentIndex(0);
+    on_comboBox_custom_currentIndexChanged(ui->comboBox_custom->currentText());
 }
 
 void GeneralTabWidget::on_pushButton_resetSubmit_clicked()
@@ -133,4 +138,44 @@ void GeneralTabWidget::on_pushButton_resetChecker_clicked()
 {
     on_radioButton_builtin_clicked();
     ui->spinBox_checkerTimeLim->setValue(10);
+}
+
+void GeneralTabWidget::on_spinBox_codeLim_valueChanged(double val)
+{
+    if (load_finished) current_problem->SetCodeLengthLimit(val);
+}
+
+void GeneralTabWidget::on_lineEdit_exe_textChanged(const QString &text)
+{
+    if (load_finished) current_problem->SetExecutableFile(text);
+}
+
+void GeneralTabWidget::on_lineEdit_inFile_textChanged(const QString &text)
+{
+    if (load_finished) current_problem->SetInFile(text);
+}
+
+void GeneralTabWidget::on_lineEdit_outFile_textChanged(const QString &text)
+{
+    if (load_finished) current_problem->SetOutFile(text);
+}
+
+void GeneralTabWidget::on_comboBox_builtin_currentIndexChanged(const QString& text)
+{
+    if (load_finished) current_problem->SetChecker(Problem::FromBuiltinCheckerName(text));
+}
+
+void GeneralTabWidget::on_comboBox_custom_currentIndexChanged(const QString& text)
+{
+    if (load_finished) current_problem->SetChecker(text);
+}
+
+void GeneralTabWidget::on_lineEdit_dir_textChanged(const QString &text)
+{
+    if (load_finished) current_problem->SetDirectory(text);
+}
+
+void GeneralTabWidget::on_spinBox_checkerTimeLim_valueChanged(int val)
+{
+    if (load_finished) current_problem->SetCheckerTimeLimit(val);
 }

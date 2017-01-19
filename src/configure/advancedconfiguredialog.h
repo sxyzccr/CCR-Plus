@@ -21,7 +21,7 @@ public:
     QList<Problem*> Problems() const { return problems; }
 
 public slots:
-    void accept() override;
+    virtual void accept() override;
 
 private:
     Ui::AdvancedConfigureDialog* ui;

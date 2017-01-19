@@ -260,7 +260,7 @@ void ConfigureTable::setColumnDataNew(int column)
 
 void ConfigureTable::setColumnData(int column)
 {
-    Problem* problem = problems[column];
+    const Problem* problem = problems[column];
 
     if (!problem->TestCaseCount())
     {
@@ -278,7 +278,7 @@ void ConfigureTable::setColumnData(int column)
             double minT = 1e9, maxT = 0, minM = 1e9, maxM = 0;
             for (int i = 0; i < problem->TestCaseCount(); i++)
             {
-                TestCase* point = problem->TestCaseAt(i);
+                const TestCase* point = problem->TestCaseAt(i);
                 minT = std::min(minT, point->TimeLimit()),   maxT = std::max(maxT, point->TimeLimit());
                 minM = std::min(minM, point->MemoryLimit()), maxM = std::max(maxM, point->MemoryLimit());
             }

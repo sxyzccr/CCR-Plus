@@ -16,18 +16,18 @@ class CreateFileDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit CreateFileDialog(Player* player, Problem* problem, QWidget* parent = nullptr);
+    explicit CreateFileDialog(const Player* player, const Problem* problem, QWidget* parent = nullptr);
     ~CreateFileDialog();
 
     QString GetSelectedFile() const { return selected_file; }
 
 public slots:
-    void accept() override;
+    virtual void accept() override;
 
 private:
     Ui::CreateFileDialog* ui;
-    Player* player;
-    Problem* problem;
+    const Player* player;
+    const Problem* problem;
     QString selected_file;
 
 private slots:

@@ -37,7 +37,7 @@
     </widget>
    </item>
    <item row="1" column="0" rowspan="12" colspan="3">
-    <widget class="TestCaseTable" name="tableWidget_testcase">
+    <widget class="TestCaseTable" name="tableWidget">
      <property name="styleSheet">
       <string notr="true">QHeaderView
 {
@@ -111,7 +111,7 @@ QTableWidget::item:!alternate:!selected
     </widget>
    </item>
    <item row="3" column="3">
-    <widget class="QPushButton" name="pushButton_removeTestCase">
+    <widget class="QPushButton" name="pushButton_delete">
      <property name="enabled">
       <bool>false</bool>
      </property>
@@ -224,7 +224,7 @@ QTableWidget::item:!alternate:!selected
     </spacer>
    </item>
    <item row="11" column="3">
-    <widget class="QPushButton" name="pushButton_resetTestCase">
+    <widget class="QPushButton" name="pushButton_reset">
      <property name="focusPolicy">
       <enum>Qt::TabFocus</enum>
      </property>

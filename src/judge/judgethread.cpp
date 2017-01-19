@@ -43,7 +43,7 @@ void JudgeThread::judgeProblem(Player* player, int column)
 
     emit labelTextChanged(tmp, "~", "正在测评...", Global::StyleRunning);
 
-    Problem* prob = Global::g_contest.problems[column - 2];
+    const Problem* prob = Global::g_contest.problems[column - 2];
     BaseJudger* judger;
     if (prob->Type() == Global::AnswersOnly)
         judger = new AnswerOnlyJudger(Global::g_contest.path, player, prob);

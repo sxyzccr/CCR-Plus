@@ -6,9 +6,9 @@
 #include "configure/testcase/addtestcasedialog.h"
 #include "ui_addtestcasedialog.h"
 
-AddTestCaseDialog::AddTestCaseDialog(Problem* problem, TestCase* point, TestCaseType type, int focusRow, QWidget* parent, int score) :
+AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, const TestCase* point, TestCaseType type, int focusRow, QWidget* parent, int score) :
     QDialog(parent),
-    ui(new Ui::AddTestCaseDialog), problem(problem), point(point), score(score), type(type)
+    ui(new Ui::AddTestCaseDialog), problem(problem), point(nullptr), score(score), type(type)
 {
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
@@ -96,6 +96,7 @@ AddTestCaseDialog::AddTestCaseDialog(Problem* problem, TestCase* point, TestCase
 
 AddTestCaseDialog::~AddTestCaseDialog()
 {
+    if (point) delete point;
     delete ui;
 }
 
@@ -128,34 +129,28 @@ void AddTestCaseDialog::accept()
         return;
     }
 
-    point->SetInFile(ui->lineEdit_inFile->text());
-    point->SetOutFile(ui->lineEdit_outFile->text());
-
     if (problem->Type() == Global::Traditional)
-    {
-        point->SetTimeLimit(ui->spinBox_timeLim->value());
-        point->SetMemoryLimit(ui->spinBox_memLim->value());
-    }
+        point = new TestCase(ui->spinBox_timeLim->value(), ui->spinBox_memLim->value(), ui->lineEdit_inFile->text(), ui->lineEdit_outFile->text());
     else if (problem->Type() == Global::AnswersOnly)
-        point->SetSubmitFile(ui->lineEdit_submitFile->text());
+        point = new TestCase(0, 0, ui->lineEdit_inFile->text(), ui->lineEdit_outFile->text(), ui->lineEdit_submitFile->text());
 
     QDialog::accept();
 }
 
 
 
-void AddTestCaseDialog::on_lineEdit_inFile_textChanged(const QString& arg1)
+void AddTestCaseDialog::on_lineEdit_inFile_textChanged(const QString& text)
 {
     QString dir = Global::g_contest.data_path + problem->Name() + "/";
-    if (arg1.isEmpty())
+    if (text.isEmpty())
     {
         ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
         ui->lineEdit_inFile->setToolTip(QString("输入文件不能为空。"));
     }
-    else if (!QFile::exists(dir + arg1))
+    else if (!QFile::exists(dir + text))
     {
         ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
-        ui->lineEdit_inFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(arg1).arg(dir));
+        ui->lineEdit_inFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(text).arg(dir));
     }
     else
     {
@@ -164,18 +159,18 @@ void AddTestCaseDialog::on_lineEdit_inFile_textChanged(const QString& arg1)
     }
 }
 
-void AddTestCaseDialog::on_lineEdit_outFile_textChanged(const QString& arg1)
+void AddTestCaseDialog::on_lineEdit_outFile_textChanged(const QString& text)
 {
     QString dir = Global::g_contest.data_path + problem->Name() + "/";
-    if (arg1.isEmpty())
+    if (text.isEmpty())
     {
         ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
         ui->lineEdit_outFile->setToolTip(QString("输出文件不能为空。"));
     }
-    else if (!QFile::exists(dir + arg1))
+    else if (!QFile::exists(dir + text))
     {
         ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
-        ui->lineEdit_outFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(arg1).arg(dir));
+        ui->lineEdit_outFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(text).arg(dir));
     }
     else
     {

@@ -30,7 +30,7 @@ TestCaseTable::TestCaseTable(QWidget* parent) :
     });
 }
 
-void TestCaseTable::LoadTestCases(Problem* problem)
+void TestCaseTable::LoadTestCases(const Problem* problem)
 {
     score_items.clear();
 
@@ -66,9 +66,9 @@ void TestCaseTable::LoadTestCases(Problem* problem)
     int rows = 0;
     for (int i = 0; i < problem->SubtaskCount(); i++)
     {
-        Subtask* sub = problem->SubtaskAt(i);
+        const Subtask* sub = problem->SubtaskAt(i);
         int len = 0;
-        for (TestCase* point : *sub)
+        for (auto point : *sub)
         {
             this->insertRow(rows);
 
@@ -126,24 +126,33 @@ TestCaseTable::SelectionType TestCaseTable::GetSelectionType(int* _top, int* _bo
     return OtherSelection;
 }
 
+TestCase TestCaseTable::TestCaseAt(int row)
+{
+    if (problem->Type() == Global::Traditional)
+        return TestCase(this->item(row, 3)->text().toDouble(), this->item(row, 4)->text().toDouble(),
+                        this->item(row, 1)->text(), this->item(row, 2)->text());
+    else if (problem->Type() == Global::AnswersOnly)
+        return TestCase(0, 0, this->item(row, 1)->text(), this->item(row, 2)->text(), this->item(row, 3)->text());
+}
+
 void TestCaseTable::ChangeScore(int row, int score)
 {
     sum_score += score - this->ScoreItemAt(row)->text().toInt();
     this->ScoreItemAt(row)->setText(QString::number(score));
 }
 
-void TestCaseTable::ChangeTestCase(int row, TestCase* point)
+void TestCaseTable::ChangeTestCase(int row, const TestCase& point)
 {
-    this->item(row, 1)->setText(point->InFile());
-    this->item(row, 2)->setText(point->OutFile());
+    this->item(row, 1)->setText(point.InFile());
+    this->item(row, 2)->setText(point.OutFile());
 
     if (problem->Type() == Global::Traditional)
     {
-        this->item(row, 3)->setText(QString::number(point->TimeLimit()));
-        this->item(row, 4)->setText(QString::number(point->MemoryLimit()));
+        this->item(row, 3)->setText(QString::number(point.TimeLimit()));
+        this->item(row, 4)->setText(QString::number(point.MemoryLimit()));
     }
     else if (problem->Type() == Global::AnswersOnly)
-        this->item(row, 3)->setText(point->SubmitFile());
+        this->item(row, 3)->setText(point.SubmitFile());
 }
 
 void TestCaseTable::swapTestCase(int row1, int row2)
@@ -181,7 +190,7 @@ void TestCaseTable::swapPackage(int topRow1, int topRow2)
 
 
 
-void TestCaseTable::AddTestCase(TestCase* point, int score)
+void TestCaseTable::AddTestCase(const TestCase& point, int score)
 {
     int top, bottom, row;
     SelectionType type = GetSelectionType(&top, &bottom);
@@ -190,16 +199,16 @@ void TestCaseTable::AddTestCase(TestCase* point, int score)
     if (type == NoSelection) bottom = -1;
     this->insertRow(row = bottom + 1);
 
-    addItem(row, 1, point->InFile());
-    addItem(row, 2, point->OutFile());
+    addItem(row, 1, point.InFile());
+    addItem(row, 2, point.OutFile());
 
     if (problem->Type() == Global::Traditional)
     {
-        addItem(row, 3, QString::number(point->TimeLimit()));
-        addItem(row, 4, QString::number(point->MemoryLimit()));
+        addItem(row, 3, QString::number(point.TimeLimit()));
+        addItem(row, 4, QString::number(point.MemoryLimit()));
     }
     else if (problem->Type() == Global::AnswersOnly)
-        addItem(row, 3, point->SubmitFile());
+        addItem(row, 3, point.SubmitFile());
 
     addItem(row, 0, QString::number(score));
     score_items.insert(score_items.begin() + row, this->item(row, 0));
@@ -208,7 +217,7 @@ void TestCaseTable::AddTestCase(TestCase* point, int score)
     if (!this->hasFocus()) this->setFocus();
 }
 
-void TestCaseTable::AddSubTestCase(TestCase* point)
+void TestCaseTable::AddSubTestCase(const TestCase& point)
 {
     int top, bottom, row;
     SelectionType type = GetSelectionType(&top, &bottom);
@@ -217,16 +226,16 @@ void TestCaseTable::AddSubTestCase(TestCase* point)
     int span = this->rowSpan(ScoreItemTopRow(top), 0) + 1;
     this->insertRow(row = bottom + 1);
 
-    addItem(row, 1, point->InFile());
-    addItem(row, 2, point->OutFile());
+    addItem(row, 1, point.InFile());
+    addItem(row, 2, point.OutFile());
 
     if (problem->Type() == Global::Traditional)
     {
-        addItem(row, 3, QString::number(point->TimeLimit()));
-        addItem(row, 4, QString::number(point->MemoryLimit()));
+        addItem(row, 3, QString::number(point.TimeLimit()));
+        addItem(row, 4, QString::number(point.MemoryLimit()));
     }
     else if (problem->Type() == Global::AnswersOnly)
-        addItem(row, 3, point->SubmitFile());
+        addItem(row, 3, point.SubmitFile());
 
     addItem(row, 0, "");
     this->setSpan(ScoreItemTopRow(top), 0, span, 1);
@@ -234,7 +243,7 @@ void TestCaseTable::AddSubTestCase(TestCase* point)
     this->selectRow(row);
 }
 
-void TestCaseTable::RemoveSelection()
+void TestCaseTable::DeleteSelection()
 {
     int top, bottom;
     SelectionType type = GetSelectionType(&top, &bottom);
@@ -369,7 +378,7 @@ void TestCaseTable::SplitSelection()
 
 void TestCaseTable::onItemSelectionChanged()
 {
-    can_add = can_add_sub = can_remove = can_up = can_down = can_merge = can_split = false;
+    can_add = can_add_sub = can_delete = can_up = can_down = can_merge = can_split = false;
 
     int top, bottom;
     SelectionType type = GetSelectionType(&top, &bottom);
@@ -396,7 +405,7 @@ void TestCaseTable::onItemSelectionChanged()
     else
         this->ScoreItemAt(bottom)->setFlags(this->ScoreItemAt(bottom)->flags() | Qt::ItemIsSelectable);
 
-    can_remove = true;
+    can_delete = true;
     if (type == SelectOnePackage || type == SelectOneTestCasePackage) can_add = true;
     if (type == SelectMultiplePackage || type == SelectMultipleTestCasePackage) can_merge = true;
     if (type == SelectOnePackage || type == SelectMultiplePackage) can_split = true;

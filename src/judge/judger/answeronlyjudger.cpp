@@ -1,6 +1,6 @@
 #include "judge/judger/answeronlyjudger.h"
 
-TestCaseResult AnswerOnlyJudger::judgeTestCase(TestCase* point) const
+TestCaseResult AnswerOnlyJudger::judgeTestCase(const TestCase* point) const
 {
     QFile file(this->SrcDirectory() + point->SubmitFile());
     if (!file.exists()) return TestCaseResult(0, 0, 'U', "未提交");

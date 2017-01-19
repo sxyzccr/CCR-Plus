@@ -35,7 +35,7 @@ private:
     void judgeProblem(Player* player, int column);
 
     /// 线程启动点
-    void run() override;
+    virtual void run() override;
 
 signals:
     void judgeStoped();

@@ -108,10 +108,10 @@ private slots:
     void on_action_about_triggered();
 
 protected:
-    void closeEvent(QCloseEvent* event) override;
-    void keyPressEvent(QKeyEvent* event) override;
-    void dragEnterEvent(QDragEnterEvent* event) override;
-    void dropEvent(QDropEvent* event) override;
+    virtual void closeEvent(QCloseEvent* event) override;
+    virtual void keyPressEvent(QKeyEvent* event) override;
+    virtual void dragEnterEvent(QDragEnterEvent* event) override;
+    virtual void dropEvent(QDropEvent* event) override;
 };
 
 #endif // MAINWINDOW_H

@@ -537,7 +537,7 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
         {
             Problem* problem = Global::g_contest.problems[c - 2];
             dirByAction = Global::g_contest.src_path + player->Name() + "/" + problem->Directory() + "/";
-            Compiler* compiler = problem->GetCompiler(player->Name());
+            const Compiler* compiler = problem->GetCompiler(player->Name());
             fileByAction = !compiler ? "" : compiler->SourceFile();
 
             if (fileByAction.isEmpty())
