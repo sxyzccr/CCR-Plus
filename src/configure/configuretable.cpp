@@ -243,7 +243,7 @@ ConfigureTable::ConfigureTable(const QList<Problem*>& problems, QWidget* parent)
 
 void ConfigureTable::setColumnDataNew(int column)
 {
-    problems[column]->ConfigureNew("传统型", 1, 128, "全文比较");
+    problems[column]->ConfigureNew(Global::Traditional, 1, 128, "全文比较");
 
     SetItemText(0, column, "传统型");
     SetItemData(1, column, 1);
@@ -374,7 +374,7 @@ void ConfigureTable::onDataChanged(const QModelIndex& topLeft, const QModelIndex
                 SetItemText(2, c, "");
                 model->item(1, c)->setEditable(false);
                 model->item(2, c)->setEditable(false);
-                problems[c]->Configure("提交答案型", 0, 0, "");
+                problems[c]->Configure(Global::AnswersOnly, 0, 0, "");
             }
             else if (ItemText(r, c) == "传统型")
             {
@@ -384,18 +384,18 @@ void ConfigureTable::onDataChanged(const QModelIndex& topLeft, const QModelIndex
                 SetItemChanged(2, c);
                 model->item(1, c)->setEditable(true);
                 model->item(2, c)->setEditable(true);
-                problems[c]->Configure("传统型", 1, 128, "");
+                problems[c]->Configure(Global::Traditional, 1, 128, "");
             }
             break;
         }
         case 1: // Time Limit
-            problems[c]->Configure("", ItemData(r, c).toDouble(), -1, "");
+            problems[c]->Configure(Global::OtherProblemType, ItemData(r, c).toDouble(), -1, "");
             break;
         case 2: // Memory Limit
-            problems[c]->Configure("", -1, ItemData(r, c).toDouble(), "");
+            problems[c]->Configure(Global::OtherProblemType, -1, ItemData(r, c).toDouble(), "");
             break;
         case 3: // Checker
-            problems[c]->Configure("", -1, -1, ItemText(r, c));
+            problems[c]->Configure(Global::OtherProblemType, -1, -1, ItemText(r, c));
             break;
         case 4: // Clean
         {

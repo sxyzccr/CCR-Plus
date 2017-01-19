@@ -182,10 +182,13 @@ public:
     void ResetTestCases(double timeLim, double memLim);
 
     /// 配置试题，只修改时间限制 、内存限制、校验器等
-    void Configure(const QString& typ, double timeLim, double memLim, const QString& check);
+    void Configure(Global::ProblemType type, double timeLim, double memLim, const QString& check);
 
     /// 清空原来的配置，重新配置试题
-    void ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check);
+    void ConfigureNew(Global::ProblemType type, double timeLim, double memLim, const QString& check);
+
+    /// 转换题目类型
+    void ChangeProblemType(Global::ProblemType type);
 
     /// 根据选手目录下的源文件自动选择编译器
     const Compiler* GetCompiler(const QString& playerName) const;

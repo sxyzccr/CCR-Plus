@@ -7,8 +7,8 @@
 
 const QStringList Compiler::BUILTIN_COMPILER_CMD =
 {
-    "gcc -o %1 %1.c -lm -static",
-    "g++ -o %1 %1.cpp -lm -static",
+    "gcc -o %2 %1.c -lm -static",
+    "g++ -o %2 %1.cpp -lm -static",
     "fpc %1.pas",
 };
 
@@ -228,7 +228,24 @@ void Problem::ResetCompilers()
     if (type == Global::Traditional)
     {
         for (int i = 0; i < Compiler::BUILTIN_COMPILER_COUNT; i++)
-            compilers.append(new Compiler(Compiler::BUILTIN_COMPILER_CMD[i].arg(name), Compiler::BUILTIN_COMPILER_FILE[i].arg(name)));
+        {
+            Compiler* compiler;
+            if (Compiler::BUILTIN_COMPILER_FILE[i] == "%1.pas") // Pascal 特判
+            {
+                if (RemoveFileExtension(exe) == name)
+                    compiler = new Compiler(Compiler::BUILTIN_COMPILER_CMD[i].arg(name),
+                                            Compiler::BUILTIN_COMPILER_FILE[i].arg(name));
+                else
+                    compiler = new Compiler(QString("fpc %1.pas -o'%2'").arg(name).arg(RemoveFileExtension(exe)),
+                                            Compiler::BUILTIN_COMPILER_FILE[i].arg(name));
+            }
+            else
+            {
+                compiler = new Compiler(Compiler::BUILTIN_COMPILER_CMD[i].arg(name).arg(RemoveFileExtension(exe)),
+                                        Compiler::BUILTIN_COMPILER_FILE[i].arg(name));
+            }
+            compilers.append(compiler);
+        }
     }
 }
 
@@ -238,7 +255,7 @@ void Problem::ResetTestCases(double timeLim, double memLim)
 
     QList<QPair<QString, QString>> list = getInAndOutFile();
 
-    int num = list.size(), sum = score;
+    int num = list.size(), sum = score = 100;
     QList<int> scores;
     for (int i = 0; i < num; i++) scores.append(score / num), sum -= scores[i];
     for (int i = num - 1; sum && i >= 0; i--) scores[i]++, sum--;
@@ -254,40 +271,84 @@ void Problem::ResetTestCases(double timeLim, double memLim)
     }
 }
 
-void Problem::Configure(const QString& typ, double timeLim, double memLim, const QString& check)
+void Problem::Configure(Global::ProblemType type, double timeLim, double memLim, const QString& check)
 {
-    if (typ == "传统型")
+    if (type == Global::Traditional)
     {
-        type = Global::Traditional;
+        this->type = type;
         if (!compilers.size()) ResetCompilers();
     }
-    else if (typ == "提交答案型")
+    else if (type == Global::AnswersOnly)
     {
-        type = Global::AnswersOnly;
+        this->type = type;
         ClearCompilers();
     }
 
-    if (!check.isEmpty()) checker = FromBuiltinCheckerName(check);
     exe = AddFileExtension(exe);
+    if (!check.isEmpty()) checker = FromBuiltinCheckerName(check);
 
     for (auto i : cases)
     {
         if (timeLim >= 0) i->SetTimeLimit(timeLim);
         if (memLim >= 0) i->SetMemoryLimit(memLim);
-        if (typ == "提交答案型" && i->SubmitFile().isEmpty()) i->SetSubmitFile(i->OutFile());
+        if (type == Global::AnswersOnly && i->SubmitFile().isEmpty()) i->SetSubmitFile(i->OutFile());
     }
 }
 
-void Problem::ConfigureNew(const QString& typ, double timeLim, double memLim, const QString& check)
+void Problem::ConfigureNew(Global::ProblemType type, double timeLim, double memLim, const QString& check)
 {
-    if (typ == "传统型") type = Global::Traditional;
-    else if (typ == "提交答案型") type = Global::AnswersOnly;
+    if (type == Global::Traditional || type == Global::AnswersOnly) this->type = type;
 
-    if (!check.isEmpty()) checker = FromBuiltinCheckerName(check);
+    dir = name;
     exe = AddFileExtension(exe);
+    in_file = name + ".in";
+    out_file = name + ".out";
+    code_len_lim = 100;
+    checker_time_lim = 10;
+    if (!check.isEmpty()) checker = FromBuiltinCheckerName(check);
 
     ResetCompilers();
     ResetTestCases(timeLim, memLim);
+}
+
+void Problem::ChangeProblemType(Global::ProblemType type)
+{
+    code_len_lim = 100;
+
+    switch (type)
+    {
+    case Global::Traditional:
+        this->type = type;
+
+        exe = AddFileExtension(name);
+        in_file = name + ".in";
+        out_file = name + ".out";
+
+        ResetCompilers();
+        for (auto point : cases)
+        {
+            point->SetTimeLimit(1);
+            point->SetMemoryLimit(128);
+            point->SetSubmitFile("");
+        }
+        break;
+
+    case Global::AnswersOnly:
+        this->type = type;
+
+        ClearCompilers();
+
+        for (auto point : cases)
+        {
+            point->SetTimeLimit(0);
+            point->SetMemoryLimit(0);
+            point->SetSubmitFile(point->OutFile());
+        }
+        break;
+
+    default:
+        break;
+    }
 }
 
 const Compiler* Problem::GetCompiler(const QString& playerName) const

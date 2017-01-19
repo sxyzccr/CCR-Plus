@@ -30,6 +30,11 @@ void TestCaseTabWidget::ShowProblemConfiguration(Problem* problem)
     ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
 }
 
+void TestCaseTabWidget::ChangeProblemType(Global::ProblemType /*type*/)
+{
+    ui->tableWidget->LoadTestCases(current_problem);
+}
+
 void TestCaseTabWidget::Reset()
 {
     on_pushButton_reset_clicked();

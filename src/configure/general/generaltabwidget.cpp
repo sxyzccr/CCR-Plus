@@ -39,9 +39,23 @@ void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
     ui->lineEdit_dir->setText(problem->Directory());
     ui->spinBox_codeLim->setValue(problem->CodeLengthLimit());
 
-    ui->lineEdit_exe->setText(Problem::RemoveFileExtension(problem->ExecutableFile()));
-    ui->lineEdit_inFile->setText(problem->InFile());
-    ui->lineEdit_outFile->setText(problem->OutFile());
+    if (problem->Type() == Global::Traditional)
+    {
+        ui->lineEdit_exe->setText(Problem::RemoveFileExtension(problem->ExecutableFile()));
+        ui->lineEdit_inFile->setText(problem->InFile());
+        ui->lineEdit_outFile->setText(problem->OutFile());
+        ui->spinBox_codeLim->setEnabled(true);
+        ui->groupBox_run->setEnabled(true);
+    }
+    else if (problem->Type() == Global::AnswersOnly)
+    {
+        ui->lineEdit_exe->clear();
+        ui->lineEdit_inFile->clear();
+        ui->lineEdit_outFile->clear();
+        ui->spinBox_codeLim->setEnabled(false);
+        ui->groupBox_run->setEnabled(false);
+    }
+
 
     ui->comboBox_custom->clear();
     ui->comboBox_builtin->setCurrentIndex(0);
@@ -92,6 +106,28 @@ void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
     load_finished = true;
 }
 
+void GeneralTabWidget::ChangeProblemType(Global::ProblemType type)
+{
+    ui->spinBox_codeLim->setValue(current_problem->CodeLengthLimit());
+
+    if (type == Global::Traditional)
+    {
+        ui->lineEdit_exe->setText(Problem::RemoveFileExtension(current_problem->ExecutableFile()));
+        ui->lineEdit_inFile->setText(current_problem->InFile());
+        ui->lineEdit_outFile->setText(current_problem->OutFile());
+        ui->spinBox_codeLim->setEnabled(true);
+        ui->groupBox_run->setEnabled(true);
+    }
+    else if (type == Global::AnswersOnly)
+    {
+        ui->lineEdit_exe->clear();
+        ui->lineEdit_inFile->clear();
+        ui->lineEdit_outFile->clear();
+        ui->spinBox_codeLim->setEnabled(false);
+        ui->groupBox_run->setEnabled(false);
+    }
+}
+
 void GeneralTabWidget::Reset()
 {
     on_pushButton_resetSubmit_clicked();
@@ -129,9 +165,18 @@ void GeneralTabWidget::on_pushButton_resetSubmit_clicked()
 
 void GeneralTabWidget::on_pushButton_resetRun_clicked()
 {
-    ui->lineEdit_exe->setText(current_problem->Name());
-    ui->lineEdit_inFile->setText(current_problem->Name() + ".in");
-    ui->lineEdit_outFile->setText(current_problem->Name() + ".out");
+    if (current_problem->Type() == Global::Traditional)
+    {
+        ui->lineEdit_exe->setText(current_problem->Name());
+        ui->lineEdit_inFile->setText(current_problem->Name() + ".in");
+        ui->lineEdit_outFile->setText(current_problem->Name() + ".out");
+    }
+    else if (current_problem->Type() == Global::AnswersOnly)
+    {
+        ui->lineEdit_exe->clear();
+        ui->lineEdit_inFile->clear();
+        ui->lineEdit_outFile->clear();
+    }
 }
 
 void GeneralTabWidget::on_pushButton_resetChecker_clicked()

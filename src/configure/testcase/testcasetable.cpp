@@ -133,6 +133,8 @@ TestCase TestCaseTable::TestCaseAt(int row)
                         this->item(row, 1)->text(), this->item(row, 2)->text());
     else if (problem->Type() == Global::AnswersOnly)
         return TestCase(0, 0, this->item(row, 1)->text(), this->item(row, 2)->text(), this->item(row, 3)->text());
+    else
+        return TestCase(0, 0, "", "");
 }
 
 void TestCaseTable::ChangeScore(int row, int score)

@@ -17,6 +17,8 @@ public:
 
     /// 载入 problem，显示具体配置
     virtual void ShowProblemConfiguration(Problem* problem) override;
+    /// 转换题目类型
+    virtual void ChangeProblemType(Global::ProblemType type) override;
     /// 重置为默认
     virtual void Reset() override;
 

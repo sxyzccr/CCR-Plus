@@ -33,6 +33,14 @@ void CompilerTabWidget::ShowProblemConfiguration(Problem* problem)
 
     ui->tableWidget->clearContents();
     ui->tableWidget->setRowCount(0);
+
+    if (problem->Type() == Global::AnswersOnly)
+    {
+        this->setEnabled(false);
+        return;
+    }
+
+    this->setEnabled(true);
     for (int i = 0; i < problem->CompilerCount(); i++)
     {
         Compiler* compiler = problem->CompilerAt(i);
@@ -59,6 +67,11 @@ void CompilerTabWidget::ShowProblemConfiguration(Problem* problem)
         item = new QTableWidgetItem(compiler->Cmd());
         ui->tableWidget->setItem(i, 1, item);
     }
+}
+
+void CompilerTabWidget::ChangeProblemType(Global::ProblemType /*type*/)
+{
+    ShowProblemConfiguration(current_problem);
 }
 
 void CompilerTabWidget::Reset()
