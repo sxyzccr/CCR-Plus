@@ -35,6 +35,7 @@ protected:
 private slots:
     void on_lineEdit_inFile_textChanged(const QString& text);
     void on_lineEdit_outFile_textChanged(const QString& text);
+    void on_lineEdit_submitFile_textChanged(const QString& text);
     void on_pushButton_browseInFile_clicked();
     void on_pushButton_browseOutFile_clicked();
 

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QListWidget>
+#include <QAbstractButton>
 
 #include "common/problem.h"
 
@@ -21,6 +22,7 @@ public:
     QList<Problem*> Problems() const { return problems; }
 
 public slots:
+    bool apply();
     virtual void accept() override;
 
 private:
@@ -32,10 +34,13 @@ private:
     void loadFromProblem(Problem* problem);
 
 private slots:
-    void onListWidgetCurrentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
-
-    void on_pushButton_reset_clicked();
+    void on_listWidget_currentRowChanged(int currentRow);
     void on_comboBox_type_currentIndexChanged(int index);
+    void on_pushButton_reset_clicked();
+    void on_buttonBox_clicked(QAbstractButton* button);
+
+signals:
+    void applied();
 };
 
 #endif // ADVANCEDCONFIGUREDIALOG_H

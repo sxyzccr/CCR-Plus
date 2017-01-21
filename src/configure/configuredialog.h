@@ -26,7 +26,7 @@ private:
     QList<Problem*> problems;
 
 private slots:
-    void on_pushButton_clicked();
+    void on_pushButton_adv_clicked();
 };
 
 #endif // CONFIGUREDIALOG_H

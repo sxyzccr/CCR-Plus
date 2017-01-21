@@ -87,11 +87,15 @@ class Problem
 {
 public:
     explicit Problem(const QString& name = "");
-    explicit Problem(Problem* problem);
+    Problem(const Problem& problem);
+    Problem& operator =(const Problem& problem);
     ~Problem() { Clear(); }
 
     /// 内置校验器列表，格式： <file, <name, toolTip>>
     static const QMap<QString, QPair<QString, QString>> BUILTIN_CHECKER_MAP;
+
+    /// 检查文件名是否合法
+    static QString CheckFileNameValid(const QString& name);
 
     /// 增加扩展名
     static QString AddFileExtension(QString file)
@@ -169,6 +173,9 @@ public:
     void ClearTestCases();
     void Clear();
 
+    /// 是否有效
+    bool isValid();
+
     /// 读入配置文件
     void ReadConfiguration();
 
@@ -210,6 +217,8 @@ public:
     }
 
 private:
+    static const QRegExp name_reg_exp;
+
     Global::ProblemType type;
     const QString name;
     QString dir, exe, checker, in_file, out_file;

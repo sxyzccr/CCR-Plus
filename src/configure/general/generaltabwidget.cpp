@@ -56,7 +56,6 @@ void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
         ui->groupBox_run->setEnabled(false);
     }
 
-
     ui->comboBox_custom->clear();
     ui->comboBox_builtin->setCurrentIndex(0);
     QStandardItemModel* model = new QStandardItemModel(ui->comboBox_custom);
@@ -135,6 +134,15 @@ void GeneralTabWidget::Reset()
     on_pushButton_resetChecker_clicked();
 }
 
+void GeneralTabWidget::FocusErrorLine()
+{
+    if (!ui->lineEdit_dir->styleSheet().isEmpty()) ui->lineEdit_dir->setFocus();
+    else if (!ui->lineEdit_exe->styleSheet().isEmpty()) ui->lineEdit_exe->setFocus();
+    else if (!ui->lineEdit_inFile->styleSheet().isEmpty()) ui->lineEdit_inFile->setFocus();
+    else if (!ui->lineEdit_outFile->styleSheet().isEmpty()) ui->lineEdit_outFile->setFocus();
+    else if (!ui->radioButton_custom->styleSheet().isEmpty()) ui->radioButton_custom->setFocus();
+}
+
 
 
 void GeneralTabWidget::on_radioButton_builtin_clicked()
@@ -145,6 +153,10 @@ void GeneralTabWidget::on_radioButton_builtin_clicked()
     ui->comboBox_custom->setEnabled(false);
     ui->comboBox_builtin->setCurrentIndex(0);
     on_comboBox_builtin_currentIndexChanged(ui->comboBox_builtin->currentText());
+
+    ui->radioButton_custom->setStyleSheet("");
+    ui->radioButton_custom->setToolTip("");
+    ui->comboBox_custom->setToolTip("");
 }
 
 void GeneralTabWidget::on_radioButton_custom_clicked()
@@ -155,6 +167,19 @@ void GeneralTabWidget::on_radioButton_custom_clicked()
     ui->comboBox_custom->setEnabled(true);
     ui->comboBox_custom->setCurrentIndex(0);
     on_comboBox_custom_currentIndexChanged(ui->comboBox_custom->currentText());
+
+    if (ui->comboBox_custom->currentText().isEmpty())
+    {
+        ui->radioButton_custom->setStyleSheet("QRadioButton{color:red;}");
+        ui->radioButton_custom->setToolTip("找不到自定义校验器。");
+        ui->comboBox_custom->setToolTip("找不到自定义校验器。");
+    }
+    else
+    {
+        ui->radioButton_custom->setStyleSheet("");
+        ui->radioButton_custom->setToolTip("");
+        ui->comboBox_custom->setToolTip("");
+    }
 }
 
 void GeneralTabWidget::on_pushButton_resetSubmit_clicked()
@@ -185,24 +210,78 @@ void GeneralTabWidget::on_pushButton_resetChecker_clicked()
     ui->spinBox_checkerTimeLim->setValue(10);
 }
 
+void GeneralTabWidget::on_lineEdit_dir_textChanged(const QString& text)
+{
+    QString msg = Problem::CheckFileNameValid(text);
+    if (msg.isEmpty())
+    {
+        ui->lineEdit_dir->setStyleSheet("");
+        ui->lineEdit_dir->setToolTip("");
+    }
+    else
+    {
+        ui->lineEdit_dir->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_dir->setToolTip(msg.arg("提交目录"));
+    }
+    if (load_finished) current_problem->SetDirectory(text.trimmed());
+}
+
 void GeneralTabWidget::on_spinBox_codeLim_valueChanged(double val)
 {
     if (load_finished) current_problem->SetCodeLengthLimit(val);
 }
 
-void GeneralTabWidget::on_lineEdit_exe_textChanged(const QString &text)
+void GeneralTabWidget::on_lineEdit_exe_textChanged(const QString& text)
 {
+    QString msg = Problem::CheckFileNameValid(text);
+    if (text.contains(' ') || text.contains('\t'))
+    {
+        ui->lineEdit_exe->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_exe->setToolTip("可执行文件名不能包含空白字符。");
+    }
+    else if (msg.isEmpty())
+    {
+        ui->lineEdit_exe->setStyleSheet("");
+        ui->lineEdit_exe->setToolTip("");
+    }
+    else
+    {
+        ui->lineEdit_exe->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_exe->setToolTip(msg.arg("可执行文件名"));
+    }
     if (load_finished) current_problem->SetExecutableFile(text);
 }
 
-void GeneralTabWidget::on_lineEdit_inFile_textChanged(const QString &text)
+void GeneralTabWidget::on_lineEdit_inFile_textChanged(const QString& text)
 {
-    if (load_finished) current_problem->SetInFile(text);
+    QString msg = Problem::CheckFileNameValid(text);
+    if (msg.isEmpty())
+    {
+        ui->lineEdit_inFile->setStyleSheet("");
+        ui->lineEdit_inFile->setToolTip("");
+    }
+    else
+    {
+        ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_inFile->setToolTip(msg.arg("输入文件名"));
+    }
+    if (load_finished) current_problem->SetInFile(text.trimmed());
 }
 
-void GeneralTabWidget::on_lineEdit_outFile_textChanged(const QString &text)
+void GeneralTabWidget::on_lineEdit_outFile_textChanged(const QString& text)
 {
-    if (load_finished) current_problem->SetOutFile(text);
+    QString msg = Problem::CheckFileNameValid(text);
+    if (msg.isEmpty())
+    {
+        ui->lineEdit_outFile->setStyleSheet("");
+        ui->lineEdit_outFile->setToolTip("");
+    }
+    else
+    {
+        ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_outFile->setToolTip(msg.arg("输出文件名"));
+    }
+    if (load_finished) current_problem->SetOutFile(text.trimmed());
 }
 
 void GeneralTabWidget::on_comboBox_builtin_currentIndexChanged(const QString& text)
@@ -213,11 +292,6 @@ void GeneralTabWidget::on_comboBox_builtin_currentIndexChanged(const QString& te
 void GeneralTabWidget::on_comboBox_custom_currentIndexChanged(const QString& text)
 {
     if (load_finished) current_problem->SetChecker(text);
-}
-
-void GeneralTabWidget::on_lineEdit_dir_textChanged(const QString &text)
-{
-    if (load_finished) current_problem->SetDirectory(text);
 }
 
 void GeneralTabWidget::on_spinBox_checkerTimeLim_valueChanged(int val)

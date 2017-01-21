@@ -19,7 +19,7 @@ ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
         if (!prob || !prob->TestCaseCount())
             prob = new Problem(i);
         else
-            prob = new Problem(prob);
+            prob = new Problem(*prob);
         problems.append(prob);
     }
 
@@ -67,12 +67,12 @@ void ConfigureDialog::accept()
 
 
 
-void ConfigureDialog::on_pushButton_clicked()
+void ConfigureDialog::on_pushButton_adv_clicked()
 {
+    this->hide();
     AdvancedConfigureDialog dialog(problems, this);
     if (dialog.exec() == QDialog::Accepted)
-    {
-        for (auto i : problems) delete i;
-        problems = dialog.Problems();
-    }
+        QDialog::accept();
+    else
+        QDialog::reject();
 }

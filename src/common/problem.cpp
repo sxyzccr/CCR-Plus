@@ -1,3 +1,4 @@
+#include <cassert>
 #include <QCollator>
 #include <QTextStream>
 #include <QDomDocument>
@@ -26,6 +27,15 @@ const QMap<QString, QPair<QString, QString>> Problem::BUILTIN_CHECKER_MAP =
     {"fulltext", qMakePair(QString("全文比较"), QString("全文比较(过滤行末空格及文末回车)"))}
 };
 
+const QRegExp Problem::name_reg_exp("[\\\\/:*?\"<>|]");
+
+QString Problem::CheckFileNameValid(const QString &name)
+{
+    if (name.trimmed().isEmpty()) return "%1不能为空。";
+    else if (name.contains(name_reg_exp)) return "%1不能包含下列非法字符：\\/:*?\"<>|";
+    else return "";
+}
+
 QString Problem::FromBuiltinCheckerName(const QString& name)
 {
     for (auto i = BUILTIN_CHECKER_MAP.begin(); i != BUILTIN_CHECKER_MAP.end(); i++)
@@ -44,21 +54,44 @@ Problem::Problem(const QString& name) :
 
 }
 
-Problem::Problem(Problem *problem) :
-    type(problem->type),
-    name(problem->name), dir(problem->dir), exe(problem->exe), checker(problem->checker),
-    in_file(problem->in_file), out_file(problem->out_file),
-    score(problem->score), checker_time_lim(problem->checker_time_lim), code_len_lim(problem->code_len_lim)
+Problem::Problem(const Problem& problem) :
+    type(problem.type),
+    name(problem.name), dir(problem.dir), exe(problem.exe), checker(problem.checker),
+    in_file(problem.in_file), out_file(problem.out_file),
+    score(problem.score), checker_time_lim(problem.checker_time_lim), code_len_lim(problem.code_len_lim)
 {
-    for (auto i : problem->cases) cases.append(new TestCase(*i));
-    for (auto i : problem->compilers) compilers.append(new Compiler(*i));
+    for (auto i : problem.cases) cases.append(new TestCase(*i));
+    for (auto i : problem.compilers) compilers.append(new Compiler(*i));
     int t = 0;
-    for (auto i : problem->subtasks)
+    for (auto i : problem.subtasks)
     {
         Subtask* sub = new Subtask(i->Score());
         for (int j = 0; j < i->Size(); j++) sub->Append(cases[t++]);
         subtasks.append(sub);
     }
+}
+
+Problem& Problem::operator =(const Problem& problem)
+{
+    if (&problem == this) return *this;
+    assert(name == problem.name);
+
+    Clear();
+    type = problem.type;
+    dir = problem.dir, exe = problem.exe, checker = problem.checker;
+    in_file = problem.in_file, out_file = problem.out_file;
+    score = problem.score, checker_time_lim = problem.checker_time_lim, code_len_lim = problem.code_len_lim;
+
+    for (auto i : problem.cases) cases.append(new TestCase(*i));
+    for (auto i : problem.compilers) compilers.append(new Compiler(*i));
+    int t = 0;
+    for (auto i : problem.subtasks)
+    {
+        Subtask* sub = new Subtask(i->Score());
+        for (int j = 0; j < i->Size(); j++) sub->Append(cases[t++]);
+        subtasks.append(sub);
+    }
+    return *this;
 }
 
 void Problem::ClearCompilers()
@@ -79,6 +112,15 @@ void Problem::Clear()
 {
     ClearCompilers();
     ClearTestCases();
+}
+
+bool Problem::isValid()
+{
+    if (!CheckFileNameValid(dir).isEmpty() || checker.isEmpty()) return false;
+    if (type == Global::AnswersOnly) return true;
+
+    return CheckFileNameValid(exe).isEmpty() && !exe.contains(' ') && !exe.contains('\t') &&
+           CheckFileNameValid(in_file).isEmpty() && CheckFileNameValid(out_file).isEmpty();
 }
 
 void Problem::ReadConfiguration()

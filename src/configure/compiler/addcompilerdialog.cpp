@@ -39,12 +39,21 @@ void AddCompilerDialog::accept()
     time_lim = ui->spinBox_timeLim->value();
     compiler = new Compiler(cmd, file, time_lim);
 
-    if (file.isEmpty())
+    if (!ui->lineEdit_file->styleSheet().isEmpty())
     {
-        ui->label_error->setText("源程序文件名为空。");
+        ui->label_error->setText("无效的源程序文件名。");
         ui->lineEdit_file->setFocus();
         return;
     }
+    if (ui->lineEdit_cmd->text().isEmpty())
+    {
+        ui->label_error->setText("编译命令为空。");
+        ui->lineEdit_cmd->setFocus();
+        return;
+    }
+    else
+        ui->label_error->setText("");
+
     switch (ui->comboBox_type->currentIndex())
     {
     case 0: // C
@@ -200,13 +209,25 @@ void AddCompilerDialog::on_comboBox_type_currentIndexChanged(int index)
     }
 }
 
-void AddCompilerDialog::on_lineEdit_file_textChanged(const QString& /*text*/)
+void AddCompilerDialog::on_lineEdit_file_textChanged(const QString& text)
 {
-    onChangeCmd();
+    QString msg = Problem::CheckFileNameValid(text);
+    if (!msg.isEmpty())
+    {
+        ui->lineEdit_file->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_file->setToolTip(msg.arg("源程序文件名"));
+        return;
+    }
+
+    ui->lineEdit_file->setStyleSheet("");
+    ui->lineEdit_file->setToolTip("");
     ui->label_error->setText("");
+
+    onChangeCmd();
 }
 
-void AddCompilerDialog::on_lineEdit_args_textChanged(const QString& /*text  */)
+void AddCompilerDialog::on_lineEdit_args_textChanged(const QString& /*text*/)
 {
+    ui->label_error->setText("");
     onChangeCmd();
 }

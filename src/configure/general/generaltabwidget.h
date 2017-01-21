@@ -22,6 +22,9 @@ public:
     /// 重置为默认
     virtual void Reset() override;
 
+    /// 焦点移到错误的 lineEdit
+    void FocusErrorLine();
+
 private:
     Ui::GeneralTabWidget* ui;
     bool load_finished;

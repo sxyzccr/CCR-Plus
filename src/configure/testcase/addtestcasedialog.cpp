@@ -91,7 +91,7 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, const TestCase* poi
     else if (focusRow == 4)
         ui->spinBox_memLim->setFocus();
 
-    this->setFixedHeight((line + 1) * 26 + 12 + (line + 1) * 6 + 18);
+    this->setFixedHeight((line + 1) * 26 + 18 + (line + 1) * 6 + 18);
 }
 
 AddTestCaseDialog::~AddTestCaseDialog()
@@ -122,9 +122,9 @@ void AddTestCaseDialog::accept()
         ui->lineEdit_outFile->setFocus();
         return;
     }
-    if (problem->Type() == Global::AnswersOnly && ui->lineEdit_submitFile->text().isEmpty())
+    if (!ui->lineEdit_submitFile->styleSheet().isEmpty())
     {
-        ui->label_error->setText("提交文件不能为空。");
+        ui->label_error->setText("无效的提交文件。");
         ui->lineEdit_submitFile->setFocus();
         return;
     }
@@ -142,41 +142,61 @@ void AddTestCaseDialog::accept()
 void AddTestCaseDialog::on_lineEdit_inFile_textChanged(const QString& text)
 {
     QString dir = Global::g_contest.data_path + problem->Name() + "/";
-    if (text.isEmpty())
-    {
-        ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
-        ui->lineEdit_inFile->setToolTip(QString("输入文件不能为空。"));
-    }
-    else if (!QFile::exists(dir + text))
+    QString msg = Problem::CheckFileNameValid(text);
+    if (!QFile::exists(dir + text))
     {
         ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
         ui->lineEdit_inFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(text).arg(dir));
+    }
+    else if (!msg.isEmpty())
+    {
+        ui->lineEdit_inFile->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_inFile->setToolTip(msg.arg("输入文件"));
     }
     else
     {
         ui->lineEdit_inFile->setStyleSheet("");
         ui->lineEdit_inFile->setToolTip(QString("位置: %1").arg(dir));
     }
+    ui->label_error->setText("");
 }
 
 void AddTestCaseDialog::on_lineEdit_outFile_textChanged(const QString& text)
 {
     QString dir = Global::g_contest.data_path + problem->Name() + "/";
-    if (text.isEmpty())
-    {
-        ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
-        ui->lineEdit_outFile->setToolTip(QString("输出文件不能为空。"));
-    }
-    else if (!QFile::exists(dir + text))
+    QString msg = Problem::CheckFileNameValid(text);
+    if (!QFile::exists(dir + text))
     {
         ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
         ui->lineEdit_outFile->setToolTip(QString("文件 \"%1\" 不在测试数据目录 \"%2\" 中。").arg(text).arg(dir));
+    }
+    else if (!msg.isEmpty())
+    {
+        ui->lineEdit_outFile->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_outFile->setToolTip(msg.arg("输出文件"));
     }
     else
     {
         ui->lineEdit_outFile->setStyleSheet("");
         ui->lineEdit_outFile->setToolTip(QString("位置: %1").arg(dir));
     }
+    ui->label_error->setText("");
+}
+
+void AddTestCaseDialog::on_lineEdit_submitFile_textChanged(const QString& text)
+{
+    QString msg = Problem::CheckFileNameValid(text);
+    if (!msg.isEmpty())
+    {
+        ui->lineEdit_submitFile->setStyleSheet("QLineEdit{color:red;}");
+        ui->lineEdit_submitFile->setToolTip(msg.arg("提交文件"));
+    }
+    else
+    {
+        ui->lineEdit_submitFile->setStyleSheet("");
+        ui->lineEdit_submitFile->setToolTip("");
+    }
+    ui->label_error->setText("");
 }
 
 void AddTestCaseDialog::on_pushButton_browseInFile_clicked()
