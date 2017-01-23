@@ -56,6 +56,11 @@ void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
         ui->groupBox_run->setEnabled(false);
     }
 
+
+    ui->radioButton_custom->setStyleSheet("");
+    ui->radioButton_custom->setToolTip("");
+    ui->comboBox_custom->setToolTip("");
+
     ui->comboBox_custom->clear();
     ui->comboBox_builtin->setCurrentIndex(0);
     QStandardItemModel* model = new QStandardItemModel(ui->comboBox_custom);
@@ -99,6 +104,13 @@ void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
         ui->comboBox_builtin->setEnabled(false);
         ui->comboBox_custom->setEnabled(true);
         ui->comboBox_custom->setCurrentText(problem->Checker());
+
+        if (ui->comboBox_custom->currentText().isEmpty())
+        {
+            ui->radioButton_custom->setStyleSheet("QRadioButton{color:red;}");
+            ui->radioButton_custom->setToolTip("找不到自定义校验器。");
+            ui->comboBox_custom->setToolTip("找不到自定义校验器。");
+        }
     }
     ui->spinBox_checkerTimeLim->setValue(problem->CheckerTimeLimit());
 

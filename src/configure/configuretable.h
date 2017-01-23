@@ -36,7 +36,7 @@ class ConfigureTable : public QTableView
     Q_OBJECT
 public:
     explicit ConfigureTable(const QList<Problem*>& problems, QWidget* parent = nullptr);
-    ~ConfigureTable() {}
+    ~ConfigureTable();
 
     // Getter member functions
     QString ItemText(int r, int c) const { return model->item(r, c)->text(); }
@@ -61,6 +61,7 @@ public:
         SetItemBold(r, c);
         model->setHeaderData(c, Qt::Horizontal, Global::BOLD_FONT, Qt::FontRole);
     }
+    void SetColumnUnchanged(int c);
 
 private:
     QStandardItemModel* model;

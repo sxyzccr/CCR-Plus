@@ -88,7 +88,6 @@ class Problem
 public:
     explicit Problem(const QString& name = "");
     Problem(const Problem& problem);
-    Problem& operator =(const Problem& problem);
     ~Problem() { Clear(); }
 
     /// 内置校验器列表，格式： <file, <name, toolTip>>

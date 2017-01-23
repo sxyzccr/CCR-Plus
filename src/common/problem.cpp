@@ -1,4 +1,3 @@
-#include <cassert>
 #include <QCollator>
 #include <QTextStream>
 #include <QDomDocument>
@@ -71,29 +70,6 @@ Problem::Problem(const Problem& problem) :
     }
 }
 
-Problem& Problem::operator =(const Problem& problem)
-{
-    if (&problem == this) return *this;
-    assert(name == problem.name);
-
-    Clear();
-    type = problem.type;
-    dir = problem.dir, exe = problem.exe, checker = problem.checker;
-    in_file = problem.in_file, out_file = problem.out_file;
-    score = problem.score, checker_time_lim = problem.checker_time_lim, code_len_lim = problem.code_len_lim;
-
-    for (auto i : problem.cases) cases.append(new TestCase(*i));
-    for (auto i : problem.compilers) compilers.append(new Compiler(*i));
-    int t = 0;
-    for (auto i : problem.subtasks)
-    {
-        Subtask* sub = new Subtask(i->Score());
-        for (int j = 0; j < i->Size(); j++) sub->Append(cases[t++]);
-        subtasks.append(sub);
-    }
-    return *this;
-}
-
 void Problem::ClearCompilers()
 {
     for (auto i : compilers) delete i;
@@ -116,7 +92,7 @@ void Problem::Clear()
 
 bool Problem::isValid()
 {
-    if (!CheckFileNameValid(dir).isEmpty() || checker.isEmpty()) return false;
+    if (!CheckFileNameValid(dir).isEmpty()) return false;
     if (type == Global::AnswersOnly) return true;
 
     return CheckFileNameValid(exe).isEmpty() && !exe.contains(' ') && !exe.contains('\t') &&

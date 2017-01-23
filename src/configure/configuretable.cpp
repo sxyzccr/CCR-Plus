@@ -241,6 +241,24 @@ ConfigureTable::ConfigureTable(const QList<Problem*>& problems, QWidget* parent)
     connect(model, &QAbstractItemModel::dataChanged, this, &ConfigureTable::onDataChanged);
 }
 
+ConfigureTable::~ConfigureTable()
+{
+    delete model;
+}
+
+void ConfigureTable::SetColumnUnchanged(int c)
+{
+    is_changing_data = true;
+
+    for (int i = 0; i < model->rowCount(); i++)
+        model->setData(model->index(i, c), Global::NORMAL_FONT, Qt::FontRole);
+    model->setHeaderData(c, Qt::Horizontal, Global::NORMAL_FONT, Qt::FontRole);
+
+    is_changing_data = false;
+}
+
+
+
 void ConfigureTable::setColumnDataNew(int column)
 {
     problems[column]->ConfigureNew(Global::Traditional, 1, 128, "全文比较");

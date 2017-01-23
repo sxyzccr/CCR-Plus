@@ -16,7 +16,7 @@ class AdvancedConfigureDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit AdvancedConfigureDialog(const QList<Problem*>& problems, QWidget* parent = nullptr);
+    explicit AdvancedConfigureDialog(const QList<const Problem*>& problems, QWidget* parent = nullptr);
     ~AdvancedConfigureDialog();
 
     QList<Problem*> Problems() const { return problems; }
@@ -28,7 +28,7 @@ public slots:
 private:
     Ui::AdvancedConfigureDialog* ui;
     Problem* current_problem;
-    QList<Problem*> old_problems, problems;
+    QList<Problem*> problems;
     bool load_finished;
 
     void loadFromProblem(Problem* problem);

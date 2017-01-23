@@ -49,8 +49,8 @@ enum LabelStyle
 
 const int MAX_RECENT_CONTEST = 20;
 
-const QFont FONT = QFont("微软雅黑", 9);
-const QFont BOLD_FONT = QFont("微软雅黑", 9, 75);
+const QFont NORMAL_FONT = QFont("微软雅黑", 9);
+const QFont BOLD_FONT = QFont("微软雅黑", 9, QFont::Bold);
 
 int GetLogicalRow(int visualRow);
 QColor GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int y);

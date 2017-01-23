@@ -2,6 +2,7 @@
 #define CONFIGUREDIALOG_H
 
 #include <QDialog>
+#include <QAbstractButton>
 
 #include "configure/configuretable.h"
 
@@ -18,6 +19,7 @@ public:
     ~ConfigureDialog();
 
 public slots:
+    bool apply();
     virtual void accept() override;
 
 private:
@@ -27,6 +29,10 @@ private:
 
 private slots:
     void on_pushButton_adv_clicked();
+    void on_buttonBox_clicked(QAbstractButton* button);
+
+signals:
+    void applied();
 };
 
 #endif // CONFIGUREDIALOG_H

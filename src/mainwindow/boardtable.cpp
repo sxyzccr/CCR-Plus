@@ -89,7 +89,7 @@ void BoardTable::ResizePlayerLabel()
     for (auto i : Global::g_contest.players)
     {
         QLabel* tmp = i->NameLabel();
-        len = std::max(len, QFontMetrics(Global::FONT).width(tmp->text()) + 30);
+        len = std::max(len, QFontMetrics(Global::NORMAL_FONT).width(tmp->text()) + 30);
     }
     this->horizontalHeader()->resizeSection(0, len);
 }

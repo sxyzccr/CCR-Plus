@@ -8,9 +8,9 @@
 #include "configure/testcase/testcasetabwidget.h"
 #include "ui_advancedconfiguredialog.h"
 
-AdvancedConfigureDialog::AdvancedConfigureDialog(const QList<Problem*>& problems, QWidget *parent) :
+AdvancedConfigureDialog::AdvancedConfigureDialog(const QList<const Problem*>& problems, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::AdvancedConfigureDialog), current_problem(nullptr), old_problems(problems), load_finished(false)
+    ui(new Ui::AdvancedConfigureDialog), current_problem(nullptr), load_finished(false)
 {
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);

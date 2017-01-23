@@ -37,13 +37,13 @@ ConfigureDialog::~ConfigureDialog()
     delete ui;
 }
 
-void ConfigureDialog::accept()
+bool ConfigureDialog::apply()
 {
     for (int i = 0; i < problems.size(); i++)
         for (int j = 0; j < 3; j++) if (configure_table->ItemText(j, i) == "无效")
             {
                 QMessageBox::critical(this, "保存配置失败", "存在无效的设置！");
-                return;
+                return false;
             }
 
     QStringList list;
@@ -55,14 +55,21 @@ void ConfigureDialog::accept()
             if (!problems[t]->SaveConfiguration())
             {
                 QMessageBox::critical(this, "保存配置失败", "无法写入配置文件！");
-                return;
+                return false;
             }
         }
         list.append(problems[t]->Name());
+        configure_table->SetColumnUnchanged(t);
     }
-    //qDebug()<<list;
     Global::g_contest.SaveProblemOrder(list);
-    QDialog::accept();
+
+    emit applied();
+    return true;
+}
+
+void ConfigureDialog::accept()
+{
+    if (apply()) QDialog::accept();
 }
 
 
@@ -70,9 +77,23 @@ void ConfigureDialog::accept()
 void ConfigureDialog::on_pushButton_adv_clicked()
 {
     this->hide();
-    AdvancedConfigureDialog dialog(problems, this);
+
+    QList<const Problem*> probs;
+    for (int i = 0; i < problems.size(); i++)
+    {
+        int t = configure_table->horizontalHeader()->logicalIndex(i);
+        probs.append(problems[t]);
+    }
+
+    AdvancedConfigureDialog dialog(probs, this);
+    connect(&dialog, &AdvancedConfigureDialog::applied, this, &ConfigureDialog::applied);
     if (dialog.exec() == QDialog::Accepted)
         QDialog::accept();
     else
         QDialog::reject();
+}
+
+void ConfigureDialog::on_buttonBox_clicked(QAbstractButton* button)
+{
+    if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Apply) apply();
 }

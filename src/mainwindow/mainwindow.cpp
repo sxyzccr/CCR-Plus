@@ -625,11 +625,12 @@ void MainWindow::on_action_configure_triggered()
     for (auto i : tmp) if (!list.count(i)) list.append(i);
 
     ConfigureDialog dialog(list, this);
-    if (dialog.exec() == QDialog::Accepted)
+    connect(&dialog, &ConfigureDialog::applied, this, [this]()
     {
         LoadTable();
         detail_table->onShowConfigurationDetail();
-    }
+    });
+    dialog.exec();
 }
 
 void MainWindow::on_action_set_list_triggered()
