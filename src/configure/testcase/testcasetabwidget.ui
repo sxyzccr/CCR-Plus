@@ -36,7 +36,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0" rowspan="12" colspan="3">
+   <item row="1" column="0" rowspan="14" colspan="3">
     <widget class="TestCaseTable" name="tableWidget">
      <property name="styleSheet">
       <string notr="true">QHeaderView
@@ -88,6 +88,29 @@ QTableWidget::item:!alternate:!selected
     </widget>
    </item>
    <item row="1" column="3">
+    <widget class="QPushButton" name="pushButton_edit">
+     <property name="text">
+      <string>编辑选中项...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>10</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="3" column="3">
     <widget class="QPushButton" name="pushButton_addTestCase">
      <property name="focusPolicy">
       <enum>Qt::TabFocus</enum>
@@ -97,7 +120,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="2" column="3">
+   <item row="4" column="3">
     <widget class="QPushButton" name="pushButton_addSubTestCase">
      <property name="enabled">
       <bool>false</bool>
@@ -110,7 +133,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="3" column="3">
+   <item row="5" column="3">
     <widget class="QPushButton" name="pushButton_delete">
      <property name="enabled">
       <bool>false</bool>
@@ -123,7 +146,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="4" column="3">
+   <item row="6" column="3">
     <spacer name="verticalSpacer_1">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -139,7 +162,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </spacer>
    </item>
-   <item row="5" column="3">
+   <item row="7" column="3">
     <widget class="QPushButton" name="pushButton_up">
      <property name="enabled">
       <bool>false</bool>
@@ -152,7 +175,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="6" column="3">
+   <item row="8" column="3">
     <widget class="QPushButton" name="pushButton_down">
      <property name="enabled">
       <bool>false</bool>
@@ -165,7 +188,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="7" column="3">
+   <item row="9" column="3">
     <spacer name="verticalSpacer_2">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -181,7 +204,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </spacer>
    </item>
-   <item row="8" column="3">
+   <item row="10" column="3">
     <widget class="QPushButton" name="pushButton_merge">
      <property name="enabled">
       <bool>false</bool>
@@ -194,7 +217,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="9" column="3">
+   <item row="11" column="3">
     <widget class="QPushButton" name="pushButton_split">
      <property name="enabled">
       <bool>false</bool>
@@ -207,7 +230,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="10" column="3">
+   <item row="12" column="3">
     <spacer name="verticalSpacer_3">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -223,7 +246,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </spacer>
    </item>
-   <item row="11" column="3">
+   <item row="13" column="3">
     <widget class="QPushButton" name="pushButton_reset">
      <property name="focusPolicy">
       <enum>Qt::TabFocus</enum>
@@ -233,7 +256,7 @@ QTableWidget::item:!alternate:!selected
      </property>
     </widget>
    </item>
-   <item row="12" column="3">
+   <item row="14" column="3">
     <spacer name="verticalSpacer_4">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

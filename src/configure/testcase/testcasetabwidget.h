@@ -32,6 +32,7 @@ private slots:
     void onTestCaseSelectionChanged();
 
     void on_tableWidget_doubleClicked(const QModelIndex& index);
+    void on_pushButton_edit_clicked();
     void on_pushButton_addTestCase_clicked();
     void on_pushButton_addSubTestCase_clicked();
     void on_pushButton_delete_clicked();

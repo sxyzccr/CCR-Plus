@@ -65,6 +65,7 @@ void TestCaseTabWidget::ChacheConfiguration()
 
 void TestCaseTabWidget::onTestCaseSelectionChanged()
 {
+    ui->pushButton_edit->setEnabled(ui->tableWidget->CanEdit());
     ui->pushButton_addTestCase->setEnabled(ui->tableWidget->CanAddTestCase());
     ui->pushButton_addSubTestCase->setEnabled(ui->tableWidget->CanAddSubTestCase());
     ui->pushButton_delete->setEnabled(ui->tableWidget->CanDelete());
@@ -112,7 +113,7 @@ void TestCaseTabWidget::on_tableWidget_doubleClicked(const QModelIndex& index)
     int id = index.row();
     if (!index.column()) // 编辑分值
     {
-        AddTestCaseDialog dialog(current_problem, nullptr, AddTestCaseDialog::EditScore, -1, this, ui->tableWidget->ScoreAt(id));
+        AddTestCaseDialog dialog(current_problem, AddTestCaseDialog::EditS, nullptr, -1, this, ui->tableWidget->ScoreAt(id));
         if (dialog.exec() == QDialog::Accepted)
         {
             ui->tableWidget->ChangeScore(id, dialog.GetScore());
@@ -122,12 +123,82 @@ void TestCaseTabWidget::on_tableWidget_doubleClicked(const QModelIndex& index)
     else // 编辑测试数据
     {
         TestCase point = ui->tableWidget->TestCaseAt(id);
+        AddTestCaseDialog dialog(current_problem, AddTestCaseDialog::EditIOTM, &point, index.column(), this);
 
-        AddTestCaseDialog dialog(current_problem, &point, AddTestCaseDialog::EditSubTestCase, index.column(), this);
         if (dialog.exec() == QDialog::Accepted)
             ui->tableWidget->ChangeTestCase(id, dialog.GetTestCase());
     }
     onTestCaseSelectionChanged();
+}
+
+void TestCaseTabWidget::on_pushButton_edit_clicked()
+{
+    int top, bottom;
+    TestCaseTable::SelectionType selectionType = ui->tableWidget->GetSelectionType(&top, &bottom);
+    AddTestCaseDialog::TestCaseType testCaseType;
+
+    switch (selectionType)
+    {
+    case TestCaseTable::SelectOnePackage:
+    case TestCaseTable::SelectMultiplePackage:
+    case TestCaseTable::SelectMultipleTestCasePackage:
+        testCaseType = AddTestCaseDialog::EditSTM;
+        break;
+    case TestCaseTable::OtherSelection:
+    case TestCaseTable::SelectMultipleSubTestCase:
+        testCaseType = AddTestCaseDialog::EditTM;
+        break;
+    case TestCaseTable::SelectOneTestCasePackage:
+        testCaseType = AddTestCaseDialog::EditSIOTM;
+        break;
+    case TestCaseTable::SelectOneSubTestCase:
+        testCaseType = AddTestCaseDialog::EditIOTM;
+        break;
+    default:
+        return;
+    }
+
+    if (testCaseType == AddTestCaseDialog::EditSIOTM || testCaseType == AddTestCaseDialog::EditIOTM)
+    {
+        TestCase point = ui->tableWidget->TestCaseAt(top);
+        AddTestCaseDialog dialog(current_problem, testCaseType, &point, -1, this, ui->tableWidget->ScoreAt(top));
+
+        if (dialog.exec() == QDialog::Accepted)
+        {
+            ui->tableWidget->ChangeTestCase(top, dialog.GetTestCase());
+            if (testCaseType == AddTestCaseDialog::EditSIOTM)
+            {
+                ui->tableWidget->ChangeScore(top, dialog.GetScore());
+                ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
+            }
+        }
+    }
+    else
+    {
+        double minT = 1e9, maxT = 0, minM = 1e9, maxM = 0;
+        int minS = 1e9, maxS = 0;
+        for (int i = top; i <= bottom; i++)
+        {
+            minT = std::min(minT, ui->tableWidget->TestCaseAt(i).TimeLimit());
+            maxT = std::max(maxT, ui->tableWidget->TestCaseAt(i).TimeLimit());
+            minM = std::min(minM, ui->tableWidget->TestCaseAt(i).MemoryLimit());
+            maxM = std::max(maxM, ui->tableWidget->TestCaseAt(i).MemoryLimit());
+            minS = std::min(minS, ui->tableWidget->ScoreAt(i));
+            maxS = std::max(maxS, ui->tableWidget->ScoreAt(i));
+        }
+        AddTestCaseDialog dialog(current_problem, testCaseType, minT, maxT, minM, maxM, minS, maxS, this);
+
+        if (dialog.exec() == QDialog::Accepted)
+        {
+            for (int i = top; i <= bottom; i++)
+            {
+                if (testCaseType == AddTestCaseDialog::EditSTM && ui->tableWidget->ScoreItemTopRow(i) == i)
+                    ui->tableWidget->ChangeScore(i, dialog.GetScore());
+                ui->tableWidget->ChangeTestCase(i, dialog.GetTestCase());
+            }
+            ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
+        }
+    }
 }
 
 void TestCaseTabWidget::on_pushButton_addTestCase_clicked()
@@ -145,12 +216,14 @@ void TestCaseTabWidget::on_pushButton_addTestCase_clicked()
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id));
 
-    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddTestCase, -1, this);
+    AddTestCaseDialog dialog(current_problem, AddTestCaseDialog::AddSIOTM, point, -1, this);
     if (dialog.exec() == QDialog::Accepted)
     {
         ui->tableWidget->AddTestCase(dialog.GetTestCase(), dialog.GetScore());
         ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
     }
+
+    if (point) delete point;
 }
 
 void TestCaseTabWidget::on_pushButton_addSubTestCase_clicked()
@@ -168,9 +241,11 @@ void TestCaseTabWidget::on_pushButton_addSubTestCase_clicked()
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id),
                                    QString("%1%2.out").arg(current_problem->Name()).arg(id));
 
-    AddTestCaseDialog dialog(current_problem, point, AddTestCaseDialog::AddSubTestCase, -1, this);
+    AddTestCaseDialog dialog(current_problem, AddTestCaseDialog::AddIOTM, point, -1, this);
     if (dialog.exec() == QDialog::Accepted)
         ui->tableWidget->AddSubTestCase(dialog.GetTestCase());
+
+    if (point) delete point;
 }
 
 void TestCaseTabWidget::on_pushButton_delete_clicked()

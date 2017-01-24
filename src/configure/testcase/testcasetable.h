@@ -11,15 +11,15 @@ class TestCaseTable : public QTableWidget
 public:
     enum SelectionType
     {
-        NoSelection,
-        SelectOnePackage,
-        SelectOneSubTestCase,
-        SelectOneTestCasePackage,
-        SelectMultiplePackage,
-        SelectMultipleSubTestCase,
-        SelectMultipleTestCasePackage,
-        SelectDiscontinuous,
-        OtherSelection
+        NoSelection,                    // 没有选中
+        SelectOnePackage,               // 选中一个测试点，包含两组及以上测试数据
+        SelectOneSubTestCase,           // 选中一组测试数据，且不是一个测试点
+        SelectOneTestCasePackage,       // 选中一个测试点，只包含一组测试数据
+        SelectMultiplePackage,          // 选中多个测试点，且至少有一个测试点包含两组及以上测试数据
+        SelectMultipleSubTestCase,      // 选中多组测试数据，且均位于一个测试点
+        SelectMultipleTestCasePackage,  // 选中多个测试点，且都只包含一组测试数据
+        SelectDiscontinuous,            // 选中的测试数据不连续（不会出现这种情况）
+        OtherSelection                  // 其他情况（选中多组测试数据，且位于多个测试点）
     };
 
     explicit TestCaseTable(QWidget* parent = nullptr);
@@ -27,6 +27,7 @@ public:
 
     // Getter member functions
     int SumScore() const { return sum_score; }
+    bool CanEdit() const { return can_edit; }
     bool CanAddTestCase() const { return can_add; }
     bool CanAddSubTestCase() const { return can_add_sub; }
     bool CanDelete() const { return can_delete; }
@@ -64,7 +65,7 @@ private:
     QList<QTableWidgetItem*> score_items;
     QTableWidgetItem* unselect_score_item;
     int sum_score;
-    bool can_add, can_add_sub, can_delete, can_up, can_down, can_merge, can_split;
+    bool can_edit, can_add, can_add_sub, can_delete, can_up, can_down, can_merge, can_split;
 
     void addItem(int row, int column, const QString& text)
     {

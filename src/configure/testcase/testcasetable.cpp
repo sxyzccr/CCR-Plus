@@ -145,16 +145,18 @@ void TestCaseTable::ChangeScore(int row, int score)
 
 void TestCaseTable::ChangeTestCase(int row, const TestCase& point)
 {
-    this->item(row, 1)->setText(point.InFile());
-    this->item(row, 2)->setText(point.OutFile());
+    if (!point.InFile().isEmpty()) this->item(row, 1)->setText(point.InFile());
+    if (!point.OutFile().isEmpty()) this->item(row, 2)->setText(point.OutFile());
 
     if (problem->Type() == Global::Traditional)
     {
-        this->item(row, 3)->setText(QString::number(point.TimeLimit()));
-        this->item(row, 4)->setText(QString::number(point.MemoryLimit()));
+        if (point.TimeLimit() >= 0) this->item(row, 3)->setText(QString::number(point.TimeLimit()));
+        if (point.MemoryLimit() >= 0) this->item(row, 4)->setText(QString::number(point.MemoryLimit()));
     }
     else if (problem->Type() == Global::AnswersOnly)
-        this->item(row, 3)->setText(point.SubmitFile());
+    {
+        if (!point.SubmitFile().isEmpty()) this->item(row, 3)->setText(point.SubmitFile());
+    }
 }
 
 void TestCaseTable::swapTestCase(int row1, int row2)
@@ -380,7 +382,7 @@ void TestCaseTable::SplitSelection()
 
 void TestCaseTable::onItemSelectionChanged()
 {
-    can_add = can_add_sub = can_delete = can_up = can_down = can_merge = can_split = false;
+    can_edit = can_add = can_add_sub = can_delete = can_up = can_down = can_merge = can_split = false;
 
     int top, bottom;
     SelectionType type = GetSelectionType(&top, &bottom);
@@ -407,7 +409,8 @@ void TestCaseTable::onItemSelectionChanged()
     else
         this->ScoreItemAt(bottom)->setFlags(this->ScoreItemAt(bottom)->flags() | Qt::ItemIsSelectable);
 
-    can_delete = true;
+    can_edit = can_delete = true;
+    if ((type == SelectMultipleSubTestCase || type == OtherSelection) && problem->Type() == Global::AnswersOnly) can_edit = false;
     if (type == SelectOnePackage || type == SelectOneTestCasePackage) can_add = true;
     if (type == SelectMultiplePackage || type == SelectMultipleTestCasePackage) can_merge = true;
     if (type == SelectOnePackage || type == SelectMultiplePackage) can_split = true;
