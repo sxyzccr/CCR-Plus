@@ -139,8 +139,11 @@ TestCase TestCaseTable::TestCaseAt(int row)
 
 void TestCaseTable::ChangeScore(int row, int score)
 {
-    sum_score += score - this->ScoreItemAt(row)->text().toInt();
-    this->ScoreItemAt(row)->setText(QString::number(score));
+    if (score >= 0)
+    {
+        sum_score += score - this->ScoreItemAt(row)->text().toInt();
+        this->ScoreItemAt(row)->setText(QString::number(score));
+    }
 }
 
 void TestCaseTable::ChangeTestCase(int row, const TestCase& point)

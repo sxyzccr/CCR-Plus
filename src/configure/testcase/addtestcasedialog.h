@@ -55,6 +55,7 @@ private:
     const TestCase* point;
     int score;
     TestCaseType type;
+    bool load_finished;
 };
 
 #endif // ADDTESTCASEDIALOG_H

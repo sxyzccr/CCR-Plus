@@ -105,7 +105,7 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, AddTestCaseDialog::
                                      double minTime, double maxTime, double minMemory, double maxMemory,
                                      int minScore, int maxScore, QWidget* parent) :
     QDialog(parent),
-    ui(new Ui::AddTestCaseDialog), problem(problem), point(nullptr), score(0), type(type)
+    ui(new Ui::AddTestCaseDialog), problem(problem), point(nullptr), score(0), type(type), load_finished(false)
 {
     Q_ASSERT(type == EditTM || type == EditSTM);
 
@@ -141,28 +141,29 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, AddTestCaseDialog::
     ui->spinBox_memLim->setValue(minMemory);
     if (minScore != maxScore)
     {
-        ui->spinBox_score->setMinimum(-1);
-        ui->spinBox_score->setValue(-1);
+        ui->spinBox_score->setMinimum(0);
+        ui->spinBox_score->setValue(0);
         ui->spinBox_score->setSpecialValueText(QString("%1 ~ %2").arg(minScore).arg(maxScore));
         ui->spinBox_score->setFixedWidth(ui->spinBox_score->sizeHint().width());
     }
     if (minTime != maxTime)
     {
-        ui->spinBox_timeLim->setMinimum(-1);
-        ui->spinBox_timeLim->setValue(-1);
+        ui->spinBox_timeLim->setMinimum(0);
+        ui->spinBox_timeLim->setValue(0);
         ui->spinBox_timeLim->setSpecialValueText(QString("%1 ~ %2 s").arg(minTime).arg(maxTime));
         ui->spinBox_timeLim->setFixedWidth(ui->spinBox_timeLim->sizeHint().width());
     }
     if (minMemory != maxMemory)
     {
-        ui->spinBox_memLim->setMinimum(-128);
-        ui->spinBox_memLim->setValue(-128);
+        ui->spinBox_memLim->setMinimum(0);
+        ui->spinBox_memLim->setValue(0);
         ui->spinBox_memLim->setSpecialValueText(QString("%1 ~ %2 MB").arg(minMemory).arg(maxMemory));
         ui->spinBox_memLim->setFixedWidth(ui->spinBox_memLim->sizeHint().width());
     }
 
     this->setFixedWidth(this->sizeHint().width());
     this->setFixedHeight((line + 1) * 26 + 18 + (line + 1) * 6 + 18);
+    load_finished = true;
 }
 
 AddTestCaseDialog::~AddTestCaseDialog()
@@ -173,7 +174,7 @@ AddTestCaseDialog::~AddTestCaseDialog()
 
 void AddTestCaseDialog::accept()
 {
-    score = ui->spinBox_score->value();
+    score = ui->spinBox_score->specialValueText().isEmpty() ? ui->spinBox_score->value() : -1;
 
     if (type == EditS)
     {
@@ -201,7 +202,9 @@ void AddTestCaseDialog::accept()
     }
 
     if (problem->Type() == Global::Traditional)
-        point = new TestCase(ui->spinBox_timeLim->value(), ui->spinBox_memLim->value(), ui->lineEdit_inFile->text(), ui->lineEdit_outFile->text());
+        point = new TestCase(ui->spinBox_timeLim->specialValueText().isEmpty() ? ui->spinBox_timeLim->value() : -1,
+                             ui->spinBox_memLim->specialValueText().isEmpty() ? ui->spinBox_memLim->value() : -1,
+                             ui->lineEdit_inFile->text(), ui->lineEdit_outFile->text());
     else if (problem->Type() == Global::AnswersOnly)
         point = new TestCase(0, 0, ui->lineEdit_inFile->text(), ui->lineEdit_outFile->text(), ui->lineEdit_submitFile->text());
 
@@ -290,20 +293,23 @@ void AddTestCaseDialog::on_pushButton_browseOutFile_clicked()
 
 void AddTestCaseDialog::on_spinBox_score_valueChanged(int)
 {
-    ui->spinBox_score->setMinimum(0);
-    ui->spinBox_score->setSpecialValueText("");
+    if (load_finished) ui->spinBox_score->setSpecialValueText("");
 }
 
 void AddTestCaseDialog::on_spinBox_timeLim_valueChanged(double)
 {
-    ui->spinBox_timeLim->setMinimum(0);
-    ui->spinBox_timeLim->setSpecialValueText("");
-    ui->spinBox_timeLim->setFixedWidth(85);
+    if (load_finished)
+    {
+        ui->spinBox_timeLim->setSpecialValueText("");
+        ui->spinBox_timeLim->setFixedWidth(85);
+    }
 }
 
 void AddTestCaseDialog::on_spinBox_memLim_valueChanged(double)
 {
-    ui->spinBox_memLim->setMinimum(0);
-    ui->spinBox_memLim->setSpecialValueText("");
-    ui->spinBox_memLim->setFixedWidth(85);
+    if (load_finished)
+    {
+        ui->spinBox_memLim->setSpecialValueText("");
+        ui->spinBox_memLim->setFixedWidth(85);
+    }
 }
