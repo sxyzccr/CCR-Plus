@@ -3,7 +3,8 @@
 #include "configure/testcase/testcasetable.h"
 
 TestCaseTable::TestCaseTable(QWidget* parent) :
-    QTableWidget(parent), problem(nullptr), sum_score(0)
+    QTableWidget(parent), problem(nullptr), unselect_score_item(nullptr), sum_score(0),
+    can_edit(false), can_add(false), can_add_sub(false), can_delete(false), can_up(false), can_down(false), can_merge(false), can_split(false)
 {
     this->horizontalHeader()->setFixedHeight(25);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -269,7 +270,8 @@ void TestCaseTable::DeleteSelection()
         }
         else if (ScoreItemTopRow(r) == r)
             sum_score -= this->item(r, 0)->text().toInt();
-        for (int c = 0; c < this->columnCount(); c++) this->takeItem(r, c);
+
+        for (int c = 0; c < this->columnCount(); c++) delete this->takeItem(r, c);
     }
 
     for (int r = bottom + 1; r < this->rowCount(); r++)

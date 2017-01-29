@@ -159,7 +159,7 @@ void CompilerTabWidget::on_pushButton_delete_clicked()
     auto list = ui->tableWidget->selectedItems();
     if (list.size())
     {
-        int row = list.first()->row(), visualRow = ui->tableWidget->visualRow(row), gotoRow = -1, end;
+        int row = list.first()->row(), visualRow = ui->tableWidget->visualRow(row), gotoRow = -1, end = 0;
         ui->tableWidget->removeRow(row);
         current_problem->DeleteCompiler(visualRow);
         for (int i = 0; i < ui->tableWidget->rowCount(); i++)

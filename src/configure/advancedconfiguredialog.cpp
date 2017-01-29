@@ -56,6 +56,8 @@ void AdvancedConfigureDialog::loadFromProblem(Problem* problem)
 {
     load_finished = false;
 
+    ui->label_problem->setText(current_problem->Name());
+
     if (problem->Type() == Global::Traditional)
         ui->comboBox_type->setCurrentIndex(0);
     else if (problem->Type() == Global::AnswersOnly)
@@ -119,7 +121,6 @@ void AdvancedConfigureDialog::on_listWidget_currentRowChanged(int currentRow)
             current_problem = problems[i];
             break;
         }
-    ui->label_problem->setText(current_problem->Name());
     loadFromProblem(current_problem);
 }
 
@@ -127,7 +128,7 @@ void AdvancedConfigureDialog::on_comboBox_type_currentIndexChanged(int index)
 {
     if (!load_finished) return;
 
-    Global::ProblemType type;
+    Global::ProblemType type = Global::OtherProblemType;
     if (!index) type = Global::Traditional;
     else if (index == 1) type = Global::AnswersOnly;
 

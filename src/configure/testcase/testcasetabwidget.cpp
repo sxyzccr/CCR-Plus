@@ -207,7 +207,7 @@ void TestCaseTabWidget::on_pushButton_addTestCase_clicked()
     auto list = ui->tableWidget->selectedItems();
     if (list.size()) id = list.first()->row() + 2;
 
-    const TestCase* point;
+    const TestCase* point = nullptr;
     if (current_problem->Type() == Global::Traditional)
         point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                      QString("%1%2.out").arg(current_problem->Name()).arg(id));
@@ -232,7 +232,7 @@ void TestCaseTabWidget::on_pushButton_addSubTestCase_clicked()
     auto list = ui->tableWidget->selectedItems();
     if (list.size()) id = list.first()->row() + 2;
 
-    const TestCase* point;
+    const TestCase* point = nullptr;
     if (current_problem->Type() == Global::Traditional)
         point = new TestCase(1, 128, QString("%1%2.in").arg(current_problem->Name()).arg(id),
                                      QString("%1%2.out").arg(current_problem->Name()).arg(id));
