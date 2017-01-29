@@ -622,7 +622,8 @@ void MainWindow::on_action_configure_triggered()
     QStringList list;
     for (auto i : Global::g_contest.problem_order) list.append(Global::g_contest.problems[i]->Name());
     QStringList tmp = QDir(Global::g_contest.data_path).entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-    for (auto i : tmp) if (!list.count(i)) list.append(i);
+    for (auto i : tmp)
+        if (!list.count(i) && Problem::CheckFileNameValid(i).isEmpty()) list.append(i);
 
     ConfigureDialog dialog(list, this);
     connect(&dialog, &ConfigureDialog::applied, this, [this]()
