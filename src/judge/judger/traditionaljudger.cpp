@@ -18,10 +18,10 @@ TestCaseResult TraditionalJudger::judgeTestCase(const TestCase* point) const
         res.state = checkResult.state;
         if (checkResult.score == 0.0)
             res.note = checkResult.note.isEmpty() ? "答案错误" : checkResult.note;
-        else if (checkResult.score < 1.0 && checkResult.note.isEmpty())
+        else if (checkResult.score < 1.0)
             res.note = checkResult.note.isEmpty() ? "部分正确" : checkResult.note;
-        else if (checkResult.score == 1.0 && !checkResult.note.isEmpty())
-            res.note += " " + checkResult.note;
+        else if (checkResult.score == 1.0)
+            if (!checkResult.note.isEmpty()) res.note += " " + checkResult.note;
     }
     return res;
 }
