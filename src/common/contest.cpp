@@ -7,9 +7,9 @@
 QPixmap Contest::CreateIcon(const QString& contestPath)
 {
     QStringList list = ReadProblemOrder(contestPath);
-    QImage image = QPixmap(":/image/folder.png").toImage();
+    QPixmap image(":/image/folder.png");
     QPainter painter(&image);
-    painter.setFont(QFont("Times New Roman", 15, 0, true));
+    painter.setFont(QFont("Times New Roman", 11, 0, true));
     QFontMetrics fm = painter.fontMetrics();
     QPair<int, int> pos[3] = {{15, 38}, {15, 60}, {15, 82}};
     int n = std::min(list.size(), 3);
@@ -20,7 +20,7 @@ QPixmap Contest::CreateIcon(const QString& contestPath)
         int height = fm.height();
         painter.drawText(QRectF(pos[i].first, pos[i].second, width, height), text);
     }
-    return QPixmap::fromImage(image);
+    return image;
 }
 
 QStringList Contest::ReadProblemOrder(const QString& contestPath)
