@@ -87,7 +87,9 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
         }
     }
 
-    if (focusRow == 1)
+    if (!focusRow)
+        ui->spinBox_score->setFocus();
+    else if (focusRow == 1)
         ui->lineEdit_inFile->setFocus();
     else if (focusRow == 2)
         ui->lineEdit_outFile->setFocus();

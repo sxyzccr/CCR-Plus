@@ -123,10 +123,21 @@ void TestCaseTabWidget::on_tableWidget_doubleClicked(const QModelIndex& index)
     else // 编辑测试数据
     {
         TestCase point = ui->tableWidget->TestCaseAt(id);
-        AddTestCaseDialog dialog(current_problem, AddTestCaseDialog::EditIOTM, &point, index.column(), this);
+        AddTestCaseDialog::TestCaseType testCaseType = AddTestCaseDialog::EditIOTM;
+        if (ui->tableWidget->ScoreItemTopRow(id) == ui->tableWidget->ScoreItemBottomRow(id))
+            testCaseType = AddTestCaseDialog::EditSIOTM;
+
+        AddTestCaseDialog dialog(current_problem, testCaseType, &point, index.column(), this, ui->tableWidget->ScoreAt(id));
 
         if (dialog.exec() == QDialog::Accepted)
+        {
             ui->tableWidget->ChangeTestCase(id, dialog.GetTestCase());
+            if (testCaseType == AddTestCaseDialog::EditSIOTM)
+            {
+                ui->tableWidget->ChangeScore(id, dialog.GetScore());
+                ui->label_score->setText(QString::number(ui->tableWidget->SumScore()));
+            }
+        }
     }
     onTestCaseSelectionChanged();
 }
