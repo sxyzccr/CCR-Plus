@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,8 +13,10 @@ char* exe;
 STARTUPINFO si;
 PROCESS_INFORMATION pi;
 PROCESS_MEMORY_COUNTERS pmc;
+FILETIME ct, et, kt, ut;
+SYSTEMTIME _kt, _ut;
 
-void EndProcess()
+void onProcessFinished()
 {
     WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hThread);
@@ -25,57 +28,64 @@ void run_win()
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESTDHANDLES;
-    if (!CreateProcess(0, exe, 0, 0, FALSE, CREATE_NO_WINDOW, 0, 0, &si, &pi)) printf("无法运行程序\n"), exit(1);
+    if (!CreateProcess(0, (LPTSTR)exe, 0, 0, FALSE, CREATE_NO_WINDOW, 0, 0, &si, &pi))
+        printf("无法运行程序: %u\n", (unsigned int)GetLastError()), exit(1);
 
-    int ok = 0;
+    int beginTime = clock();
     for (;;)
     {
-        if (WaitForSingleObject(pi.hProcess, 0) == WAIT_OBJECT_0)
-        {
-            ok = 1;
-            break;
-        }
+        if (WaitForSingleObject(pi.hProcess, 0) == WAIT_OBJECT_0) break;
+
         GetProcessMemoryInfo(pi.hProcess, &pmc, sizeof(pmc));
-        if (pmc.PeakPagefileUsage > memLim * (1 << 20))
+        if (pmc.PeakPagefileUsage > memLim * (1<<20))
         {
             TerminateProcess(pi.hProcess, 0);
-            EndProcess();
+            onProcessFinished();
             printf("超过内存限制\n");
             exit(4);
         }
+
+        GetProcessTimes(pi.hProcess, &ct, &et, &kt, &ut);
+        FileTimeToSystemTime(&kt, &_kt);
+        FileTimeToSystemTime(&ut, &_ut);
+        double userTime = _ut.wHour * 3600 + _ut.wMinute * 60 + _ut.wSecond + _ut.wMilliseconds / 1000.0;
+        double kernelTime = _kt.wHour * 3600 + _kt.wMinute * 60 + _kt.wSecond + _kt.wMilliseconds / 1000.0;
+        double blockTime = (double)(clock() - beginTime) / CLOCKS_PER_SEC - userTime - kernelTime;
+
+        if (userTime > timeLim || kernelTime > timeLim || blockTime > 1.5)
+        {
+            TerminateProcess(pi.hProcess, 0);
+            onProcessFinished();
+            if (userTime > timeLim) printf("超过时间限制\n"), exit(3);
+            else if (kernelTime > timeLim) printf("系统 CPU 时间过长\n"), exit(3);
+            else printf("进程被阻塞\n"), exit(3);
+        }
+
+        Sleep(10);
     }
 
     DWORD exitCode;
     GetExitCodeProcess(pi.hProcess, &exitCode);
     if (exitCode && exitCode != STILL_ACTIVE)
     {
-        EndProcess();
-        printf("运行时错误: %d\n", (int)exitCode);
+        onProcessFinished();
+        printf("运行时错误: %u\n", (unsigned int)exitCode);
         exit(2);
     }
 
-    if (!ok)
-    {
-        TerminateProcess(pi.hProcess, 0);
-        EndProcess();
-        printf("超过时间限制\n");
-        exit(3);
-    }
-
-    FILETIME ct, et, kt, ut;
-    SYSTEMTIME st;
-    GetProcessTimes(pi.hProcess, &ct, &et, &kt, &ut);
     GetProcessMemoryInfo(pi.hProcess, &pmc, sizeof(pmc));
-    EndProcess();
+    double usedMemory = pmc.PeakPagefileUsage / 1024.0 / 1024.0;
 
-    FileTimeToSystemTime(&ut, &st);
-    double usedTime = st.wHour * 3600 + st.wMinute * 60 + st.wSecond + st.wMilliseconds / 1000.0;
-    if (usedTime > timeLim)
-    {
-        printf("超过时间限制\n");
-        exit(3);
-    }
-    printf("时间: %.2lfs 内存: %.2lfMB\n%.6lf\n", usedTime, pmc.PeakPagefileUsage / 1024.0 / 1024.0, usedTime);
+    GetProcessTimes(pi.hProcess, &ct, &et, &kt, &ut);
+    FileTimeToSystemTime(&ut, &_ut);
+    double usedTime = _ut.wHour * 3600 + _ut.wMinute * 60 + _ut.wSecond + _ut.wMilliseconds / 1000.0;
+
+    onProcessFinished();
+
+    if (usedMemory > memLim) printf("超过内存限制\n"), exit(4);
+    if (usedTime > timeLim) printf("超过时间限制\n"), exit(3);
+
+    printf("时间: %.2lfs 内存: %.2lfMB\n%.6lf\n", usedTime, usedMemory, usedTime);
     exit(0);
 }
 #endif
