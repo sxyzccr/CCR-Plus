@@ -312,7 +312,7 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
     if (!process.waitForStarted(-1))
         return TestCaseResult(0, 0, 'E', "无法运行进程监视器");
 
-    bool ok = monitorProcess(&process, timeLim * 2000 + 10);
+    bool ok = monitorProcess(&process, std::max(timeLim * 2000 + 200, 10000.0));
     bool finished = process.waitForFinished(2000);
     QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
 
