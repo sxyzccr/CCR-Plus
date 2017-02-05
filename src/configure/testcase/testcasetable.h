@@ -67,6 +67,9 @@ private:
     int sum_score;
     bool can_edit, can_add, can_add_sub, can_delete, can_up, can_down, can_merge, can_split;
 
+    QAction *action_in, *action_out, *action_sub;
+    QMenu* menu;
+
     void addItem(int row, int column, const QString& text)
     {
         QTableWidgetItem* item = new QTableWidgetItem(text);
@@ -79,6 +82,11 @@ private:
 
 private slots:
     void onItemSelectionChanged();
+
+    void onOpenInFile();
+    void onOpenOutFile();
+    void onHeaderContextMenuEvent(const QPoint &pos);
+    void onContextMenuEvent(const QPoint &pos);
 
 signals:
     void testCaseSelectionChanged();

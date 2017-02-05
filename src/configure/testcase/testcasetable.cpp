@@ -1,5 +1,10 @@
+#include <QUrl>
+#include <QFile>
+#include <QMenu>
 #include <QHeaderView>
+#include <QDesktopServices>
 
+#include "common/global.h"
 #include "configure/testcase/testcasetable.h"
 
 TestCaseTable::TestCaseTable(QWidget* parent) :
@@ -8,6 +13,7 @@ TestCaseTable::TestCaseTable(QWidget* parent) :
 {
     this->horizontalHeader()->setFixedHeight(25);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    this->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -29,6 +35,15 @@ TestCaseTable::TestCaseTable(QWidget* parent) :
         if (type != NoSelection && ScoreItemBottomRow(bottom) == bottom && unselect_score_item)
             unselect_score_item->setFlags(unselect_score_item->flags() | Qt::ItemIsSelectable);
     });
+
+    menu = new QMenu(this);
+    action_in = new QAction("查看输入文件(&I)...", this);
+    action_out = new QAction("查看输出文件(&O)...", this);
+
+    connect(action_in,  &QAction::triggered, this, &TestCaseTable::onOpenInFile);
+    connect(action_out, &QAction::triggered, this, &TestCaseTable::onOpenOutFile);
+    connect(this, &QWidget::customContextMenuRequested, this, &TestCaseTable::onContextMenuEvent);
+    connect(this->horizontalHeader(), &QWidget::customContextMenuRequested, this, &TestCaseTable::onHeaderContextMenuEvent);
 }
 
 void TestCaseTable::LoadTestCases(const Problem* problem)
@@ -434,4 +449,63 @@ void TestCaseTable::onItemSelectionChanged()
         }
     }
     emit testCaseSelectionChanged();
+}
+
+
+
+static QString inFileByAction, outFileByAction;
+
+void TestCaseTable::onOpenInFile()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(inFileByAction));
+}
+
+void TestCaseTable::onOpenOutFile()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(outFileByAction));
+}
+
+void TestCaseTable::onHeaderContextMenuEvent(const QPoint& pos)
+{
+    action_in->setEnabled(false);
+    menu->clear();
+
+    if (this->horizontalHeader()->logicalIndexAt(pos) >= 0)
+    {
+        inFileByAction = Global::g_contest.data_path + problem->Name() + "/";
+        action_in->setText("打开数据目录(&O)...");
+        if (QDir(inFileByAction).exists()) action_in->setEnabled(true);
+
+        menu->addAction(action_in);
+        menu->popup(QCursor::pos());
+    }
+}
+
+void TestCaseTable::onContextMenuEvent(const QPoint& pos)
+{
+    action_in->setEnabled(false);
+    action_out->setEnabled(false);
+    menu->clear();
+
+    QTableWidgetItem* item = this->itemAt(pos);
+    if (!item) return;
+
+    int row = item->row();
+    if (!item->column() && ScoreItemTopRow(row) != ScoreItemBottomRow(row)) return;
+
+    QString in = this->item(row, 1)->text();
+    QString out = this->item(row, 2)->text();
+    inFileByAction = Global::g_contest.data_path + problem->Name() + "/" + in;
+    outFileByAction = Global::g_contest.data_path + problem->Name() + "/" + out;
+
+    action_in->setText(QString("查看输入文件 \"%1\" (&I)...").arg(in));
+    if (QFile(inFileByAction).exists()) action_in->setEnabled(true);
+
+    action_out->setText(QString("查看输出文件 \"%1\" (&O)...").arg(out));
+    if (QFile(outFileByAction).exists()) action_out->setEnabled(true);
+
+    menu->addAction(action_in);
+    menu->addAction(action_out);
+
+    menu->popup(QCursor::pos());
 }

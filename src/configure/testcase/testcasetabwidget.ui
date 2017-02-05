@@ -38,6 +38,9 @@
    </item>
    <item row="1" column="0" rowspan="14" colspan="3">
     <widget class="TestCaseTable" name="tableWidget">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
      <property name="styleSheet">
       <string notr="true">QHeaderView
 {
