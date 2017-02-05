@@ -16,7 +16,7 @@ class AdvancedConfigureDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit AdvancedConfigureDialog(const QList<const Problem*>& problems, QWidget* parent = nullptr);
+    explicit AdvancedConfigureDialog(const QList<const Problem*>& problems, QWidget* parent = nullptr, const QString& currentProblem = "");
     ~AdvancedConfigureDialog();
 
     QList<Problem*> Problems() const { return problems; }

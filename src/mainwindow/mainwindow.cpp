@@ -8,6 +8,7 @@
 #include "common/global.h"
 #include "common/version.h"
 #include "configure/configuredialog.h"
+#include "configure/advancedconfiguredialog.h"
 #include "mainwindow/mainwindow.h"
 #include "mainwindow/createfiledialog.h"
 #include "ui_mainwindow.h"
@@ -372,6 +373,7 @@ void MainWindow::CreateActions()
     action_open_dir = new QAction("打开目录(&O)...", this);
     action_create_dir = new QAction("创建并打开目录(&C)...", this);
     action_remove_dir = new QAction("删除目录(&R)...", this);
+    action_configure = new QAction("配置所有试题(&C)...", this);
     ui->menu_recent->addAction(action_clean_recent);
 
     connect(action_clean_recent,  &QAction::triggered, this, &MainWindow::onCleanRecentContest);
@@ -381,6 +383,7 @@ void MainWindow::CreateActions()
     connect(action_open_dir,      &QAction::triggered, this, &MainWindow::onOpenDir);
     connect(action_create_dir,    &QAction::triggered, this, &MainWindow::onCreateDir);
     connect(action_remove_dir,    &QAction::triggered, this, &MainWindow::onRemoveDir);
+    connect(action_configure,     &QAction::triggered, this, &MainWindow::onConfigure);
 
     board_table->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->listWidget_recent,           &QWidget::customContextMenuRequested, this, &MainWindow::onMenuRecentListEvent);
@@ -435,6 +438,25 @@ void MainWindow::onRemoveDir()
         QDir(dirByAction).removeRecursively();
         if (t1 == "删除试题") QDir(Global::g_contest.result_path + fileByAction).removeRecursively();
         LoadTable();
+    }
+}
+
+void MainWindow::onConfigure()
+{
+    if (fileByAction.isEmpty())
+        on_action_configure_triggered();
+    else
+    {
+        QList<const Problem*> probs;
+        for (auto i : Global::g_contest.problems) probs.append(i);
+
+        AdvancedConfigureDialog dialog(probs, this, fileByAction);
+        connect(&dialog, &AdvancedConfigureDialog::applied, this, [this]()
+        {
+            LoadTable();
+            detail_table->onShowConfigurationDetail();
+        });
+        dialog.exec();
     }
 }
 
@@ -501,15 +523,31 @@ void MainWindow::onMenuHeaderEvent(const QPoint& pos)
 
         if (QDir(dirByAction).exists())
         {
-            if (!c) action_open_dir->setText("打开选手目录(&O)...");
-            else if (c == 1) action_open_dir->setText("打开试题目录(&O)...");
-            else action_open_dir->setText("打开目录(&O)...");
-            menu_header->addAction(action_open_dir);
-            if (c > 1)
+            if (!c)
+            {
+                action_open_dir->setText("打开选手目录(&O)...");
+                menu_header->addAction(action_open_dir);
+            }
+            else if (c == 1)
+            {
+                fileByAction = "";
+                action_open_dir->setText("打开数据目录(&O)...");
+                action_configure->setText("配置所有试题(&C)...");
+
+                menu_header->addAction(action_open_dir);
+                menu_header->addSeparator();
+                menu_header->addAction(action_configure);
+            }
+            else if (c > 1)
             {
                 fileByAction = Global::g_contest.problems[c - 2]->Name();
+                action_open_dir->setText(QString("打开试题 \"%1\" 的数据目录(&O)...").arg(fileByAction));
+                action_configure->setText(QString("配置试题 \"%1\" (&C)...").arg(fileByAction));
+                action_remove_dir->setText(QString("删除试题 \"%1\" (&R)").arg(fileByAction));
+
+                menu_header->addAction(action_open_dir);
                 menu_header->addSeparator();
-                action_remove_dir->setText(QString("删除试题 \"%1\"(&R)").arg(fileByAction));
+                menu_header->addAction(action_configure);
                 menu_header->addAction(action_remove_dir);
             }
         }
@@ -574,7 +612,7 @@ void MainWindow::onMenuTableEvent(const QPoint& pos)
             {
                 menu_table->addAction(action_open_dir);
                 menu_table->addSeparator();
-                action_remove_dir->setText(QString("删除选手 \"%1\"(&R)").arg(fileByAction));
+                action_remove_dir->setText(QString("删除选手 \"%1\" (&R)").arg(fileByAction));
                 menu_table->addAction(action_remove_dir);
             }
             else menu_table->addAction(action_create_dir);

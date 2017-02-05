@@ -36,7 +36,7 @@ private:
 
     // Context menus and actions
     QMenu *menu_recent_list, *menu_table, *menu_header;
-    QAction *action_create_file, *action_edit_file, *action_create_dir, *action_open_dir, *action_remove_dir,
+    QAction *action_create_file, *action_edit_file, *action_create_dir, *action_open_dir, *action_remove_dir, *action_configure,
             *action_remove_recent, *action_clean_recent, *action_recent_list[Global::MAX_RECENT_CONTEST];
 
     bool is_locked;
@@ -79,6 +79,7 @@ private slots:
     void onOpenRecentContest();
     void onRemoveRecentContest();
     void onCleanRecentContest();
+    void onConfigure();
 
     // Context menu events
     void onMenuRecentListEvent(const QPoint& pos);
