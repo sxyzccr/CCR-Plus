@@ -18,17 +18,11 @@ public:
     void Lock() { is_locked = true; }
     void Unlock() { is_locked = false; }
 
-    /// 清空 detail 表格
-    void ClearDetail();
-
     /// 在开始测评时启动一个计时器，防止多次点击导致测评结果的 detail 变成普通的 detail
     void StartLastJudgeTimer() { last_judge_timer.start(); }
 
-    /// 调整滚动条
-    void AdjustScrollBar();
-
-    /// 显示某选手某一题的 detail
-    void ShowProblemDetail(Player* player, Problem* problem);
+    /// 清空 detail 表格
+    void ClearDetail();
 
 public slots:
     /// 标题单元格
@@ -53,6 +47,25 @@ private:
     bool is_scrollBar_at_bottom, is_show_detail, is_locked;
     QElapsedTimer last_judge_timer;
     int rows;
+
+    QList<const Player*> player_at;
+    QList<const Problem*> problem_at;
+    Player* current_player;
+    Problem* current_problem;
+    QAction *action_in, *action_out, *action_sub;
+    QMenu* menu;
+
+    /// 调整滚动条
+    void adjustScrollBar();
+
+    /// 显示某选手某一题的 detail
+    void showProblemDetail(Player* player, Problem* problem);
+
+private slots:
+    void onOpenInFile();
+    void onOpenOutFile();
+    void onOpenSubmitFile();
+    void onContextMenuEvent(const QPoint& pos);
 };
 
 #endif // DETAILTABLE_H

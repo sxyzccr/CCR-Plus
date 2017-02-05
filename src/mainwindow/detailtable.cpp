@@ -1,7 +1,10 @@
+#include <QUrl>
+#include <QMenu>
 #include <QScrollBar>
 #include <QHeaderView>
 #include <QDomDocument>
 #include <QCoreApplication>
+#include <QDesktopServices>
 
 #include "common/global.h"
 #include "mainwindow/detailtable.h"
@@ -17,6 +20,7 @@ DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
     this->setSelectionMode(QAbstractItemView::NoSelection);
+    this->setContextMenuPolicy(Qt::CustomContextMenu);
     this->setStyleSheet(QLatin1String(
                             "QHeaderView"
                             "{"
@@ -34,6 +38,16 @@ DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
     this->verticalHeader()->setMinimumWidth(22);
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    menu = new QMenu(this);
+    action_in = new QAction("查看输入文件(&I)...", this);
+    action_out = new QAction("查看输出文件(&O)...", this);
+    action_sub = new QAction("查看提交文件(&S)...", this);
+
+    connect(action_in,  &QAction::triggered, this, &DetailTable::onOpenInFile);
+    connect(action_out, &QAction::triggered, this, &DetailTable::onOpenOutFile);
+    connect(action_sub, &QAction::triggered, this, &DetailTable::onOpenSubmitFile);
+    connect(this, &QWidget::customContextMenuRequested, this, &DetailTable::onContextMenuEvent);
 }
 
 void DetailTable::ClearDetail()
@@ -48,18 +62,28 @@ void DetailTable::ClearDetail()
     is_show_detail = false;
     is_locked = false;
     rows = 0;
+
+    player_at.clear();
+    problem_at.clear();
+    current_player = nullptr;
+    current_problem = nullptr;
 }
 
-void DetailTable::AdjustScrollBar()
+
+
+void DetailTable::adjustScrollBar()
 {
     QCoreApplication::processEvents();
     QScrollBar* bar = this->verticalScrollBar();
     if (is_scrollBar_at_bottom) bar->setValue(bar->maximum());
 }
 
-void DetailTable::ShowProblemDetail(Player* player, Problem* problem)
+void DetailTable::showProblemDetail(Player* player, Problem* problem)
 {
     rows = this->rowCount();
+    current_player = player;
+    current_problem = problem;
+
     QString title = player->GetNameWithList();
     if (title == "std") title = QString("\"%1\" 的标程").arg(problem->Name()); else title += " - " + problem->Name();
     onAddTitleDetail(title);
@@ -135,9 +159,11 @@ void DetailTable::onAddTitleDetail(const QString& title)
     this->setItem(rows, 0, tmp);
     this->setSpan(rows, 0, 1, 2);
     this->setVerticalHeaderItem(rows, new QTableWidgetItem);
+    player_at.append(current_player);
+    problem_at.append(current_problem);
     rows++;
 
-    if (!is_show_detail) this->AdjustScrollBar();
+    if (!is_show_detail) this->adjustScrollBar();
 }
 
 void DetailTable::onAddNoteDetail(const QString& note, const QString& state)
@@ -160,9 +186,11 @@ void DetailTable::onAddNoteDetail(const QString& note, const QString& state)
     this->setSpan(rows, 0, 1, 2);
     this->setVerticalHeaderItem(rows, new QTableWidgetItem);
     this->verticalHeader()->resizeSection(rows, b);
+    player_at.append(current_player);
+    problem_at.append(current_problem);
     rows++;
 
-    if (!is_show_detail) this->AdjustScrollBar();
+    if (!is_show_detail) this->adjustScrollBar();
 }
 
 void DetailTable::onAddPointDetail(int num, const QString& note, const QString& state, const QString& inOut, int subTaskLen)
@@ -217,9 +245,11 @@ void DetailTable::onAddPointDetail(int num, const QString& note, const QString& 
     this->setVerticalHeaderItem(rows, t);
 
     if (subTaskLen > 1) this->setSpan(rows - subTaskLen + 1, 0, subTaskLen, 1);
+    player_at.append(current_player);
+    problem_at.append(current_problem);
     rows++;
 
-    if (!is_show_detail) this->AdjustScrollBar();
+    if (!is_show_detail) this->adjustScrollBar();
 }
 
 void DetailTable::onAddScoreDetail(int subTaskLen, int score, int sumScore)
@@ -241,11 +271,11 @@ void DetailTable::onShowDetail(int row, int column)
 
     row = Global::GetLogicalRow(row);
     if (column > 1)
-        ShowProblemDetail(Global::g_contest.players[row], Global::g_contest.problems[column - 2]);
+        showProblemDetail(Global::g_contest.players[row], Global::g_contest.problems[column - 2]);
     else
     {
         for (auto i : Global::g_contest.problem_order)
-            ShowProblemDetail(Global::g_contest.players[row], Global::g_contest.problems[i]);
+            showProblemDetail(Global::g_contest.players[row], Global::g_contest.problems[i]);
     }
 
     is_show_detail = false;
@@ -257,7 +287,7 @@ void DetailTable::onShowConfigurationDetail()
     rows = this->rowCount();
     for (auto i : Global::g_contest.problem_order)
     {
-        const Problem* prob = Global::g_contest.problems[i];
+        const Problem* prob = current_problem = Global::g_contest.problems[i];
         onAddTitleDetail(QString("\"%1\" 的配置结果").arg(prob->Name()));
 
         int t = 0;
@@ -269,5 +299,84 @@ void DetailTable::onShowConfigurationDetail()
             onAddScoreDetail(sub->Size(), sub->Score(), sub->Score());
         }
     }
+
     is_show_detail = false;
+}
+
+
+
+static QString inFileByAction, outFileByAction, submitFileByAction;
+
+void DetailTable::onOpenInFile()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(inFileByAction));
+}
+
+void DetailTable::onOpenOutFile()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(outFileByAction));
+}
+
+void DetailTable::onOpenSubmitFile()
+{
+    QDesktopServices::openUrl(QUrl::fromLocalFile(submitFileByAction));
+}
+
+void DetailTable::onContextMenuEvent(const QPoint& pos)
+{
+    action_in->setEnabled(false);
+    action_out->setEnabled(false);
+    action_sub->setEnabled(false);
+    menu->clear();
+
+    QTableWidgetItem* item = this->itemAt(pos);
+    if (!item) return;
+
+    int row = item->row();
+    const Player* player = player_at[row];
+    const Problem* problem = problem_at[row];
+    if (!problem) return;
+
+    if (item->textColor() == Qt::white) // title item
+    {
+        if (!player)
+            inFileByAction = Global::g_contest.data_path + problem->Name() + "/";
+        else
+            inFileByAction = Global::g_contest.src_path + player->Name() + "/" + problem->Name() + "/";
+
+        action_in->setText("打开目录(&O)...");
+        if (QDir(inFileByAction).exists()) action_in->setEnabled(true);
+
+        menu->addAction(action_in);
+        menu->popup(QCursor::pos());
+    }
+    else if (item->column() == 1) // test point item
+    {
+        int id = this->verticalHeaderItem(row)->text().toInt() - 1;
+        QString in = problem->TestCaseAt(id)->InFile();
+        QString out = problem->TestCaseAt(id)->OutFile();
+        QString sub = problem->TestCaseAt(id)->SubmitFile();
+        inFileByAction = Global::g_contest.data_path + problem->Name() + "/" + in;
+        outFileByAction = Global::g_contest.data_path + problem->Name() + "/" + out;
+        if (player) submitFileByAction = Global::g_contest.src_path + player->Name() + "/" + problem->Name() + "/" + sub;
+
+        action_in->setText(QString("查看输入文件 \"%1\" (&I)...").arg(in));
+        if (QFile(inFileByAction).exists()) action_in->setEnabled(true);
+
+        action_out->setText(QString("查看输出文件 \"%1\" (&O)...").arg(out));
+        if (QFile(outFileByAction).exists()) action_out->setEnabled(true);
+
+        menu->addAction(action_in);
+        menu->addAction(action_out);
+
+        if (problem->Type() == Global::AnswersOnly && player)
+        {
+            action_sub->setText(QString("查看提交文件 \"%1\" (&S)...").arg(sub));
+            if (QFile(submitFileByAction).exists()) action_sub->setEnabled(true);
+
+            menu->addAction(action_sub);
+        }
+
+        menu->popup(QCursor::pos());
+    }
 }
