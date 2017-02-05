@@ -8,19 +8,22 @@
 #include "configure/testcase/testcasetabwidget.h"
 #include "ui_advancedconfiguredialog.h"
 
-AdvancedConfigureDialog::AdvancedConfigureDialog(const QList<const Problem*>& problems, QWidget *parent) :
+AdvancedConfigureDialog::AdvancedConfigureDialog(const QList<const Problem*>& problems, QWidget* parent, const QString& currentProblem) :
     QDialog(parent),
     ui(new Ui::AdvancedConfigureDialog), current_problem(nullptr), load_finished(false)
 {
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
+    int index = 0;
     for (int i = 0; i < problems.size(); i++)
     {
         Problem* prob = new Problem(*problems[i]);
         this->problems.append(prob);
         ui->listWidget->addItem(prob->Name());
         ui->listWidget->item(i)->setToolTip(prob->Name());
+
+        if (prob->Name() == currentProblem) index = i;
     }
 
     QStandardItemModel* model;
@@ -42,7 +45,7 @@ AdvancedConfigureDialog::AdvancedConfigureDialog(const QList<const Problem*>& pr
     ui->tabWidget->addTab(new CompilerTabWidget(), tr("编译器"));
     ui->tabWidget->addTab(new TestCaseTabWidget(), tr("测试点"));
 
-    ui->listWidget->setCurrentRow(0);
+    ui->listWidget->setCurrentRow(index);
 }
 
 AdvancedConfigureDialog::~AdvancedConfigureDialog()
