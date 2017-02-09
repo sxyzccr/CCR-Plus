@@ -1,16 +1,26 @@
-QT += core gui xml widgets network
+QT += core widgets network
+QT -= gui
 
 TARGET = upgrader
 TEMPLATE = app
 
 CONFIG += c++11
 
-SOURCES += main.cpp \
-    checkupdatesdialog.cpp
+include(quazip/quazip.pri)
 
-HEADERS += checkupdatesdialog.h
+SOURCES += updaterconst.cpp \
+    main.cpp \
+    checkupdatesdialog.cpp \
+    downloaddialog.cpp \
+    mycompress.cpp
 
-FORMS += checkupdatesdialog.ui
+HEADERS += updaterconst.h \
+    checkupdatesdialog.h \
+    downloaddialog.h \
+    mycompress.h
+
+FORMS += checkupdatesdialog.ui \
+    downloaddialog.ui
 
 RESOURCES = ../../resources/trans.qrc
 

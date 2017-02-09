@@ -2,31 +2,14 @@
 #include <QTimer>
 #include <QPushButton>
 #include <QJsonArray>
-#include <QJsonObject>
-#include <QJsonDocument>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
 
 #include "../common/version.h"
+#include "updaterconst.h"
 #include "checkupdatesdialog.h"
 #include "ui_checkupdatesdialog.h"
-
-inline QJsonObject CheckUpdatesDialog::parseToJson(const QByteArray& data, QString* errorString)
-{
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &error);
-    if (errorString)
-    {
-        *errorString = "";
-        if (error.error)
-            *errorString = QString("JSON 解析错误(错误代码 %1): %2").arg(error.error).arg(error.errorString());
-        else if (!doc.isObject())
-            *errorString = "JSON 解析失败: 不是 JSON 对象。";
-    }
-    return doc.object();
-}
-
 
 CheckUpdatesDialog::CheckUpdatesDialog(bool dontShowError, QWidget* parent) :
     QDialog(parent),
@@ -48,7 +31,8 @@ CheckUpdatesDialog::CheckUpdatesDialog(bool dontShowError, QWidget* parent) :
     this->setFixedHeight(120);
     this->setVisible(!dontShowError);
 
-    reply = manager->get(QNetworkRequest(QUrl("https://api.github.com/repos/sxyzccr/CCR-Plus/releases/latest")));
+    qDebug() << "Request URL:" << Updater::RELEASE_INFO_URL;
+    reply = manager->get(QNetworkRequest(QUrl(Updater::RELEASE_INFO_URL)));
 
     connect(this, &QDialog::finished, reply, &QNetworkReply::abort);
     connect(timer, &QTimer::timeout, this, [this]()
@@ -62,7 +46,7 @@ CheckUpdatesDialog::CheckUpdatesDialog(bool dontShowError, QWidget* parent) :
     connect(manager, &QNetworkAccessManager::finished, this, &CheckUpdatesDialog::onReplyFinished);
 
     timer->setSingleShot(true);
-    timer->start(60000);
+    timer->start(Updater::CONNECT_TIME_OUT);
 }
 
 CheckUpdatesDialog::~CheckUpdatesDialog()
@@ -116,7 +100,7 @@ void CheckUpdatesDialog::noUpdates()
     }
 
     this->setWindowTitle("没有更新");
-    ui->label_info->setText(QString("CCR-Plus 已是最新版本 %1。").arg(VERSION_SHORT));
+    ui->label_info->setText(QString("%1 已是最新版本 %2。").arg(Updater::APP_NAME).arg(VERSION_SHORT));
     ui->progressBar->hide();
 }
 
@@ -124,8 +108,8 @@ void CheckUpdatesDialog::foundUpdates(const QString& version, const QString& log
 {
     this->setWindowTitle("发现新版本");
     ui->label_latest->setText(version);
+    ui->label_info->setText(QString("将会下载 %1。").arg(Updater::FormatFileSize(bytes)));
     ui->plainTextEdit->setPlainText(log);
-    ui->label_info->setText(QString("将会下载 %1 MB。").arg(bytes / 1024.0 / 1024.0, 0, 'f', 2));
     ui->buttonBox->addButton(download_button, QDialogButtonBox::AcceptRole);
 
     ui->label_1->show();
@@ -158,7 +142,7 @@ void CheckUpdatesDialog::onReplyFinished()
     else if (download_url.isEmpty())
     {
         QString errorString;
-        QJsonObject json = parseToJson(reply->readAll(), &errorString);
+        QJsonObject json = Updater::ParseToJson(reply->readAll(), &errorString);
         if (!errorString.isEmpty())
         {
             showError(QString("检查更新失败: %1").arg(errorString));
@@ -182,7 +166,7 @@ void CheckUpdatesDialog::onReplyFinished()
             for (int i = 0; i < array.size(); i++)
             {
                 QJsonObject obj = array[i].toObject();
-                if (obj.value("name") == getFileName(latestVersion))
+                if (obj.value("name") == Updater::GetFileNameByPlatform(latestVersion))
                 {
                     download_url = obj.value("browser_download_url").toString();
                     download_size = obj.value("size").toInt();

@@ -2,22 +2,19 @@
 #include <QFile>
 #include <QString>
 #include <QProcess>
-#include <iostream>
-#include <QDebug>
 #include <QTranslator>
 #include <QApplication>
+#include <iostream>
 
 #include "../common/version.h"
+#include "updaterconst.h"
+#include "downloaddialog.h"
 #include "checkupdatesdialog.h"
 
-#if defined(Q_OS_WIN)
-    const QString updaterName = "upgrader.exe"
-#elif defined(Q_OS_LINUX)
-    const QString updaterName = "upgrader";
-#endif
-const QString tempPath = QDir::tempPath() + "/CCR-Plus/";
-const QString tempUpdaterPath = tempPath + updaterName;
+const QString tempPath = QDir::tempPath() + "/" + Updater::APP_NAME + "/";
+const QString tempUpdaterPath = tempPath + Updater::UPDATER_NAME;
 
+/// 杀死进程 pid
 #if defined(Q_OS_WIN)
 #include <windows.h>
 
@@ -31,6 +28,12 @@ void killProcess(int pid)
 
 }
 #endif
+
+/// 创建快捷方式
+void createLink()
+{
+
+}
 
 void cleanTemp()
 {
@@ -49,6 +52,25 @@ int main(int argc, char* argv[])
     bool _c = argc == 1, _d = false, _n = false, _h = false, _v = false;
     int pid = 0;
     QString url, dir;
+
+    if (!QDir(tempPath).exists()) QDir().mkpath(tempPath);
+
+// Debug for download
+//    for (;;)
+//    {
+//        //DownloadDialog dialog("file:///C:/Users/Equation/Desktop/CCR-Plus_1.0.0.150712_release_windows_x86.zip", "C:/Users/equation/Desktop/a");
+//        //DownloadDialog dialog("file:///home/equation/Desktop/CCR-Plus_v1.1.0_linux_x64.zip", "/home/equation/Desktop/a");
+//        //DownloadDialog dialog("https://svwh.dl.sourceforge.net/project/ccr-plus/Beta/1.0.0.150712_beta2/CCR-Plus_1.0.0.150712_beta2_linux_x64.zip", "/home/equation/Desktop/a");
+
+//        dialog.exec();
+//        qDebug()<<dialog.result();
+//        if (dialog.result() == QDialog::Accepted)
+//        {
+//            if (dialog.NeedRedownload()) continue;
+//        }
+
+//        return 0;
+//    }
 
     for (int i = 1 ; i < argc; i++)
     {
@@ -71,9 +93,9 @@ int main(int argc, char* argv[])
         else { _h = true; break; }
     }
 
-    if (_h) // help info
+    if (_h || (!_c && !_d && !_v)) // help info
     {
-        std::cout << "Usage: " << updaterName.toStdString() << " [options]\n";
+        std::cout << "Usage: " << Updater::UPDATER_NAME.toStdString() << " [options]\n";
         std::cout << "  -h, --help           Display this information\n";
         std::cout << "  -v, --version        Display the version information\n";
         std::cout << "  -c                   Check for updates\n";
@@ -91,7 +113,7 @@ int main(int argc, char* argv[])
     {
         cleanTemp();
         QString appPath = QCoreApplication::applicationDirPath();
-        QString updaterPath = appPath + "/" + updaterName;
+        QString updaterPath = appPath + "/" + Updater::UPDATER_NAME;
 
         for (;;)
         {
@@ -109,6 +131,19 @@ int main(int argc, char* argv[])
     }
     else if (_d) // download new files
     {
-
+        //url = "file:///C:/Users/Equation/Desktop/CCR-Plus_1.0.0.150712_release_windows_x86.zip";
+        //url = "file:///home/equation/Desktop/CCR-Plus_v1.1.0_linux_x64.zip";
+        //url = "https://svwh.dl.sourceforge.net/project/ccr-plus/Beta/1.0.0.150712_beta2/CCR-Plus_1.0.0.150712_beta2_linux_x64.zip";
+        for (;;)
+        {
+            DownloadDialog dialog(url, dir);
+            if (dialog.exec() == QDialog::Accepted)
+            {
+                if (dialog.NeedRedownload()) continue;
+                createLink();
+                QProcess::startDetached(dir + "/" + Updater::RUN_APP_CMD, {}, dir);
+            }
+            break;
+        }
     }
 }

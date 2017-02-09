@@ -41,23 +41,6 @@ private:
     QString download_url;
     int download_size;
 
-    /// 获取不同系统的下载文件名
-    inline static QString getFileName(const QString& version)
-    {
-#if defined(Q_OS_WIN)
-        return QString("CCR-Plus_%1_windows_x86.zip").arg(version);
-#elif defined(Q_OS_LINUX)
-#   if defined(Q_PROCESSOR_X86_64)
-        return QString("CCR-Plus_%1_linux_x64.zip").arg(version);
-#   else
-        return QString("CCR-Plus_%1_linux_x86.zip").arg(version);
-#   endif
-#endif
-    }
-
-    /// 解析 JSON 数据
-    inline static QJsonObject parseToJson(const QByteArray& data, QString* errorString = nullptr);
-
     /// 发生错误，会阻塞其他操作
     void showError(const QString& msg);
 
