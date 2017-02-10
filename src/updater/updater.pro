@@ -22,6 +22,7 @@ HEADERS += updaterconst.h \
 FORMS += checkupdatesdialog.ui \
     downloaddialog.ui
 
-RESOURCES = ../../resources/trans.qrc
+RESOURCES = ../../resources/image.qrc \
+    ../../resources/trans.qrc
 
-#RC_FILE = ../resources/icon.rc
+RC_FILE = ../../resources/updater_icon.rc

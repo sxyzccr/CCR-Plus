@@ -68,6 +68,6 @@ FORMS += configure/configuredialog.ui \
 RESOURCES = ../resources/image.qrc \
     ../resources/trans.qrc
 
-RC_FILE = ../resources/icon.rc
+RC_FILE = ../resources/CCR_icon.rc
 
 win32: LIBS += -lpsapi

@@ -17,6 +17,10 @@
   <property name="windowTitle">
    <string>下载更新</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../../resources/image.qrc">
+    <normaloff>:/image/update.ico</normaloff>:/image/update.ico</iconset>
+  </property>
   <property name="styleSheet">
    <string notr="true">QWidget
 {
@@ -68,7 +72,9 @@ QMainWindow
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../../resources/image.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>buttonBox</sender>

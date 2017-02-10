@@ -4,5 +4,6 @@
         <file>folder.png</file>
         <file>logo.png</file>
         <file>logo2.png</file>
+        <file>update.ico</file>
     </qresource>
 </RCC>

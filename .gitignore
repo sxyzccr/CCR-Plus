@@ -11,6 +11,7 @@ log.*
 
 # Test files
 [Tt]est/
+private
 
 # *nix related
 # Common convention for backup or temporary files
