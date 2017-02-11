@@ -206,49 +206,67 @@ Global::CompileResult BaseJudger::compile(const Compiler* compiler, QString& res
 #include <windows.h>
 #include <psapi.h>
 
+/// 进程结束后的清理
+inline void onProcessFinished(const PROCESS_INFORMATION& pi)
+{
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+}
+
 TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double memLim) const
 {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     PROCESS_MEMORY_COUNTERS pmc;
+    FILETIME ct, et, kt, ut;
+    SYSTEMTIME _kt, _ut;
 
-    auto EndProcess = [&](PROCESS_INFORMATION& pi)
-    {
-        WaitForSingleObject(pi.hProcess, INFINITE);
-        CloseHandle(pi.hThread);
-        CloseHandle(pi.hProcess);
-    };
-
-    double usedTime = 0;
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
     si.dwFlags = STARTF_USESTDHANDLES;
-    if (!CreateProcess(0, (wchar_t*)(working_dir + exe).utf16(), 0, 0, FALSE, CREATE_NO_WINDOW, 0, (wchar_t*)working_dir.utf16(), &si, &pi))
-        return TestCaseResult(0, 0, 'E', "无法运行程序");
+    if (!CreateProcess(0, (LPTSTR)(working_dir + exe).utf16(), 0, 0, FALSE, CREATE_NO_WINDOW, 0, (LPCTSTR)working_dir.utf16(), &si, &pi))
+        return TestCaseResult(0, 0, 'E', QString("无法运行程序: %1").arg((unsigned int)GetLastError()));
 
-    bool ok = false;
     QElapsedTimer timer;
     timer.start();
-    for (; timer.elapsed() <= timeLim * 1000 + 10;)
+    for (;;)
     {
-        if (WaitForSingleObject(pi.hProcess, 0) == WAIT_OBJECT_0)
-        {
-            ok = true;
-            break;
-        }
+        if (WaitForSingleObject(pi.hProcess, 0) == WAIT_OBJECT_0) break;
         if (Global::g_is_judge_stoped)
         {
             TerminateProcess(pi.hProcess, 0);
-            EndProcess(pi);
+            onProcessFinished(pi);
             return TestCaseResult();
         }
+
         GetProcessMemoryInfo(pi.hProcess, &pmc, sizeof(pmc));
-        if (pmc.PeakPagefileUsage > memLim * (1 << 20))
+        if (pmc.PeakPagefileUsage > memLim * (1<<20))
         {
             TerminateProcess(pi.hProcess, 0);
-            EndProcess(pi);
+            onProcessFinished(pi);
             return TestCaseResult(0, 0, 'M', "超过内存限制");
         }
+
+        GetProcessTimes(pi.hProcess, &ct, &et, &kt, &ut);
+        FileTimeToSystemTime(&kt, &_kt);
+        FileTimeToSystemTime(&ut, &_ut);
+        double usedTime = _ut.wHour * 3600 + _ut.wMinute * 60 + _ut.wSecond + _ut.wMilliseconds / 1000.0;
+        double kernelTime = _kt.wHour * 3600 + _kt.wMinute * 60 + _kt.wSecond + _kt.wMilliseconds / 1000.0;
+        double blockTime = timer.elapsed() / 1000.0 - usedTime - kernelTime;
+
+        if (usedTime > timeLim || kernelTime > timeLim || blockTime > 1.5)
+        {
+            TerminateProcess(pi.hProcess, 0);
+            onProcessFinished(pi);
+            if (usedTime > timeLim)
+                return TestCaseResult(0, timeLim, 'T', "超过时间限制");
+            else if (kernelTime > timeLim)
+                return TestCaseResult(0, timeLim, 'T', "系统 CPU 时间过长");
+            else
+                return TestCaseResult(0, timeLim, 'T', "进程被阻塞");
+        }
+
         QCoreApplication::processEvents();
         QThread::msleep(10);
     }
@@ -257,30 +275,26 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
     GetExitCodeProcess(pi.hProcess, &exitCode);
     if (exitCode && exitCode != STILL_ACTIVE)
     {
-        EndProcess(pi);
-        return TestCaseResult(0, 0, 'R', QString("运行时错误: %1").arg((int)exitCode));
+        onProcessFinished(pi);
+        return TestCaseResult(0, 0, 'R', QString("运行时错误: %1").arg((unsigned int)exitCode));
     }
 
-    if (!ok)
-    {
-        TerminateProcess(pi.hProcess, 0);
-        EndProcess(pi);
-        return TestCaseResult(0, timeLim, 'T', "超过时间限制");
-    }
-
-    FILETIME ct, et, kt, ut;
-    SYSTEMTIME st;
-    GetProcessTimes(pi.hProcess, &ct, &et, &kt, &ut);
     GetProcessMemoryInfo(pi.hProcess, &pmc, sizeof(pmc));
-    EndProcess(pi);
+    double usedMemory = pmc.PeakPagefileUsage / 1024.0 / 1024.0;
 
-    FileTimeToSystemTime(&ut, &st);
-    usedTime = st.wHour * 3600 + st.wMinute * 60 + st.wSecond + st.wMilliseconds / 1000.0;
+    GetProcessTimes(pi.hProcess, &ct, &et, &kt, &ut);
+    FileTimeToSystemTime(&ut, &_ut);
+    double usedTime = _ut.wHour * 3600 + _ut.wMinute * 60 + _ut.wSecond + _ut.wMilliseconds / 1000.0;
+
+    onProcessFinished(pi);
+
+    if (usedMemory > memLim)
+        return TestCaseResult(0, 0, 'M', "超过内存限制");
     if (usedTime > timeLim)
         return TestCaseResult(0, timeLim, 'T', "超过时间限制");
 
     return TestCaseResult(1.0, usedTime, ' ', QString("时间: %1s 内存: %2MB").arg(usedTime, 0, 'f', 2)
-                                                                             .arg(pmc.PeakPagefileUsage / 1024.0 / 1024.0, 0, 'f', 2));
+                                                                             .arg(usedMemory, 0, 'f', 2));
 }
 
 #else
@@ -298,7 +312,7 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
     if (!process.waitForStarted(-1))
         return TestCaseResult(0, 0, 'E', "无法运行进程监视器");
 
-    bool ok = monitorProcess(&process, timeLim * 1000 + 10);
+    bool ok = monitorProcess(&process, std::max(timeLim * 2000 + 200, 10000.0));
     bool finished = process.waitForFinished(2000);
     QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
 
@@ -307,7 +321,7 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
     else if (Global::g_is_judge_stoped)
         return TestCaseResult();
     else if (!ok)
-        return TestCaseResult(0, timeLim, 'T', "超过时间限制");
+        return TestCaseResult(0, timeLim, 'T', "运行时间过长");
     else if (process.exitCode())
     {
         char state = ' ';
