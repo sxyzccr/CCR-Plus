@@ -19,11 +19,12 @@ DownloadDialog::DownloadDialog(const QString urlString, const QString installDir
     url_string(urlString), file_name(QFileInfo(urlString).fileName()), download_dir(QDir::tempPath() + "/CCR-Plus/"), install_dir(installDir),
     file_downloaded(new QFile(download_dir + file_name, this)), file_tmp(new QFile(download_dir + file_name + ".download", this)),
     last_bytes(0), current_bytes(0), total_bytes(0),
-    download_ok(false), uncompress_ok(false), need_redownload(false)
+    download_ok(false), uncompress_ok(false), need_redownload(false), need_reuncompress(false), create_shortcut(false)
 {
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
+    ui->checkBox->hide();
     ui->buttonBox->addButton(redownload_button, QDialogButtonBox::AcceptRole);
     redownload_button->hide();
     this->setFixedHeight(this->sizeHint().height());
@@ -45,6 +46,17 @@ DownloadDialog::DownloadDialog(const QString urlString, const QString installDir
 DownloadDialog::~DownloadDialog()
 {
     delete ui;
+}
+
+void DownloadDialog::done(int r)
+{
+    if (need_reuncompress)
+    {
+        need_reuncompress = false;
+        return;
+    }
+    if (uncompress_ok) create_shortcut = ui->checkBox->isChecked();
+    QDialog::done(r);
 }
 
 
@@ -87,6 +99,7 @@ void DownloadDialog::updateSuccessed()
     ui->label_info->setText("更新成功!");
     ui->label_size->hide();
     ui->progressBar->hide();
+    ui->checkBox->show();
     ui->buttonBox->setStandardButtons(QDialogButtonBox::Close);
     redownload_button->setText("立即启动(&S)");
     this->setFixedHeight(120);
@@ -209,5 +222,8 @@ void DownloadDialog::onDownloadFinished()
 void DownloadDialog::on_buttonBox_clicked(QAbstractButton* button)
 {
     if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Retry)
+    {
         if (uncompress()) updateSuccessed();
+        need_reuncompress = true;
+    }
 }

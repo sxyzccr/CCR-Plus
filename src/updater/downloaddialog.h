@@ -24,6 +24,12 @@ public:
     /// 需要重新下载
     bool NeedRedownload() const { return need_redownload; }
 
+    /// 是否创建快捷方式
+    bool ShouldCreateShortcut() const { return create_shortcut; }
+
+public slots:
+    virtual void done(int r) override;
+
 private:
     Ui::DownloadDialog* ui;
     QPushButton* redownload_button;
@@ -35,7 +41,7 @@ private:
     QString url_string, file_name, download_dir, install_dir;
     QFile *file_downloaded, *file_tmp;
     qint64 last_bytes, current_bytes, total_bytes;
-    bool download_ok, uncompress_ok, need_redownload;
+    bool download_ok, uncompress_ok, need_redownload, need_reuncompress, create_shortcut;
 
     /// 显示错误
     void showError(const QString& msg, bool isBlocked = true);

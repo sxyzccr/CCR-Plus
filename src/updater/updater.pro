@@ -26,3 +26,5 @@ RESOURCES = ../../resources/image.qrc \
     ../../resources/trans.qrc
 
 RC_FILE = ../../resources/updater_icon.rc
+
+win32: LIBS += -lole32

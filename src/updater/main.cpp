@@ -4,6 +4,7 @@
 #include <QProcess>
 #include <QTranslator>
 #include <QApplication>
+#include <QStandardPaths>
 #include <iostream>
 
 #include "../common/version.h"
@@ -14,26 +15,67 @@
 const QString tempPath = QDir::tempPath() + "/" + Updater::APP_NAME + "/";
 const QString tempUpdaterPath = tempPath + Updater::UPDATER_NAME;
 
-/// 杀死进程 pid
 #if defined(Q_OS_WIN)
+
+#define INITGUID
+#include <shobjidl.h>
+#include <shlguid.h>
 #include <windows.h>
 
+/// 杀死进程 pid
 void killProcess(int pid)
 {
 
 }
-#elif defined(Q_OS_LINUX)
-void killProcess(int pid)
-{
-
-}
-#endif
 
 /// 创建快捷方式
-void createLink()
+bool createShortcut(const QString& installDir, const QString& destinationDir)
+{
+    CoInitialize(NULL);
+    IShellLink* pShellLink = NULL;
+
+    HRESULT hres;
+    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL, IID_IShellLink, (void**)&pShellLink);
+
+    LPCTSTR appPath = (LPCTSTR)QDir(installDir).absoluteFilePath(Updater::RUN_APP_CMD).utf16();
+    LPCTSTR lnkPath = (LPCTSTR)QDir(destinationDir).absoluteFilePath("CCR Plus 测评器.lnk").utf16();
+
+    if (SUCCEEDED(hres))
+    {
+        pShellLink->SetPath(appPath);
+        pShellLink->SetDescription(L"CCR Plus 测评器");
+        pShellLink->SetWorkingDirectory((LPCTSTR)installDir.utf16());
+
+        IPersistFile* pPersistFile;
+        hres = pShellLink->QueryInterface(IID_IPersistFile, (void**)&pPersistFile);
+
+        if (SUCCEEDED(hres))
+        {
+            hres = pPersistFile->Save(lnkPath, TRUE);
+            pPersistFile->Release();
+        }
+        pShellLink->Release();
+    }
+    CoUninitialize();
+
+    return SUCCEEDED(hres);
+}
+
+#elif defined(Q_OS_LINUX)
+
+/// 杀死进程 pid
+void killProcess(int pid)
 {
 
 }
+
+/// 创建快捷方式
+bool createShortcut(const QString& installDir, const QString& destinationDir)
+{
+    return !QProcess::execute(QString("%1/install.sh").arg(installDir), { installDir, destinationDir });
+}
+
+#endif
 
 void cleanTemp()
 {
@@ -68,6 +110,8 @@ int main(int argc, char* argv[])
 //        {
 //            if (dialog.NeedRedownload()) continue;
 //        }
+//        if (dialog.ShouldCreateShortcut())
+//            createShortcut("/home/equation/Desktop/a", QStandardPaths::writableLocation(QStandardPaths::DesktopLocation));
 
 //        return 0;
 //    }
@@ -140,9 +184,11 @@ int main(int argc, char* argv[])
             if (dialog.exec() == QDialog::Accepted)
             {
                 if (dialog.NeedRedownload()) continue;
-                createLink();
-                QProcess::startDetached(dir + "/" + Updater::RUN_APP_CMD, {}, dir);
+                QProcess::startDetached(QDir(dir).absoluteFilePath(Updater::RUN_APP_CMD), {}, dir);
             }
+            if (dialog.ShouldCreateShortcut())
+                createShortcut(dir, QStandardPaths::writableLocation(QStandardPaths::DesktopLocation));
+
             break;
         }
     }
