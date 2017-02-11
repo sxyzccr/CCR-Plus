@@ -25,7 +25,8 @@ const QString tempUpdaterPath = tempPath + Updater::UPDATER_NAME;
 /// 杀死进程 pid
 void killProcess(int pid)
 {
-
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    if (hProcess != NULL) TerminateProcess(hProcess, 0);
 }
 
 /// 创建快捷方式
@@ -66,7 +67,7 @@ bool createShortcut(const QString& installDir, const QString& destinationDir)
 /// 杀死进程 pid
 void killProcess(int pid)
 {
-
+    QProcess::execute(QString("kill -9 %1").arg(pid));
 }
 
 /// 创建快捷方式
