@@ -200,6 +200,7 @@ QMainWindow
      <string>帮助(&amp;H)</string>
     </property>
     <addaction name="action_help"/>
+    <addaction name="action_update"/>
     <addaction name="separator"/>
     <addaction name="action_about"/>
    </widget>
@@ -336,6 +337,11 @@ QMainWindow
    </property>
    <property name="shortcut">
     <string>F1</string>
+   </property>
+  </action>
+  <action name="action_update">
+   <property name="text">
+    <string>检查更新(&amp;U)...</string>
    </property>
   </action>
  </widget>
