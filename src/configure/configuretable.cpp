@@ -59,7 +59,7 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
                 model->appendRow(item);
             }
 
-            QStringList dirs = { QDir().currentPath() + "/checker",
+            QStringList dirs = { QCoreApplication::applicationDirPath() + "/checker",
                                  Global::g_contest.data_path + problem_list[index.column()]
                                };
             for (auto dir : dirs)
