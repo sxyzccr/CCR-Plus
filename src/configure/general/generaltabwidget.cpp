@@ -64,7 +64,7 @@ void GeneralTabWidget::ShowProblemConfiguration(Problem* problem)
     ui->comboBox_custom->clear();
     ui->comboBox_builtin->setCurrentIndex(0);
     QStandardItemModel* model = new QStandardItemModel(ui->comboBox_custom);
-    QStringList dirs = { QDir().currentPath() + "/checker",
+    QStringList dirs = { QCoreApplication::applicationDirPath() + "/checker",
                          Global::g_contest.data_path + problem->Name(),
                        };
     for (auto dir : dirs)

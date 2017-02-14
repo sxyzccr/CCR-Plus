@@ -126,8 +126,8 @@ TestCaseResult BaseJudger::checkOutput(const QString& inFile, const QString& ans
     QProcess process;
     process.setWorkingDirectory(working_dir);
     QString checkerDir;
-    if (QFile(QDir().currentPath() + "/checker/" + problem->Checker()).exists())
-        checkerDir = QDir().currentPath() + "/checker/";
+    if (QFile(QCoreApplication::applicationDirPath() + "/checker/" + problem->Checker()).exists())
+        checkerDir = QCoreApplication::applicationDirPath() + "/checker/";
     else
         checkerDir = data_dir;
 #ifdef Q_OS_LINUX
@@ -301,11 +301,11 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
 
 TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double memLim) const
 {
-    QProcess::execute(QString("chmod +wx \"%1\"").arg(QDir().currentPath() + "/monitor"));
+    QProcess::execute(QString("chmod +wx \"%1\"").arg(QCoreApplication::applicationDirPath() + "/monitor"));
 
     QProcess process;
     process.setWorkingDirectory(working_dir);
-    process.start(QDir().currentPath() + "/monitor", QStringList({ exe,
+    process.start(QCoreApplication::applicationDirPath() + "/monitor", QStringList({ exe,
                                                                    QString::number(timeLim),
                                                                    QString::number(memLim)
                                                                  }));
