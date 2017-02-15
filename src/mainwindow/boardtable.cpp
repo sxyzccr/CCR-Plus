@@ -1,5 +1,6 @@
 #include <QScrollBar>
 #include <QHeaderView>
+#include <QAbstractButton>
 
 #include "common/global.h"
 #include "common/contest.h"
@@ -69,6 +70,9 @@ BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),
 
     connect(this->horizontalHeader(), &QHeaderView::sectionMoved, this, &BoardTable::onSectionMove);
     connect(this->horizontalHeader(), &QHeaderView::sectionClicked, this, &BoardTable::onSortTable);
+
+    QAbstractButton* button = this->findChild<QAbstractButton*>();
+    if (button) button->setToolTip("全选");
 }
 
 void BoardTable::ClearBoard()
