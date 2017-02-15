@@ -789,6 +789,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
+    if (!ui->listWidget_recent->count()) return;
     if (!ui->action_close->isEnabled() && (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return) && ui->listWidget_recent->currentItem()->isSelected())
         on_listWidget_recent_itemDoubleClicked(ui->listWidget_recent->currentItem());
     else QWidget::keyPressEvent(event);
