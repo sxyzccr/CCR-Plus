@@ -27,7 +27,7 @@ ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
     ui->widget_empty->hide();
     ui->gridLayout->addWidget(configure_table, 0, 0, 1, 2);
 
-    this->setFixedSize(configure_table->width() + 18, configure_table->height() + 86);
+    this->setFixedSize(this->sizeHint());
 }
 
 ConfigureDialog::~ConfigureDialog()

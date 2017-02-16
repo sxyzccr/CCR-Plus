@@ -219,15 +219,15 @@ ConfigureTable::ConfigureTable(const QList<Problem*>& problems, QWidget* parent)
     this->horizontalHeader()->setSectionsMovable(true);
     this->horizontalHeader()->setTextElideMode(Qt::ElideRight);
     this->horizontalHeader()->setHighlightSections(false);
-    this->horizontalHeader()->setDefaultSectionSize(85);
-    this->horizontalHeader()->setMinimumSectionSize(85);
-    this->horizontalHeader()->setFixedHeight(25);
+    this->horizontalHeader()->setDefaultSectionSize(80);
+    this->horizontalHeader()->setMinimumSectionSize(80);
+    this->horizontalHeader()->setMinimumHeight(25);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     this->verticalHeader()->setHighlightSections(false);
-    this->verticalHeader()->setDefaultSectionSize(27);
-    this->verticalHeader()->setMinimumSectionSize(27);
-    this->verticalHeader()->setFixedWidth(80);
+    this->verticalHeader()->setDefaultSectionSize(25);
+    this->verticalHeader()->setMinimumSectionSize(25);
+    this->verticalHeader()->setMinimumWidth(80);
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
     this->setModel(model);
@@ -364,6 +364,9 @@ void ConfigureTable::loadProblems()
         model->setHorizontalHeaderItem(i, item);
         setColumnData(i);
     }
+
+    this->horizontalHeader()->setDefaultSectionSize(this->verticalHeader()->width());
+    this->verticalHeader()->setDefaultSectionSize(this->horizontalHeader()->height());
 
     int w = std::min(std::max(num, 3), 12) * this->horizontalHeader()->defaultSectionSize() + this->verticalHeader()->width() + 2 * this->frameWidth();
     int h = 5 * this->verticalHeader()->defaultSectionSize() + this->horizontalHeader()->height() + 2 * this->frameWidth();
