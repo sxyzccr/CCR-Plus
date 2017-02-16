@@ -4,13 +4,13 @@
 #include "configure/compiler/compilertabwidget.h"
 #include "ui_compilertabwidget.h"
 
-CompilerTabWidget::CompilerTabWidget(QWidget *parent) :
+CompilerTabWidget::CompilerTabWidget(QWidget* parent) :
     ConfigureTabWidget(parent),
     ui(new Ui::CompilerTabWidget)
 {
     ui->setupUi(this);
 
-    ui->tableWidget->horizontalHeader()->setFixedHeight(25);
+    ui->tableWidget->horizontalHeader()->setMinimumHeight(25);
     ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     ui->tableWidget->verticalHeader()->setSectionsMovable(true);
@@ -67,6 +67,8 @@ void CompilerTabWidget::ShowProblemConfiguration(Problem* problem)
         item = new QTableWidgetItem(compiler->Cmd());
         ui->tableWidget->setItem(i, 1, item);
     }
+
+    ui->tableWidget->verticalHeader()->setDefaultSectionSize(ui->tableWidget->horizontalHeader()->height());
 }
 
 void CompilerTabWidget::ChangeProblemType(Global::ProblemType /*type*/)

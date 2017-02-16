@@ -53,7 +53,7 @@ private:
     Ui::AddTestCaseDialog *ui;
     const Problem* problem;
     const TestCase* point;
-    int score;
+    int score, box_min_width;
     TestCaseType type;
     bool load_finished;
 };
