@@ -33,8 +33,10 @@ MainWindow::MainWindow(QWidget* parent) :
 
     close_button->setIcon(style()->standardPixmap(QStyle::SP_TitleBarCloseButton));
     close_button->setToolTip("关闭当前竞赛");
-    close_button->setStyleSheet("background-color:transparent");
+    close_button->setFixedSize(ui->menuBar->sizeHint().height(), ui->menuBar->sizeHint().height());
+    close_button->setStyleSheet("QToolButton{border:none;}");
     close_button->setFocusPolicy(Qt::NoFocus);
+    close_button->setCursor(Qt::PointingHandCursor);
     close_button->hide();
     ui->menuBar->setCornerWidget(close_button);
 
