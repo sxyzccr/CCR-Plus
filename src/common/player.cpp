@@ -3,6 +3,7 @@
 
 #include "common/global.h"
 #include "common/player.h"
+#include "common/version.h"
 
 const QStringList ResultLabel::COLOR_NAME_LIST =
 {
@@ -129,7 +130,7 @@ void Player::SaveHTMLResult()
     meta.setAttribute("content", "text/html; charset=utf-8");
     head.appendChild(meta);
     meta = doc.createElement("title");
-    meta.appendChild(doc.createTextNode(QString("%1的测评结果").arg(name)));
+    meta.appendChild(doc.createTextNode(QString("%1 的测评结果").arg(name)));
     head.appendChild(meta);
 
     head = doc.createElement("body");
@@ -267,10 +268,18 @@ void Player::SaveHTMLResult()
         file.close();
     }
     QDomElement p = doc.createElement("p");
-    p.appendChild(doc.createTextNode("本文件由 CCR Plus 测评器生成，如有疑问和建议请致信 "));
+    p.appendChild(doc.createTextNode("本文件由 CCR Plus 测评器生成"));
+    head.appendChild(p);
+
+    p = doc.createElement("p");
+    p.appendChild(doc.createTextNode(QString("版本: %1").arg(VERSION_LONG)));
+    head.appendChild(p);
+
+    p = doc.createElement("p");
+    p.appendChild(doc.createTextNode("项目主页: "));
     QDomElement a = doc.createElement("a");
-    a.setAttribute("href", "mailto:equation618@gmail.com");
-    a.appendChild(doc.createTextNode("equation618@gmail.com"));
+    a.setAttribute("href", "https://github.com/sxyzccr/CCR-Plus");
+    a.appendChild(doc.createTextNode("https://github.com/sxyzccr/CCR-Plus"));
     p.appendChild(a);
     head.appendChild(p);
 
@@ -282,7 +291,7 @@ void Player::SaveHTMLResult()
     head.appendChild(p);
 
     p = doc.createElement("p");
-    p.appendChild(doc.createTextNode("绍兴一中 贾越凯"));
+    p.appendChild(doc.createTextNode(QString("Copyright © %1 绍兴一中 贾越凯。保留所有权利。").arg(YEAR_STRING)));
     head.appendChild(p);
 
     QFile file(Global::g_contest.src_path + name + "/result.html");

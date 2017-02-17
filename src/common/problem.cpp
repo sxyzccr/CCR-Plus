@@ -4,6 +4,7 @@
 
 #include "common/global.h"
 #include "common/problem.h"
+#include "common/version.h"
 
 const QStringList Compiler::BUILTIN_COMPILER_CMD =
 {
@@ -183,6 +184,7 @@ bool Problem::SaveConfiguration() const
     QDomElement root = doc.createElement("problem");
     root.setAttribute("type", type == Global::Traditional ? "TRA_0_4" : type == Global::AnswersOnly ? "ANS_0_4" : "UNKNOWN");
     root.setAttribute("maker", "ccr-plus");
+    root.setAttribute("version", VERSION_SHORTER);
     doc.appendChild(root);
 
     QDomElement source = doc.createElement("source");
