@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>CreateFileDialog</class>
  <widget class="QDialog" name="CreateFileDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>240</width>
-    <height>160</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>创建源代码</string>
   </property>

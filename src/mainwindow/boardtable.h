@@ -64,7 +64,7 @@ public slots:
     void onUpdateProblemLabel(Player* player, int column);
 
 private:
-    int pre_highlighted_col;
+    int pre_highlighted_col, sum_label_width, problem_label_width;
     bool already_moving_section, is_locked;
 };
 

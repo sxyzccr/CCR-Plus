@@ -17,6 +17,8 @@ CreateFileDialog::CreateFileDialog(const Player* player, const Problem* problem,
         ui->listWidget->item(i)->setToolTip(compiler->SourceFile());
     }
     ui->listWidget->setCurrentRow(0);
+
+    this->setMinimumSize(this->sizeHint());
 }
 
 CreateFileDialog::~CreateFileDialog()

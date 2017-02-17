@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget* parent) :
     splitter->hide();
     ui->verticalLayout->addWidget(splitter);
 
+    ui->listWidget_recent->setGridSize(QSize(145, 128 + 5 + QFontMetrics(this->font()).height()));
+
     // Set connect
     connect(close_button, &QToolButton::clicked, this, &MainWindow::on_action_close_triggered);
 
