@@ -9,7 +9,10 @@ QPixmap Contest::CreateIcon(const QString& contestPath)
     QStringList list = ReadProblemOrder(contestPath);
     QPixmap image(":/image/folder.png");
     QPainter painter(&image);
-    painter.setFont(QFont("Times New Roman", 11, 0, true));
+    QFont font("Times New Roman", -1, 0, true);
+    font.setPixelSize(15);
+    painter.setFont(font);
+
     QFontMetrics fm = painter.fontMetrics();
     QPair<int, int> pos[3] = {{15, 38}, {15, 60}, {15, 82}};
     int n = std::min(list.size(), 3);
