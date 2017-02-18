@@ -777,6 +777,7 @@ void MainWindow::on_action_about_triggered()
 {
     QMessageBox msgBox(this);
     msgBox.setWindowTitle("关于 CCR Plus");
+    msgBox.setStyleSheet("QMessageBox{background-color:rgb(250,250,250);}");
     msgBox.setText(QString(
                       "<h2>CCR Plus 测评器<br/></h2>"
                       "<p>版本：%1</p>"

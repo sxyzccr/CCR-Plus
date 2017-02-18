@@ -10,6 +10,7 @@
 #include "common/global.h"
 #include "common/player.h"
 #include "common/problem.h"
+#include "common/version.h"
 #include "judge/judger/basejudger.h"
 
 BaseJudger::BaseJudger(const QString& testDir, const Player* player, const Problem* problem, QObject *parent) : QObject(parent),
@@ -364,6 +365,8 @@ ResultSummary BaseJudger::Judge()
     QDomProcessingInstruction xml = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
     doc.appendChild(xml);
     QDomElement root = doc.createElement("task");
+    root.setAttribute("maker", "ccr-plus");
+    root.setAttribute("version", VERSION_SHORTER);
     doc.appendChild(root);
 
     auto saveXml = [&](ResultSummary result)
