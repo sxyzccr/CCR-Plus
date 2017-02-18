@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget* parent) :
                              "<p align=\"right\">"
                              "<span style=\"font-size:11pt; color:#505050;\">版本 </span>"
                              "<span style=\"font-size:11pt; color:#00a1f1;\">%1</span>"
-                             "</p>").arg(VERSION));
+                             "</p>").arg(VERSION_LONG));
 
     splitter = new QSplitter(ui->centralWidget);
     close_button = new QToolButton(ui->menuBar);
@@ -772,12 +772,16 @@ void MainWindow::on_action_about_triggered()
                       "<h2>CCR Plus 测评器<br/></h2>"
                       "<p>版本：%1</p>"
                       "<p>构建时间：%2 - %3</p>"
-                      "<p>Copyright © 2016 绍兴一中 贾越凯。保留所有权利。<br/></p>"
+                      "<p>Copyright © %4 绍兴一中 贾越凯。保留所有权利。<br/></p>"
+
                       "<p>项目主页：<a href=\"https://github.com/sxyzccr/CCR-Plus\">https://github.com/sxyzccr/CCR-Plus</a></p>"
-                      "<p>作者邮箱：<a href=\"mailto:equation618@gmail.com\">equation618@gmail.com</a><br/></p>"
+                      "<p>下载地址: <a href=\"https://github.com/sxyzccr/CCR-Plus/releases\">https://github.com/sxyzccr/CCR-Plus/releases</a></p>"
+                      "<p>Bug 汇报: <a href=\"https://github.com/sxyzccr/CCR-Plus/issues\">https://github.com/sxyzccr/CCR-Plus/issues</a></p>"
+                      "<p>GitHub 贡献者: <a href=\"https://github.com/equation314\">equation314</a>, <a href=\"https://github.com/wwt17\">wwt17</a><br/></p>"
+
                       "<p>本项目使用 <a href=\"http://www.gnu.org/licenses/gpl-3.0.html\">GNU 通用公共许可证</a>。</p>"
-                      "<p>感谢 <a href=\"http://code.google.com/p/project-lemon\">project-lemon</a> 等开源项目的支持。</p>"
-                      ).arg(VERSION).arg(__DATE__).arg(__TIME__));
+                      "<p>感谢原版 CCR 以及 <a href=\"http://code.google.com/p/project-lemon\">project-lemon</a>，<a href=\"http://www.hustoj.com\">HUSTOJ</a> 等开源项目。</p>"
+                      ).arg(VERSION_LONGER).arg(__DATE__).arg(__TIME__).arg(YEAR_STRING));
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setIconPixmap(QPixmap(":/image/logo.png"));
     msgBox.exec();

@@ -3,6 +3,7 @@
 #include <QDomDocument>
 
 #include "common/contest.h"
+#include "common/version.h"
 
 QPixmap Contest::CreateIcon(const QString& contestPath)
 {
@@ -90,7 +91,7 @@ void Contest::SaveProblemOrder(const QStringList& list)
     QTextStream out(&file);
     out.setCodec("UTF-8");
     out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    out << "<contest>\n";
+    out << QString("<contest maker=\"ccr-plus\" version=\"%1\">\n").arg(VERSION_SHORTER);
     out << "    <order>\n";
     for (auto i : list) out << QString("        <problem>%1</problem>\n").arg(i);
     out << "    </order>\n";
