@@ -55,7 +55,9 @@ QWidget* ConfigureTableItemDelegate::createEditor(QWidget* parent, const QStyleO
             {
                 item = new QStandardItem(checker.first);
                 item->setToolTip(checker.second);
-                item->setFont(Global::BOLD_FONT);
+                QFont font = item->font();
+                font.setBold(true);
+                item->setFont(font);
                 model->appendRow(item);
             }
 
@@ -197,6 +199,7 @@ bool ConfigureTableItemDelegate::editorEvent(QEvent* event, QAbstractItemModel* 
 
 
 
+const QFont ConfigureTable::BOLD_FONT = QFont("微软雅黑", 9, QFont::Bold);
 
 ConfigureTable::ConfigureTable(const QList<Problem*>& problems, QWidget* parent) : QTableView(parent),
     model(new QStandardItemModel(this)), problems(problems), is_changing_data(false)
@@ -251,8 +254,8 @@ void ConfigureTable::SetColumnUnchanged(int c)
     is_changing_data = true;
 
     for (int i = 0; i < model->rowCount(); i++)
-        model->setData(model->index(i, c), Global::NORMAL_FONT, Qt::FontRole);
-    model->setHeaderData(c, Qt::Horizontal, Global::NORMAL_FONT, Qt::FontRole);
+        model->setData(model->index(i, c), this->font(), Qt::FontRole);
+    model->setHeaderData(c, Qt::Horizontal, this->font(), Qt::FontRole);
 
     is_changing_data = false;
 }

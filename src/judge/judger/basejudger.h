@@ -1,6 +1,9 @@
 #ifndef BASEJUDGER_H
 #define BASEJUDGER_H
 
+#include <QObject>
+#include <QString>
+
 #include "common/const.h"
 
 class QProcess;

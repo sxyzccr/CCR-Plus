@@ -1,8 +1,6 @@
 #ifndef CONST_H
 #define CONST_H
 
-#include <QFont>
-
 class QColor;
 
 namespace Global
@@ -49,9 +47,6 @@ enum LabelStyle
 };
 
 const int MAX_RECENT_CONTEST = 20;
-
-const QFont NORMAL_FONT = QFont("微软雅黑", 9);
-const QFont BOLD_FONT = QFont("微软雅黑", 9, QFont::Bold);
 
 int GetLogicalRow(int visualRow);
 QColor GetRatioColor(int rl, int gl, int bl, int rr, int gr, int br, int x, int y);

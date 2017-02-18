@@ -3,6 +3,9 @@
 
 #include "common/const.h"
 
+class QString;
+class QStringList;
+
 class Compiler
 {
 public:

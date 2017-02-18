@@ -58,11 +58,11 @@ public:
         else
             model->setData(model->index(r, c), value.toString(), Qt::ToolTipRole);
     }
-    void SetItemBold(int r, int c) { model->setData(model->index(r, c), Global::BOLD_FONT, Qt::FontRole); }
+    void SetItemBold(int r, int c) { model->setData(model->index(r, c), BOLD_FONT, Qt::FontRole); }
     void SetItemChanged(int r, int c)
     {
         SetItemBold(r, c);
-        model->setHeaderData(c, Qt::Horizontal, Global::BOLD_FONT, Qt::FontRole);
+        model->setHeaderData(c, Qt::Horizontal, BOLD_FONT, Qt::FontRole);
     }
     void SetColumnUnchanged(int c);
 
@@ -70,6 +70,8 @@ private:
     QStandardItemModel* model;
     QList<Problem*> problems;
     bool is_changing_data;
+
+    static const QFont BOLD_FONT;
 
     void setColumnDataNew(int column);
     void setColumnData(int column);
