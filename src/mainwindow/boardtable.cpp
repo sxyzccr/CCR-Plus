@@ -7,7 +7,8 @@
 #include "mainwindow/boardtable.h"
 
 BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),
-    pre_highlighted_col(-1), already_moving_section(false), is_locked(false)
+    pre_highlighted_col(-1), sum_label_width(50), problem_label_width(75),
+    already_moving_section(false), is_locked(false)
 {
     this->setMinimumSize(QSize(140, 250));
     this->setFocusPolicy(Qt::NoFocus);
@@ -52,9 +53,9 @@ BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),
 
     this->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
     this->horizontalHeader()->setHighlightSections(false);
-    this->horizontalHeader()->setDefaultSectionSize(85);
-    this->horizontalHeader()->setMinimumSectionSize(60);
-    this->horizontalHeader()->setFixedHeight(25);
+    this->horizontalHeader()->setDefaultSectionSize(problem_label_width);
+    this->horizontalHeader()->setMinimumSectionSize(sum_label_width);
+    this->horizontalHeader()->setMinimumHeight(25);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->horizontalHeader()->setProperty("showSortIndicator", QVariant(false));
     this->horizontalHeader()->setSectionsMovable(true);
@@ -62,8 +63,8 @@ BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),
     this->horizontalHeader()->setTextElideMode(Qt::ElideRight);
 
     this->verticalHeader()->setHighlightSections(false);
-    this->verticalHeader()->setDefaultSectionSize(27);
-    this->verticalHeader()->setMinimumSectionSize(27);
+    this->verticalHeader()->setDefaultSectionSize(25);
+    this->verticalHeader()->setMinimumSectionSize(25);
     this->verticalHeader()->setMinimumWidth(22);
     this->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     this->verticalHeader()->setDefaultAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -80,7 +81,6 @@ void BoardTable::ClearBoard()
     this->clear();
     this->setRowCount(0);
     this->setColumnCount(2);
-    this->horizontalHeader()->resizeSection(1, 60);
 
     pre_highlighted_col = -1;
     already_moving_section = false;
@@ -93,7 +93,7 @@ void BoardTable::ResizePlayerLabel()
     for (auto i : Global::g_contest.players)
     {
         QLabel* tmp = i->NameLabel();
-        len = std::max(len, QFontMetrics(Global::NORMAL_FONT).width(tmp->text()) + 30);
+        len = std::max(len, QFontMetrics(tmp->font()).width(tmp->text()) + 30);
     }
     this->horizontalHeader()->resizeSection(0, len);
 }
@@ -104,7 +104,7 @@ void BoardTable::SetSumLabel(ResultLabel* tmp)
     ResultSummary res = tmp->Result();
     int sum = Global::g_contest.sum_score;
 
-    tmp->setText(QFontMetrics(tmp->font()).elidedText(QString::number(res.score), Qt::ElideRight, 60 - 5));
+    tmp->setText(QFontMetrics(tmp->font()).elidedText(QString::number(res.score), Qt::ElideRight, sum_label_width - 5));
     tmp->setToolTip(QString("总用时: %1s").arg(res.time, 0, 'f', 2));
 
     if (!sum) x = Global::StyleInvalidOrStateCFS;
@@ -122,7 +122,7 @@ void BoardTable::SetProblemLabel(ResultLabel* tmp, int sum)
     Global::LabelStyle x = Global::StyleNone;
     ResultSummary res = tmp->Result();
 
-    tmp->setText(QFontMetrics(tmp->font()).elidedText(QString::number(res.score), Qt::ElideRight, 85 - 5));
+    tmp->setText(QFontMetrics(tmp->font()).elidedText(QString::number(res.score), Qt::ElideRight, problem_label_width - 5));
     tmp->setToolTip(QString("用时: %1s").arg(res.time, 0, 'f', 2));
 
     switch (res.state)
@@ -174,6 +174,13 @@ void BoardTable::ShowResult()
     this->setHorizontalHeaderLabels(headerLabels);
     for (int i = 0; i < Global::g_contest.problem_num + 2; i++)
         this->horizontalHeaderItem(i)->setToolTip(headerLabels[i]);
+
+    sum_label_width = this->horizontalHeader()->sectionSizeHint(1);
+    problem_label_width = sum_label_width * 1.5;
+
+    this->horizontalHeader()->setDefaultSectionSize(problem_label_width);
+    this->horizontalHeader()->resizeSection(1, sum_label_width);
+    this->verticalHeader()->setDefaultSectionSize(this->horizontalHeader()->height());
 
     int row = 0;
     for (auto i : Global::g_contest.players)

@@ -117,7 +117,7 @@ QTableWidget::item:!alternate:!selected
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>301</height>
+       <height>40</height>
       </size>
      </property>
     </spacer>

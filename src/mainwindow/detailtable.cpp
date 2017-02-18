@@ -29,7 +29,7 @@ DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
 
     this->horizontalHeader()->setDefaultSectionSize(45);
     this->horizontalHeader()->setMinimumSectionSize(45);
-    this->horizontalHeader()->setFixedHeight(25);
+    this->horizontalHeader()->setMinimumHeight(25);
     this->horizontalHeader()->setStretchLastSection(true);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 
@@ -57,6 +57,9 @@ void DetailTable::ClearDetail()
     this->setColumnCount(2);
     this->setHorizontalHeaderLabels({"得分", "详情"});
     this->verticalScrollBar()->setValue(0);
+
+    this->horizontalHeader()->setDefaultSectionSize(this->horizontalHeader()->sectionSizeHint(0));
+    this->verticalHeader()->setDefaultSectionSize(0.9 * this->horizontalHeader()->height());
 
     is_scrollBar_at_bottom = false;
     is_show_detail = false;
@@ -180,7 +183,7 @@ void DetailTable::onAddNoteDetail(const QString& note, const QString& state)
     if (state == " " || state.isEmpty()) tmp->setTextColor(QColor(100, 100, 100)), tmp->setBackgroundColor(QColor(235, 235, 235));
     if (state.isEmpty()) tmp->setTextAlignment(Qt::AlignCenter);
 
-    int a = tmp->text().split('\n').count(), b = std::min(a, 4) * 17 + 5;
+    int a = tmp->text().split('\n').count(), b = a == 1 ? this->verticalHeader()->defaultSectionSize() : std::min(a, 4) * QFontMetrics(this->font()).height() + 6;
     this->insertRow(rows);
     this->setItem(rows, 0, tmp);
     this->setSpan(rows, 0, 1, 2);

@@ -46,6 +46,9 @@ AdvancedConfigureDialog::AdvancedConfigureDialog(const QList<const Problem*>& pr
     ui->tabWidget->addTab(new TestCaseTabWidget(), tr("测试点"));
 
     ui->listWidget->setCurrentRow(index);
+
+    ui->tabWidget->setMinimumHeight(ui->tabWidget->sizeHint().height());
+    ui->tabWidget->setMinimumWidth(std::max(this->sizeHint().width(), ui->tabWidget->sizeHint().height()));
 }
 
 AdvancedConfigureDialog::~AdvancedConfigureDialog()

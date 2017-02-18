@@ -1,5 +1,4 @@
 #include <QFile>
-#include <QDebug>
 #include <QFileDialog>
 
 #include "common/global.h"
@@ -15,6 +14,13 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
+    box_min_width = ui->spinBox_memLim->sizeHint().width();
+    ui->spinBox_timeLim->setMinimumWidth(box_min_width);
+    ui->spinBox_memLim->setMinimumWidth(box_min_width);
+    ui->lineEdit_inFile->setMinimumWidth(box_min_width);
+    ui->lineEdit_outFile->setMinimumWidth(box_min_width);
+    ui->lineEdit_submitFile->setMinimumWidth(box_min_width);
+
     ui->spinBox_score->setValue(score);
     if (type != EditS)
     {
@@ -25,7 +31,6 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
         ui->spinBox_memLim->setValue(point->MemoryLimit());
     }
 
-    int line = 6;
     switch (type)
     {
     case AddSIOTM:
@@ -35,7 +40,6 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
         this->setWindowTitle("添加测试数据 - " + problem->Name());
         ui->label_1->hide();
         ui->spinBox_score->hide();
-        line--;
         break;
     case EditSIOTM:
         this->setWindowTitle("编辑测试点 - " + problem->Name());
@@ -44,7 +48,6 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
         this->setWindowTitle("编辑测试数据 - " + problem->Name());
         ui->label_1->hide();
         ui->spinBox_score->hide();
-        line--;
         break;
     case EditS:
         this->setWindowTitle("编辑分值 - " + problem->Name());
@@ -53,6 +56,7 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
         ui->label_4->hide();
         ui->label_5->hide();
         ui->label_6->hide();
+        ui->label_error->hide();
         ui->lineEdit_inFile->hide();
         ui->lineEdit_outFile->hide();
         ui->lineEdit_submitFile->hide();
@@ -60,7 +64,6 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
         ui->spinBox_memLim->hide();
         ui->pushButton_browseInFile->hide();
         ui->pushButton_browseOutFile->hide();
-        line -= 5;
         this->setFixedWidth(this->sizeHint().width());
         ui->spinBox_score->setFocus();
         ui->spinBox_score->selectAll();
@@ -75,7 +78,6 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
         {
             ui->label_4->hide();
             ui->lineEdit_submitFile->hide();
-            line--;
         }
         else if (problem->Type() == Global::AnswersOnly)
         {
@@ -83,7 +85,6 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
             ui->label_6->hide();
             ui->spinBox_timeLim->hide();
             ui->spinBox_memLim->hide();
-            line -= 2;
         }
     }
 
@@ -100,7 +101,8 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, TestCaseType type, 
     else if (focusRow == 4)
         ui->spinBox_memLim->setFocus();
 
-    this->setFixedHeight((line + 1) * 26 + 18 + (line + 1) * 6 + 18);
+    if (type != EditS) this->setMinimumWidth(std::max(this->sizeHint().width(), 350));
+    this->setFixedHeight(this->sizeHint().height());
 }
 
 AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, AddTestCaseDialog::TestCaseType type,
@@ -114,20 +116,26 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, AddTestCaseDialog::
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
 
+    box_min_width = ui->spinBox_memLim->sizeHint().width();
+    ui->spinBox_timeLim->setMinimumWidth(box_min_width);
+    ui->spinBox_memLim->setMinimumWidth(box_min_width);
+    ui->lineEdit_inFile->setMinimumWidth(box_min_width);
+    ui->lineEdit_outFile->setMinimumWidth(box_min_width);
+    ui->lineEdit_submitFile->setMinimumWidth(box_min_width);
+
     ui->label_2->hide();
     ui->label_3->hide();
     ui->label_4->hide();
+    ui->label_error->hide();
     ui->lineEdit_inFile->hide();
     ui->lineEdit_outFile->hide();
     ui->lineEdit_submitFile->hide();
     ui->pushButton_browseInFile->hide();
     ui->pushButton_browseOutFile->hide();
-    int line = 3;
     if (type == EditTM)
     {
         ui->label_1->hide();
         ui->spinBox_score->hide();
-        line--;
     }
     if (problem->Type() == Global::AnswersOnly)
     {
@@ -135,7 +143,6 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, AddTestCaseDialog::
         ui->label_6->hide();
         ui->spinBox_timeLim->hide();
         ui->spinBox_memLim->hide();
-        line -= 2;
     }
 
     ui->spinBox_score->setValue(minScore);
@@ -164,7 +171,7 @@ AddTestCaseDialog::AddTestCaseDialog(const Problem* problem, AddTestCaseDialog::
     }
 
     this->setFixedWidth(this->sizeHint().width());
-    this->setFixedHeight((line + 1) * 26 + 18 + (line + 1) * 6 + 18);
+    this->setFixedHeight(this->sizeHint().height());
     load_finished = true;
 }
 
@@ -303,7 +310,7 @@ void AddTestCaseDialog::on_spinBox_timeLim_valueChanged(double)
     if (load_finished)
     {
         ui->spinBox_timeLim->setSpecialValueText("");
-        ui->spinBox_timeLim->setFixedWidth(85);
+        ui->spinBox_timeLim->setFixedWidth(box_min_width);
     }
 }
 
@@ -312,6 +319,6 @@ void AddTestCaseDialog::on_spinBox_memLim_valueChanged(double)
     if (load_finished)
     {
         ui->spinBox_memLim->setSpecialValueText("");
-        ui->spinBox_memLim->setFixedWidth(85);
+        ui->spinBox_memLim->setFixedWidth(box_min_width);
     }
 }

@@ -1,5 +1,3 @@
-#include <QDebug>
-
 #include "configure/compiler/addcompilerdialog.h"
 #include "ui_addcompilerdialog.h"
 
@@ -10,6 +8,7 @@ AddCompilerDialog::AddCompilerDialog(const Problem* problem, const Compiler* com
     ui->setupUi(this);
     this->setWindowFlags(Qt::Dialog | Qt::WindowCloseButtonHint);
     this->setFixedHeight(this->sizeHint().height());
+    this->setMinimumWidth(std::max(this->sizeHint().width(), 350));
 
     if (!compiler)
         this->setWindowTitle("添加编译器 - " + problem->Name());

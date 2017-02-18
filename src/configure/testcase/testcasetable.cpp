@@ -11,7 +11,7 @@ TestCaseTable::TestCaseTable(QWidget* parent) :
     QTableWidget(parent), problem(nullptr), unselect_score_item(nullptr), sum_score(0),
     can_edit(false), can_add(false), can_add_sub(false), can_delete(false), can_up(false), can_down(false), can_merge(false), can_split(false)
 {
-    this->horizontalHeader()->setFixedHeight(25);
+    this->horizontalHeader()->setMinimumHeight(25);
     this->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     this->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -65,16 +65,17 @@ void TestCaseTable::LoadTestCases(const Problem* problem)
         this->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
         this->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
         this->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Fixed);
-        this->setColumnWidth(0, 70);
-        this->setColumnWidth(3, 70);
-        this->setColumnWidth(4, 70);
+
+        this->setColumnWidth(0, this->horizontalHeader()->sectionSizeHint(0));
+        this->setColumnWidth(3, this->horizontalHeader()->sectionSizeHint(3));
+        this->setColumnWidth(4, this->horizontalHeader()->sectionSizeHint(4));
     }
     else if (problem->Type() == Global::AnswersOnly)
     {
         this->setColumnCount(4);
         this->setHorizontalHeaderLabels({"分值", "输入文件", "输出文件", "提交文件"});
         this->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-        this->setColumnWidth(0, 70);
+        this->setColumnWidth(0, this->horizontalHeader()->sectionSizeHint(0));
     }
     else
         return;
@@ -107,6 +108,10 @@ void TestCaseTable::LoadTestCases(const Problem* problem)
         }
         if (len > 1) this->setSpan(rows - len, 0, len, 1);
     }
+
+    this->verticalHeader()->setDefaultSectionSize(0.9 * this->horizontalHeader()->height());
+    this->setMinimumWidth(5 * this->horizontalHeader()->sectionSizeHint(3) + this->verticalHeader()->sizeHint().width() + 2 * this->frameWidth());
+    this->setMinimumHeight(20 * this->verticalHeader()->defaultSectionSize() + this->horizontalHeader()->height() + 2 * this->frameWidth());
 }
 
 TestCaseTable::SelectionType TestCaseTable::GetSelectionType(int* _top, int* _bottom)

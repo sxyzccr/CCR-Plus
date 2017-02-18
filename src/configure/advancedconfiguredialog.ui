@@ -2,20 +2,6 @@
 <ui version="4.0">
  <class>AdvancedConfigureDialog</class>
  <widget class="QDialog" name="AdvancedConfigureDialog">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>700</width>
-    <height>620</height>
-   </rect>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>700</width>
-    <height>620</height>
-   </size>
-  </property>
   <property name="windowTitle">
    <string>高级配置</string>
   </property>
@@ -36,13 +22,13 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>100</width>
-       <height>360</height>
+       <width>120</width>
+       <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>100</width>
+       <width>120</width>
        <height>16777215</height>
       </size>
      </property>
@@ -97,6 +83,12 @@
    </item>
    <item row="0" column="0" colspan="5">
     <widget class="QLabel" name="label_problem">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="font">
       <font>
        <pointsize>14</pointsize>
@@ -134,12 +126,6 @@
    </item>
    <item row="1" column="1" colspan="7">
     <widget class="QTabWidget" name="tabWidget">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>360</height>
-      </size>
-     </property>
      <property name="currentIndex">
       <number>-1</number>
      </property>

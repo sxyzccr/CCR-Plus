@@ -3,15 +3,11 @@
 #include "configure/testcase/testcasetabwidget.h"
 #include "ui_testcasetabwidget.h"
 
-TestCaseTabWidget::TestCaseTabWidget(QWidget *parent) :
+TestCaseTabWidget::TestCaseTabWidget(QWidget* parent) :
     ConfigureTabWidget(parent),
     ui(new Ui::TestCaseTabWidget)
 {
     ui->setupUi(this);
-
-    ui->tableWidget->setMinimumHeight(ui->tableWidget->verticalHeader()->defaultSectionSize() * 20 +
-                                      ui->tableWidget->horizontalHeader()->height() +
-                                      ui->tableWidget->frameWidth() * 2);
 
     connect(ui->tableWidget, &TestCaseTable::testCaseSelectionChanged, this, &TestCaseTabWidget::onTestCaseSelectionChanged);
 }
