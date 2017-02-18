@@ -5,7 +5,10 @@
 #include <QStandardItemModel>
 #include <QStyledItemDelegate>
 
-#include "common/global.h"
+#include "common/const.h"
+
+class Player;
+class Problem;
 
 class ConfigureTableItemDelegate : public QStyledItemDelegate
 {

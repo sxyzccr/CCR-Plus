@@ -1,3 +1,5 @@
+#include "common/player.h"
+#include "common/problem.h"
 #include "mainwindow/createfiledialog.h"
 #include "ui_createfiledialog.h"
 

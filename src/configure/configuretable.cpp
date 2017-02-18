@@ -1,14 +1,14 @@
 #include <QListView>
 #include <QHeaderView>
-#include <QStandardItemModel>
 #include <QComboBox>
 #include <QScrollBar>
 #include <QDoubleSpinBox>
+#include <QDir>
 #include <QMouseEvent>
 #include <QApplication>
+#include <QStandardItemModel>
 
 #include "common/global.h"
-#include "common/player.h"
 #include "common/problem.h"
 #include "configure/configuretable.h"
 

@@ -1,7 +1,9 @@
+#include <QDir>
 #include <QListView>
 #include <QStandardItemModel>
 
 #include "common/global.h"
+#include "common/problem.h"
 #include "configure/general/generaltabwidget.h"
 #include "ui_generaltabwidget.h"
 

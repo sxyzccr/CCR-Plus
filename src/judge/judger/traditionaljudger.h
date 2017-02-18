@@ -6,7 +6,7 @@
 class TraditionalJudger : public BaseJudger
 {
 public:
-    explicit TraditionalJudger(const QString& testDir, Player* player, const Problem* problem, QObject *parent = 0) :
+    explicit TraditionalJudger(const QString& testDir, const Player* player, const Problem* problem, QObject* parent = nullptr) :
         BaseJudger(testDir, player, problem, parent) {}
 
 protected:

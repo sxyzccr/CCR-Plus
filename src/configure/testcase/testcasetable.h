@@ -3,7 +3,8 @@
 
 #include <QTableWidget>
 
-#include "common/problem.h"
+class Problem;
+class TestCase;
 
 class TestCaseTable : public QTableWidget
 {
@@ -46,7 +47,7 @@ public:
     }
 
     void LoadTestCases(const Problem* problem);
-    TestCaseTable::SelectionType GetSelectionType(int *_top, int *_bottom);
+    TestCaseTable::SelectionType GetSelectionType(int* _top, int* _bottom);
     TestCase TestCaseAt(int row);
     void ChangeScore(int row, int score);
     void ChangeTestCase(int row, const TestCase& point);
@@ -85,8 +86,8 @@ private slots:
 
     void onOpenInFile();
     void onOpenOutFile();
-    void onHeaderContextMenuEvent(const QPoint &pos);
-    void onContextMenuEvent(const QPoint &pos);
+    void onHeaderContextMenuEvent(const QPoint& pos);
+    void onContextMenuEvent(const QPoint& pos);
 
 signals:
     void testCaseSelectionChanged();

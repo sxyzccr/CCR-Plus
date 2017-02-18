@@ -2,6 +2,7 @@
 #include <QStandardItemModel>
 
 #include "common/global.h"
+#include "common/problem.h"
 #include "configure/advancedconfiguredialog.h"
 #include "configure/general/generaltabwidget.h"
 #include "configure/compiler/compilertabwidget.h"

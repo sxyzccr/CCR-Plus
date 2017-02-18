@@ -1,3 +1,6 @@
+#include <QMap>
+#include <QDir>
+#include <QFile>
 #include <QCollator>
 #include <QTextStream>
 #include <QDomDocument>
@@ -29,7 +32,7 @@ const QMap<QString, QPair<QString, QString>> Problem::BUILTIN_CHECKER_MAP =
 
 const QRegExp Problem::name_reg_exp("[\\\\/:*?\"<>|]");
 
-QString Problem::CheckFileNameValid(const QString &name)
+QString Problem::CheckFileNameValid(const QString& name)
 {
     if (name.trimmed().isEmpty()) return "%1不能为空。";
     else if (name.contains(name_reg_exp)) return "%1不能包含下列非法字符：\\/:*?\"<>|";
@@ -41,6 +44,11 @@ QString Problem::FromBuiltinCheckerName(const QString& name)
     for (auto i = BUILTIN_CHECKER_MAP.begin(); i != BUILTIN_CHECKER_MAP.end(); i++)
         if (name == i.value().first) return AddFileExtension(i.key());
     return AddFileExtension(name);
+}
+
+bool Problem::IsBuiltinChecker(const QString& checker)
+{
+    return BUILTIN_CHECKER_MAP.find(RemoveFileExtension(checker)) != BUILTIN_CHECKER_MAP.end();
 }
 
 
@@ -376,6 +384,12 @@ const Compiler* Problem::GetCompiler(const QString& playerName) const
     for (auto i : compilers)
         if (QFile(Global::g_contest.src_path + playerName + "/" + dir + "/" + i->SourceFile()).exists()) return i;
     return nullptr;
+}
+
+QString Problem::BuiltinCheckerName() const
+{
+    auto p = BUILTIN_CHECKER_MAP.find(RemoveFileExtension(checker));
+    if (p != BUILTIN_CHECKER_MAP.end()) return p.value().first; else return checker;
 }
 
 

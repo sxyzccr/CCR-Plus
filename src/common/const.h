@@ -2,7 +2,8 @@
 #define CONST_H
 
 #include <QFont>
-#include <QColor>
+
+class QColor;
 
 namespace Global
 {

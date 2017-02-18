@@ -1,16 +1,21 @@
 #include <QUrl>
+#include <QDir>
+#include <QFile>
 #include <QMenu>
 #include <QScrollBar>
 #include <QHeaderView>
 #include <QDomDocument>
+#include <QElapsedTimer>
 #include <QCoreApplication>
 #include <QDesktopServices>
 
 #include "common/global.h"
+#include "common/player.h"
+#include "common/problem.h"
 #include "mainwindow/detailtable.h"
 
 DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
-    is_scrollBar_at_bottom(false), is_locked(false), rows(0)
+    is_scrollBar_at_bottom(false), is_locked(false), last_judge_timer(new QElapsedTimer()), rows(0)
 {
     this->setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
     this->setMinimumSize(QSize(320, 250));
@@ -50,6 +55,16 @@ DetailTable::DetailTable(QWidget* parent) : QTableWidget(parent),
     connect(this, &QWidget::customContextMenuRequested, this, &DetailTable::onContextMenuEvent);
 }
 
+DetailTable::~DetailTable()
+{
+    delete last_judge_timer;
+}
+
+void DetailTable::StartLastJudgeTimer()
+{
+     last_judge_timer->start();
+}
+
 void DetailTable::ClearDetail()
 {
     this->clear();
@@ -81,7 +96,7 @@ void DetailTable::adjustScrollBar()
     if (is_scrollBar_at_bottom) bar->setValue(bar->maximum());
 }
 
-void DetailTable::showProblemDetail(Player* player, Problem* problem)
+void DetailTable::showProblemDetail(const Player* player, const Problem* problem)
 {
     rows = this->rowCount();
     current_player = player;
@@ -268,7 +283,7 @@ void DetailTable::onAddScoreDetail(int subTaskLen, int score, int sumScore)
 
 void DetailTable::onShowDetail(int row, int column)
 {
-    if (is_locked || (last_judge_timer.isValid() && last_judge_timer.elapsed() < 1000)) return;
+    if (is_locked || (last_judge_timer->isValid() && last_judge_timer->elapsed() < 1000)) return;
     ClearDetail();
     is_show_detail = true;
 

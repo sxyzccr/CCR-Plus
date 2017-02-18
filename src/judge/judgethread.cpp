@@ -1,7 +1,10 @@
+#include <QFile>
 #include <QElapsedTimer>
 #include <QCoreApplication>
 
 #include "common/global.h"
+#include "common/player.h"
+#include "common/problem.h"
 #include "judge/judgethread.h"
 #include "judge/judger/answeronlyjudger.h"
 #include "judge/judger/traditionaljudger.h"

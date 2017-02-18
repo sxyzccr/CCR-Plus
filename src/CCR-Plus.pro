@@ -1,4 +1,4 @@
-QT += core gui xml widgets
+QT += core xml widgets
 
 TARGET = CCR-Plus
 TEMPLATE = app

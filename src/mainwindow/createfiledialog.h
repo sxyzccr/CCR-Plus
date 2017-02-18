@@ -2,10 +2,10 @@
 #define CREATEFILEDIALOG_H
 
 #include <QDialog>
-#include <QListWidget>
 
-#include "common/player.h"
-#include "common/problem.h"
+class QListWidgetItem;
+class Player;
+class Problem;
 
 namespace Ui
 {

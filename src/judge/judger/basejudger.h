@@ -1,11 +1,14 @@
 #ifndef BASEJUDGER_H
 #define BASEJUDGER_H
 
-#include <QProcess>
+#include "common/const.h"
 
-#include "common/global.h"
-#include "common/player.h"
-#include "common/problem.h"
+class QProcess;
+class ResultSummary;
+class Player;
+class Compiler;
+class TestCase;
+class Problem;
 
 struct TestCaseResult
 {
@@ -23,7 +26,7 @@ class BaseJudger : public QObject
 {
     Q_OBJECT
 public:
-    explicit BaseJudger(const QString& testDir, Player* player, const Problem* problem, QObject *parent = 0);
+    explicit BaseJudger(const QString& testDir, const Player* player, const Problem* problem, QObject* parent = nullptr);
     virtual ~BaseJudger();
 
     // Getter member functions
@@ -39,7 +42,7 @@ public:
     void StopJudge() { emit judgeStoped(); }
 
 protected:
-    Player* player;
+    const Player* player;
     const Problem* problem;
 
     /// 检查输出文件

@@ -1,17 +1,18 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "common/player.h"
-#include "common/problem.h"
-#include "judge/judgethread.h"
-#include "mainwindow/boardtable.h"
-#include "mainwindow/detailtable.h"
-
-#include <QFile>
-#include <QSplitter>
-#include <QToolButton>
-#include <QListWidget>
 #include <QMainWindow>
+
+#include "common/const.h"
+
+class QSplitter;
+class QToolButton;
+class QListWidgetItem;
+class Player;
+class Problem;
+class JudgeThread;
+class BoardTable;
+class DetailTable;
 
 namespace Ui
 {

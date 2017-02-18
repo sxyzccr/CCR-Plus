@@ -2,9 +2,10 @@
 #define CONFIGUREDIALOG_H
 
 #include <QDialog>
-#include <QAbstractButton>
 
-#include "configure/configuretable.h"
+class QAbstractButton;
+class Problem;
+class ConfigureTable;
 
 namespace Ui
 {

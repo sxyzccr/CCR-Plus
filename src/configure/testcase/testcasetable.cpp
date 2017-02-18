@@ -1,10 +1,12 @@
 #include <QUrl>
+#include <QDir>
 #include <QFile>
 #include <QMenu>
 #include <QHeaderView>
 #include <QDesktopServices>
 
 #include "common/global.h"
+#include "common/problem.h"
 #include "configure/testcase/testcasetable.h"
 
 TestCaseTable::TestCaseTable(QWidget* parent) :
