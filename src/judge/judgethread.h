@@ -3,8 +3,11 @@
 
 #include <QThread>
 
-#include "common/player.h"
-#include "common/problem.h"
+#include "common/const.h"
+
+class ResultLabel;
+class Player;
+class Problem;
 
 class JudgeThread: public QThread
 {

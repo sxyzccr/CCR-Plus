@@ -1,3 +1,6 @@
+#include <QFile>
+
+#include "common/problem.h"
 #include "judge/judger/answeronlyjudger.h"
 
 TestCaseResult AnswerOnlyJudger::judgeTestCase(const TestCase* point) const

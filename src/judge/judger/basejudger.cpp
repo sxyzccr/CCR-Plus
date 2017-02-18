@@ -1,13 +1,18 @@
 #include <QSet>
+#include <QDir>
 #include <QThread>
+#include <QProcess>
 #include <QTextStream>
 #include <QDomDocument>
 #include <QElapsedTimer>
 #include <QCoreApplication>
 
+#include "common/global.h"
+#include "common/player.h"
+#include "common/problem.h"
 #include "judge/judger/basejudger.h"
 
-BaseJudger::BaseJudger(const QString& testDir, Player* player, const Problem* problem, QObject *parent) : QObject(parent),
+BaseJudger::BaseJudger(const QString& testDir, const Player* player, const Problem* problem, QObject *parent) : QObject(parent),
     player(player), problem(problem),
     test_dir(testDir), tmp_dir(testDir + ".tmp/"),
     data_dir(testDir + "data/" + problem->Name() + "/"),

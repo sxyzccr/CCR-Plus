@@ -3,7 +3,8 @@
 #include <QAbstractButton>
 
 #include "common/global.h"
-#include "common/contest.h"
+#include "common/player.h"
+#include "common/problem.h"
 #include "mainwindow/boardtable.h"
 
 BoardTable::BoardTable(QWidget* parent) : QTableWidget(parent),

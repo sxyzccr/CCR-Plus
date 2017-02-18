@@ -2,24 +2,24 @@
 #define DETAILTABLE_H
 
 #include <QTableWidget>
-#include <QElapsedTimer>
 
-#include "common/player.h"
-#include "common/problem.h"
+class QElapsedTimer;
+class Player;
+class Problem;
 
 class DetailTable : public QTableWidget
 {
     Q_OBJECT
 public:
     explicit DetailTable(QWidget* parent = nullptr);
-    ~DetailTable() {}
+    ~DetailTable();
 
     // 上锁与解锁，防止测评时点击
     void Lock() { is_locked = true; }
     void Unlock() { is_locked = false; }
 
     /// 在开始测评时启动一个计时器，防止多次点击导致测评结果的 detail 变成普通的 detail
-    void StartLastJudgeTimer() { last_judge_timer.start(); }
+    void StartLastJudgeTimer();
 
     /// 清空 detail 表格
     void ClearDetail();
@@ -45,13 +45,13 @@ public slots:
 
 private:
     bool is_scrollBar_at_bottom, is_show_detail, is_locked;
-    QElapsedTimer last_judge_timer;
+    QElapsedTimer* last_judge_timer;
     int rows;
 
     QList<const Player*> player_at;
     QList<const Problem*> problem_at;
-    Player* current_player;
-    Problem* current_problem;
+    const Player* current_player;
+    const Problem* current_problem;
     QAction *action_in, *action_out, *action_sub;
     QMenu* menu;
 
@@ -59,7 +59,7 @@ private:
     void adjustScrollBar();
 
     /// 显示某选手某一题的 detail
-    void showProblemDetail(Player* player, Problem* problem);
+    void showProblemDetail(const Player* player, const Problem* problem);
 
 private slots:
     void onOpenInFile();

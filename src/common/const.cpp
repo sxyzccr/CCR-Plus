@@ -1,3 +1,5 @@
+#include <QColor>
+
 #include "common/const.h"
 #include "common/global.h"
 

@@ -1,9 +1,10 @@
 #ifndef PROBLEM_H
 #define PROBLEM_H
 
-#include <QMap>
-
 #include "common/const.h"
+
+class QString;
+class QStringList;
 
 class Compiler
 {
@@ -118,10 +119,7 @@ public:
     static QString FromBuiltinCheckerName(const QString& name);
 
     /// 是否是内置校验器
-    static bool IsBuiltinChecker(const QString& checker)
-    {
-        return BUILTIN_CHECKER_MAP.find(RemoveFileExtension(checker)) != BUILTIN_CHECKER_MAP.end();
-    }
+    static bool IsBuiltinChecker(const QString& checker);
 
     // Getter member functions
     QString Name() const { return name; }
@@ -200,11 +198,7 @@ public:
     const Compiler* GetCompiler(const QString& playerName) const;
 
     /// 尝试获取内置校验器名称，不是内置校验器返回原始文件名
-    QString BuiltinCheckerName() const
-    {
-        auto p = BUILTIN_CHECKER_MAP.find(RemoveFileExtension(checker));
-        if (p != BUILTIN_CHECKER_MAP.end()) return p.value().first; else return checker;
-    }
+    QString BuiltinCheckerName() const;
 
     /// InOutString，格式如下
     QString GetInOutString(const TestCase *point) const

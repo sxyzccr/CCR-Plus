@@ -2,6 +2,8 @@
 #include <QMessageBox>
 
 #include "common/global.h"
+#include "common/problem.h"
+#include "configure/configuretable.h"
 #include "configure/configuredialog.h"
 #include "configure/advancedconfiguredialog.h"
 #include "ui_configuredialog.h"

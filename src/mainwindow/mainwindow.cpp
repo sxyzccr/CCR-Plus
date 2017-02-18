@@ -1,15 +1,22 @@
-#include <QSettings>
-#include <QMimeData>
+#include <QSplitter>
+#include <QToolButton>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QSettings>
+#include <QMimeData>
 #include <QCloseEvent>
 #include <QDesktopServices>
 
 #include "common/global.h"
+#include "common/player.h"
+#include "common/problem.h"
 #include "common/version.h"
+#include "judge/judgethread.h"
 #include "configure/configuredialog.h"
 #include "configure/advancedconfiguredialog.h"
 #include "mainwindow/mainwindow.h"
+#include "mainwindow/boardtable.h"
+#include "mainwindow/detailtable.h"
 #include "mainwindow/createfiledialog.h"
 #include "ui_mainwindow.h"
 
@@ -31,7 +38,7 @@ MainWindow::MainWindow(QWidget* parent) :
     board_table = new BoardTable(splitter);
     is_locked = false;
 
-    close_button->setIcon(style()->standardPixmap(QStyle::SP_TitleBarCloseButton));
+    close_button->setIcon(this->style()->standardPixmap(QStyle::SP_TitleBarCloseButton));
     close_button->setToolTip("关闭当前竞赛");
     close_button->setFixedSize(ui->menuBar->sizeHint().height(), ui->menuBar->sizeHint().height());
     close_button->setStyleSheet("QToolButton{border:none;}");

@@ -3,7 +3,10 @@
 
 #include <QTableWidget>
 
-#include "common/player.h"
+#include "common/const.h"
+
+class ResultLabel;
+class Player;
 
 class BoardTable : public QTableWidget
 {
@@ -55,7 +58,7 @@ public slots:
     void onSetItemUnselected(int row, int column);
 
     /// 更新标签文本
-    void onUpdateLabelText(ResultLabel* tmp, const QString &text, const QString &toolTip, Global::LabelStyle style);
+    void onUpdateLabelText(ResultLabel* tmp, const QString& text, const QString& toolTip, Global::LabelStyle style);
 
     /// 更新选手总分标签
     void onUpdateSumLabel(Player* player);

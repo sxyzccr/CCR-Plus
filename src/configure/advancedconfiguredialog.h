@@ -2,10 +2,9 @@
 #define ADVANCEDCONFIGUREDIALOG_H
 
 #include <QDialog>
-#include <QListWidget>
-#include <QAbstractButton>
 
-#include "common/problem.h"
+class QAbstractButton;
+class Problem;
 
 namespace Ui
 {

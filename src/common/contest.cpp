@@ -1,7 +1,11 @@
+#include <QDir>
+#include <QFile>
 #include <QPainter>
 #include <QTextStream>
 #include <QDomDocument>
 
+#include "common/player.h"
+#include "common/problem.h"
 #include "common/contest.h"
 #include "common/version.h"
 
@@ -72,6 +76,13 @@ void Contest::Clear()
     problems.clear();
     players.clear();
     problem_order.clear();
+}
+
+Problem* Contest::ProblemFromName(const QString& name)
+{
+    for (int i = 0; i < problem_num; i++)
+        if (problems[i]->Name() == name) return problems[i];
+    return nullptr;
 }
 
 QStringList Contest::ReadFolders(const QString& path)
@@ -264,4 +275,13 @@ void Contest::ExportPlayerScore(QFile& file)
         out << endl;
     }
     file.close();
+}
+
+void Contest::SetPath(const QString& path)
+{
+    this->name = QDir(path).dirName();
+    this->path = path + "/";
+    this->data_path = path + "/data/";
+    this->src_path = path + "/src/";
+    this->result_path = path + "/result/";
 }

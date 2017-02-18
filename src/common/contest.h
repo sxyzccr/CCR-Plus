@@ -1,10 +1,13 @@
 #ifndef CONTEST_H
 #define CONTEST_H
 
-#include <QDir>
+#include <QList>
+#include <QString>
 
-#include "common/player.h"
-#include "common/problem.h"
+class QFile;
+class QPixmap;
+class Player;
+class Problem;
 
 struct Contest
 {
@@ -29,12 +32,7 @@ struct Contest
     void Clear();
 
     /// 根据名称查找题目
-    Problem* ProblemFromName(const QString& name)
-    {
-        for (int i = 0; i < problem_num; i++)
-            if (problems[i]->Name() == name) return problems[i];
-        return nullptr;
-    }
+    Problem* ProblemFromName(const QString& name);
 
     /// 读取目录下的所有文件夹
     QStringList ReadFolders(const QString& path);
@@ -46,7 +44,7 @@ struct Contest
     void ReadContestInfo();
 
     /// 选手排序
-    void SortPlayers(bool (*cmp)(Player* x, Player* y)) { qSort(players.begin(), players.end(), cmp); }
+    void SortPlayers(bool (*cmp)(const Player* x, const Player* y)) { qSort(players.begin(), players.end(), cmp); }
 
     /// 缓存测评结果到 .reslist
     void SaveResultCache();
@@ -58,14 +56,7 @@ struct Contest
     void ExportPlayerScore(QFile& fileName);
 
     /// 设置路径
-    void SetPath(const QString& path)
-    {
-        this->name = QDir(path).dirName();
-        this->path = path + "/";
-        this->data_path = path + "/data/";
-        this->src_path = path + "/src/";
-        this->result_path = path + "/result/";
-    }
+    void SetPath(const QString& path);
 };
 
 #endif // CONTEST_H

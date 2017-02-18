@@ -24,13 +24,13 @@ protected:
     virtual void accept() override;
 
 private:
-    Ui::AddCompilerDialog *ui;
+    Ui::AddCompilerDialog* ui;
     const Problem* problem;
     const Compiler* compiler;
     QString cmd, file;
     int time_lim;
 
-    void initCompiler(const Compiler *compiler);
+    void initCompiler(const Compiler* compiler);
 
 private slots:
     void onChangeCmd();

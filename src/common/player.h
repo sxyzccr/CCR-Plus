@@ -88,10 +88,14 @@ public:
     int Id() const { return id; }
     QString Name() const { return name; }
     QString NameInList() const { return name_in_list; }
-    ResultLabel* NameLabel() const { return name_label; }
-    ResultLabel* SumLabel() const { return sum_label; }
-    ResultLabel* ProblemLabelAt(int column) const { return prob_label[column]; }
-    ResultLabel* LabelAt(int column) const { return !column ? name_label : column == 1 ? sum_label : prob_label[column - 2]; }
+    ResultLabel* NameLabel() { return name_label; }
+    ResultLabel* SumLabel() { return sum_label; }
+    ResultLabel* ProblemLabelAt(int column) { return prob_label[column]; }
+    ResultLabel* LabelAt(int column) { return !column ? name_label : column == 1 ? sum_label : prob_label[column - 2]; }
+    const ResultLabel* NameLabel() const { return name_label; }
+    const ResultLabel* SumLabel() const { return sum_label; }
+    const ResultLabel* ProblemLabelAt(int column) const { return prob_label[column]; }
+    const ResultLabel* LabelAt(int column) const { return !column ? name_label : column == 1 ? sum_label : prob_label[column - 2]; }
 
     // Setter member functions
     void SetId(int _id) { id = _id; }
@@ -115,9 +119,9 @@ public:
     void SaveHTMLResult();
 
     /// 比较函数
-    friend inline bool CmpName(Player* x, Player* y);
-    friend inline bool CmpSumScore(Player* x, Player* y);
-    friend bool CmpProblem(Player* x, Player* y);
+    friend inline bool CmpName(const Player* x, const Player* y);
+    friend inline bool CmpSumScore(const Player* x, const Player* y);
+    friend bool CmpProblem(const Player* x, const Player* y);
 
 private:
     int id, priority;
@@ -127,17 +131,17 @@ private:
     QList<ResultLabel*> prob_label;
 };
 
-inline bool CmpName(Player* x, Player* y)
+inline bool CmpName(const Player* x, const Player* y)
 {
     return x->priority > y->priority || (x->priority == y->priority && x->name < y->name);
 }
 
-inline bool CmpSumScore(Player* x, Player* y)
+inline bool CmpSumScore(const Player* x, const Player* y)
 {
     return  x->sum_label->Result() <  y->sum_label->Result() ||
            (x->sum_label->Result() == y->sum_label->Result() && !CmpName(x, y));
 }
 
-bool CmpProblem(Player* x, Player* y);
+bool CmpProblem(const Player* x, const Player* y);
 
 #endif // PLAYER_H

@@ -3,7 +3,9 @@
 
 #include <QWidget>
 
-#include "common/problem.h"
+#include "common/const.h"
+
+class Problem;
 
 class ConfigureTabWidget : public QWidget
 {

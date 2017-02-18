@@ -50,7 +50,7 @@ private slots:
     void on_spinBox_memLim_valueChanged(double);
 
 private:
-    Ui::AddTestCaseDialog *ui;
+    Ui::AddTestCaseDialog* ui;
     const Problem* problem;
     const TestCase* point;
     int score, box_min_width;

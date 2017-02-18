@@ -1,8 +1,10 @@
+#include <QFile>
 #include <QTextStream>
 #include <QDomDocument>
 
 #include "common/global.h"
 #include "common/player.h"
+#include "common/problem.h"
 #include "common/version.h"
 
 const QStringList ResultLabel::COLOR_NAME_LIST =
@@ -301,17 +303,17 @@ void Player::SaveHTMLResult()
     file.close();
 }
 
-bool CmpProblem(Player* x,Player* y)
+bool CmpProblem(const Player* x, const Player* y)
 {
     static char F[128];
     F[' '] = 0, F['F'] = 1, F['S'] = 2, F['C'] = 3, F['E'] = 4, F['N'] = 5;
-    ResultLabel *a = x->ProblemLabelAt(Global::g_sort_key_col),
-                *b = y->ProblemLabelAt(Global::g_sort_key_col);
+    const ResultLabel *a = x->ProblemLabelAt(Global::g_sort_key_col),
+                      *b = y->ProblemLabelAt(Global::g_sort_key_col);
 
     if (!a->Score() && !b->Score())
-        return  F[(size_t)a->State()] <  F[(size_t)b->State()] ||
+        return (F[(size_t)a->State()] <  F[(size_t)b->State()]) ||
                (F[(size_t)a->State()] == F[(size_t)b->State()] && CmpSumScore(x, y));
     else
-        return  a->Result() <  b->Result() ||
+        return (a->Result() <  b->Result()) ||
                (a->Result() == b->Result() && CmpSumScore(x, y));
 }

@@ -1,3 +1,6 @@
+#include <QFile>
+
+#include "common/problem.h"
 #include "judge/judger/traditionaljudger.h"
 
 TestCaseResult TraditionalJudger::judgeTestCase(const TestCase* point) const
