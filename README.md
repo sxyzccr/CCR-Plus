@@ -1,10 +1,20 @@
 # CCR Plus 测评器
 CCR Plus 是一款适用于 NOI(National Olympiad in Informatics) 系列比赛的开源的跨平台测评环境，使用 Qt 编写，是对原版 CCR 测评器的重大改进。CCR Plus 目前支持 Windows 和 Linux 两大操作系统，可以方便地配置与评测传统题、提交答案题等题型。
 
-CCR Plus 基于 GPLv3，参考 [LICENSE](https://raw.githubusercontent.com/sxyzccr/CCR-Plus/master/LICENSE)。请在获取源代码后遵循此许可证。
-
 
 ## 下载与安装
+### 下载地址
+<https://github.com/sxyzccr/CCR-Plus/releases>
+
+### 安装及使用说明：
+#### Windows
+解压下载文件到安装目录，无需安装，直接双击 `CCR-Plus.exe` 运行程序。可自行创建桌面快捷方式。
+
+#### Linux
+解压下载文件到安装目录，双击运行 `install.sh`，把生成的图标复制到任意位置，再双击图标运行程序。
+
+
+## 从源代码构建
 你可以直接下载源代码，并从源代码构建 CCR Plus：
 
 * [Windows 构建方法](https://github.com/sxyzccr/CCR-Plus/wiki/Windows-Build)
@@ -21,6 +31,7 @@ CCR Plus 基于 GPLv3，参考 [LICENSE](https://raw.githubusercontent.com/sxyzc
 5. 通过 .prb 文件可以设置编译时限与校验器时限。
 6. 支持配置提交答案型试题。
 7. 配置试题时，可以只更改某一试题的某几项信息，而不全部重新配置，当然也可以选择重新配置某一题。
+8. 强大的高级配置功能，支持修改编译器、修改测试点、打包测试点等功能。
 
 
 ## 注意事项
@@ -44,3 +55,7 @@ CCR Plus 基于 GPLv3，参考 [LICENSE](https://raw.githubusercontent.com/sxyzc
 ### Linux
 1. 即使终止测评，选手的程序进程也会等到它运行结束或超过时间限制后才被结束。必要时需手动结束该进程，以免占用系统资源。
 2. 某些按钮未完全汉化。
+
+
+## LICENSE
+基于 [GPLv3](LICENSE.txt)。请在获取源代码后遵循此许可证。
