@@ -17,15 +17,15 @@ fi
 version="v1.1.0"
 filename=$linkDir/ccr-plus.desktop
 
-ln -sf lib/libicudata.so.56.1 lib/libicudata.so.56
-ln -sf lib/libicui18n.so.56.1 lib/libicui18n.so.56
-ln -sf lib/libicuuc.so.56.1 lib/libicuuc.so.56
-ln -sf lib/libQt5Core.so.5.8.0 lib/libQt5Core.so.5
-ln -sf lib/libQt5DBus.so.5.8.0 lib/libQt5DBus.so.5
-ln -sf lib/libQt5Gui.so.5.8.0 lib/libQt5Gui.so.5
-ln -sf lib/libQt5Widgets.so.5.8.0 lib/libQt5Widgets.so.5
-ln -sf lib/libQt5XcbQpa.so.5.8.0 lib/libQt5XcbQpa.so.5
-ln -sf lib/libQt5Xml.so.5.8.0 lib/libQt5Xml.so.5
+ln -sf libicudata.so.56.1     "$appDir/lib/libicudata.so.56"
+ln -sf libicui18n.so.56.1     "$appDir/lib/libicui18n.so.56"
+ln -sf libicuuc.so.56.1       "$appDir/lib/libicuuc.so.56"
+ln -sf libQt5Core.so.5.8.0    "$appDir/lib/libQt5Core.so.5"
+ln -sf libQt5DBus.so.5.8.0    "$appDir/lib/libQt5DBus.so.5"
+ln -sf libQt5Gui.so.5.8.0     "$appDir/lib/libQt5Gui.so.5"
+ln -sf libQt5Widgets.so.5.8.0 "$appDir/lib/libQt5Widgets.so.5"
+ln -sf libQt5XcbQpa.so.5.8.0  "$appDir/lib/libQt5XcbQpa.so.5"
+ln -sf libQt5Xml.so.5.8.0     "$appDir/lib/libQt5Xml.so.5"
 
 echo "[Desktop Entry]" > "$filename"
 echo "Version="$version >> "$filename"
