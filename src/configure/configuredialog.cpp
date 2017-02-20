@@ -24,6 +24,7 @@ ConfigureDialog::ConfigureDialog(const QStringList& list, QWidget* parent) :
             prob = new Problem(*prob);
         problems.append(prob);
     }
+    if (!list.size()) ui->pushButton_adv->setEnabled(false);
 
     configure_table = new ConfigureTable(problems, this);
     ui->widget_empty->hide();
