@@ -270,7 +270,7 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
             else if (kernelTime > timeLim)
                 return TestCaseResult(0, timeLim, 'T', "系统 CPU 时间过长");
             else
-                return TestCaseResult(0, timeLim, 'T', "进程被阻塞");
+                return TestCaseResult(0, 0, 'R', "进程被阻塞");
         }
 
         QCoreApplication::processEvents();
@@ -312,15 +312,15 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
     QProcess process;
     process.setWorkingDirectory(working_dir);
     process.start(QCoreApplication::applicationDirPath() + "/monitor", QStringList({ exe,
-                                                                   QString::number(timeLim),
-                                                                   QString::number(memLim)
-                                                                 }));
+                                                                                     QString::number(timeLim),
+                                                                                     QString::number(memLim)
+                                                                                    }));
     if (!process.waitForStarted(-1))
         return TestCaseResult(0, 0, 'E', "无法运行进程监视器");
 
     bool ok = monitorProcess(&process, std::max(timeLim * 2000 + 200, 10000.0));
     bool finished = process.waitForFinished(2000);
-    QString output = QString::fromLocal8Bit(process.readAllStandardOutput());
+    QString output = QString::fromLocal8Bit(process.readAllStandardOutput()).trimmed();
 
     if (!finished && process.state() == QProcess::Running)
         return TestCaseResult(0, 0, 'E', "无法结束进程监视器");
