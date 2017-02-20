@@ -270,7 +270,7 @@ TestCaseResult BaseJudger::runProgram(const QString& exe, double timeLim, double
             else if (kernelTime > timeLim)
                 return TestCaseResult(0, timeLim, 'T', "系统 CPU 时间过长");
             else
-                return TestCaseResult(0, timeLim, 'T', "进程被阻塞");
+                return TestCaseResult(0, 0, 'R', "进程被阻塞");
         }
 
         QCoreApplication::processEvents();

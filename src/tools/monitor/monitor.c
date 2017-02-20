@@ -58,7 +58,7 @@ void run()
             onProcessFinished();
             if (userTime > timeLim) printf("超过时间限制\n"), exit(3);
             else if (kernelTime > timeLim) printf("系统 CPU 时间过长\n"), exit(3);
-            else printf("进程被阻塞\n"), exit(3);
+            else printf("进程被阻塞\n"), exit(2);
         }
 
         Sleep(10);
@@ -191,7 +191,7 @@ void watch()
 
     if (userTime > timeLim) printf("超过时间限制\n"), exit(3);
     if (systemTime > timeLim) printf("系统 CPU 时间过长\n"), exit(3);
-    if (blockTime > 1.5) printf("进程被阻塞\n"), exit(3);
+    if (blockTime > 1.5) printf("进程被阻塞\n"), exit(2);
 
     watching = 0;
 }
@@ -213,7 +213,7 @@ void watch_rusage(struct rusage* usage)
 
     if (userTime > timeLim) printf("超过时间限制\n"), exit(3);
     if (systemTime > timeLim) printf("系统 CPU 时间过长\n"), exit(3);
-    if (blockTime > 1.5) printf("进程被阻塞\n"), exit(3);
+    if (blockTime > 1.5) printf("进程被阻塞\n"), exit(2);
 
     watching = 0;
 }
