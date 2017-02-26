@@ -371,6 +371,8 @@ void DetailTable::onContextMenuEvent(const QPoint& pos)
     else if (item->column() == 1) // test point item
     {
         int id = this->verticalHeaderItem(row)->text().toInt() - 1;
+        if (id < 0 || id >= problem->TestCaseCount()) return;
+
         QString in = problem->TestCaseAt(id)->InFile();
         QString out = problem->TestCaseAt(id)->OutFile();
         QString sub = problem->TestCaseAt(id)->SubmitFile();
