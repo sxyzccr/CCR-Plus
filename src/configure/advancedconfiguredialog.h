@@ -2,6 +2,7 @@
 #define ADVANCEDCONFIGUREDIALOG_H
 
 #include <QDialog>
+#include <QHeaderView>
 
 class QAbstractButton;
 class Problem;
