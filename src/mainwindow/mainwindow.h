@@ -46,6 +46,9 @@ private:
     void LockTable();
     void UnlockTable();
 
+    /// 检查更新，是否只当有更新时才显示对话框
+    void CheckUpdates(bool dontShowError);
+
     /// 更新最近打开的竞赛列表，是否更新 listWidget_recent
     void UpdateRecentContest(bool);
 
@@ -107,6 +110,7 @@ private slots:
 
     // Help menu actions
     void on_action_help_triggered();
+    void on_action_update_triggered();
     void on_action_about_triggered();
 
 protected:

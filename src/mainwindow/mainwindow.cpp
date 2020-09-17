@@ -2,11 +2,13 @@
 #include <QToolButton>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QProcess>
 #include <QSettings>
 #include <QMimeData>
 #include <QCloseEvent>
 #include <QDesktopServices>
 
+#include "updater/updaterconst.h"
 #include "common/global.h"
 #include "common/player.h"
 #include "common/problem.h"
@@ -66,6 +68,7 @@ MainWindow::MainWindow(QWidget* parent) :
 
     CreateActions();
     UpdateRecentContest(true);
+    CheckUpdates(true);
 
     this->activateWindow();
 }
@@ -88,6 +91,15 @@ void MainWindow::UnlockTable()
     is_locked = false;
     board_table->Unlock();
     detail_table->Unlock();
+}
+
+void MainWindow::CheckUpdates(bool dontShowError)
+{
+    QString dir = QCoreApplication::applicationDirPath();
+    QStringList arguments = { "-c", "-p" };
+    arguments.append(QString("%1").arg(QCoreApplication::applicationPid()));
+    if (dontShowError) arguments.append("-n");
+    QProcess::startDetached(dir + "/" + Updater::UPDATER_NAME, arguments, dir);
 }
 
 // Last contest path
@@ -771,6 +783,11 @@ void MainWindow::on_action_stop_triggered()
 void MainWindow::on_action_help_triggered()
 {
 
+}
+
+void MainWindow::on_action_update_triggered()
+{
+    CheckUpdates(false);
 }
 
 void MainWindow::on_action_about_triggered()
