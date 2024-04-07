@@ -5,6 +5,8 @@
 #include <QTextStream>
 #include <QDomDocument>
 
+#include <algorithm>
+
 #include "common/global.h"
 #include "common/problem.h"
 #include "common/version.h"
@@ -424,7 +426,7 @@ QList<QPair<QString, QString>> Problem::getInAndOutFile()
         for (int j = 0; j < out.size() && !res.size(); j++)
             if (ma - Q[i][j].size() <= 3) { res = Q[i][j]; break; }
 
-    qSort(res.begin(), res.end(), [&](const InOutPair& a, const InOutPair& b)
+    std::sort(res.begin(), res.end(), [&](const InOutPair& a, const InOutPair& b)
     {
         QCollator c;
         c.setNumericMode(true);

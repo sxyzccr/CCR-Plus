@@ -3,6 +3,7 @@
 
 #include <QList>
 #include <QString>
+#include <algorithm>
 
 class QFile;
 class QPixmap;
@@ -44,7 +45,7 @@ struct Contest
     void ReadContestInfo();
 
     /// 选手排序
-    void SortPlayers(bool (*cmp)(const Player* x, const Player* y)) { qSort(players.begin(), players.end(), cmp); }
+    void SortPlayers(bool (*cmp)(const Player* x, const Player* y)) { std::sort(players.begin(), players.end(), cmp); }
 
     /// 缓存测评结果到 .reslist
     void SaveResultCache();
