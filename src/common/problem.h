@@ -210,7 +210,7 @@ public:
     }
 
 private:
-    static const QRegExp name_reg_exp;
+    static const QRegularExpression name_reg_exp;
 
     Global::ProblemType type;
     const QString name;

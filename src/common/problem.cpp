@@ -32,7 +32,7 @@ const QMap<QString, QPair<QString, QString>> Problem::BUILTIN_CHECKER_MAP =
     {"fulltext", qMakePair(QString("全文比较"), QString("全文比较(过滤行末空格及文末回车)"))}
 };
 
-const QRegExp Problem::name_reg_exp("[\\\\/:*?\"<>|]");
+const QRegularExpression Problem::name_reg_exp("[\\\\/:*?\"<>|]");
 
 QString Problem::CheckFileNameValid(const QString& name)
 {
