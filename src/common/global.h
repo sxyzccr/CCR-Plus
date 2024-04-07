@@ -1,6 +1,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <QtCore>
 #include <Qt>
 
 #include "common/contest.h"

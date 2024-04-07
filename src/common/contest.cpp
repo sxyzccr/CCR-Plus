@@ -18,16 +18,17 @@ QPixmap Contest::CreateIcon(const QString& contestPath)
     font.setPixelSize(15);
     painter.setFont(font);
 
-    QFontMetrics fm = painter.fontMetrics();
+    QFontMetricsF fm = painter.fontMetrics();
     QPair<int, int> pos[3] = {{15, 38}, {15, 60}, {15, 82}};
-    int n = std::min(list.size(), 3);
+    int n = std::min(list.size(), (qsizetype)3);
     for (int i = 0; i < n; i++)
     {
         QString text = QString(" %1 ").arg(list[i]);
-        int width = std::min(fm.width(text), 109 - pos[i].first);
-        int height = fm.height();
+        qreal width = std::min(fm.horizontalAdvance(text), qreal(109 - pos[i].first));
+        qreal height = fm.height();
         painter.drawText(QRectF(pos[i].first, pos[i].second, width, height), text);
     }
+
     return image;
 }
 
@@ -103,7 +104,7 @@ void Contest::SaveProblemOrder(const QStringList& list)
     QFile file(path + ".ccr");
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
     QTextStream out(&file);
-    out.setCodec("UTF-8");
+    out.setEncoding(QStringConverter::Utf8);
     out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     out << QString("<contest maker=\"ccr-plus\" version=\"%1\">\n").arg(VERSION_SHORTER);
     out << "    <order>\n";
@@ -154,7 +155,7 @@ void Contest::ReadContestInfo()
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
         QTextStream in(&file);
-        in.setCodec("UTF-8");
+        in.setEncoding(QStringConverter::Utf8);
         for (; !in.atEnd();)
         {
             QString str = in.readLine();
@@ -212,7 +213,7 @@ void Contest::SaveResultCache()
     if (file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
         QTextStream out(&file);
-        out.setCodec("UTF-8");
+        out.setEncoding(QStringConverter::Utf8);
         for (int i = 0; i < players.size(); i++)
         {
             int t = Global::GetLogicalRow(i);
@@ -220,7 +221,7 @@ void Contest::SaveResultCache()
             for (auto j : problem_order)
             {
                 ResultSummary r = p->ProblemLabelAt(j)->Result();
-                out << p->Name() << '/' << problems[j]->Name() << '/' << r.score << '/' << r.time << '/' << r.state << '/' << endl;
+                out << p->Name() << '/' << problems[j]->Name() << '/' << r.score << '/' << r.time << '/' << r.state << '/' << '\n';
             }
         }
         file.close();
@@ -248,7 +249,7 @@ void Contest::ReadPlayerList(QFile& file, bool isSaveList)
         {
             QTextStream out(&f);
             //out.setCodec("UTF-8");
-            for (auto i = list.begin(); i != list.end(); i++) out << i.key() << "," << i.value() << endl;
+            for (auto i = list.begin(); i != list.end(); i++) out << i.key() << "," << i.value() << '\n';
             f.close();
         }
     }
@@ -259,20 +260,32 @@ void Contest::ReadPlayerList(QFile& file, bool isSaveList)
 void Contest::ExportPlayerScore(QFile& file)
 {
     QTextStream out(&file);
-    //out.setCodec("UTF-8");
-    if (is_list_used) out << QString("编号,") << QString("姓名,"); else out << QString("选手,");
+    out.setEncoding(QStringConverter::Utf8); // 设置编码为UTF-8
+
+    if (is_list_used)
+        out << QString("编号,") << QString("姓名,");
+    else
+        out << QString("选手,");
+
     out << QString("总分,");
-    for (auto j : problem_order) out << QString("\"%1\",").arg(problems[j]->Name());
-    out << endl;
+    for (auto j : problem_order)
+        out << QString("\"%1\",").arg(problems[j]->Name());
+
+    out << "\n"; // 使用 \n 插入换行符
+
     for (int i = 0; i < player_num; i++)
     {
         int t = Global::GetLogicalRow(i);
         Player* p = players[t];
         out << QString("\"%1\",").arg(p->Name());
-        if (is_list_used) out << QString("\"%1\",").arg(p->NameInList());
+
+        if (is_list_used)
+            out << QString("\"%1\",").arg(p->NameInList());
+
         out << p->SumLabel()->Score() << ",";
-        for (auto j : problem_order) out << p->ProblemLabelAt(j)->Score() << ",";
-        out << endl;
+        for (auto j : problem_order)
+            out << p->ProblemLabelAt(j)->Score() << ",";
+        out << "\n"; // 使用 \n 插入换行符
     }
     file.close();
 }

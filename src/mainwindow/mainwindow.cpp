@@ -98,7 +98,7 @@ void MainWindow::UpdateRecentContest(bool updateRecentListWidget)
     QSettings set("ccr.ini", QSettings::IniFormat);
     QStringList list = set.value("RecentContestList").toStringList();
     lastContest = set.value("LastContest").toString();
-    int n = std::min(list.size(), Global::MAX_RECENT_CONTEST);
+    int n = std::min(list.size(), (qsizetype)Global::MAX_RECENT_CONTEST);
     for (int i = 0; i < n; i++)
     {
         QString s = QString("&%1 %2").arg(i + 1).arg(list[i]);

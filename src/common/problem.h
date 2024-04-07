@@ -2,9 +2,10 @@
 #define PROBLEM_H
 
 #include "common/const.h"
+#include <QStringList>
 
 class QString;
-class QStringList;
+//class QStringList;
 
 class Compiler
 {

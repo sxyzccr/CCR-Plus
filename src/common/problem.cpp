@@ -4,6 +4,7 @@
 #include <QCollator>
 #include <QTextStream>
 #include <QDomDocument>
+#include <QRegularExpression>
 
 #include <algorithm>
 
