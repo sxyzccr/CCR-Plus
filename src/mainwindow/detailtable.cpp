@@ -169,8 +169,8 @@ void DetailTable::onAddTitleDetail(const QString& title)
     is_scrollBar_at_bottom = this->verticalScrollBar()->value() >= this->verticalScrollBar()->maximum() - 5;
 
     QTableWidgetItem* tmp = new QTableWidgetItem(title);
-    tmp->setTextColor(Qt::white);
-    tmp->setBackgroundColor(QColor(120, 120, 120));
+    tmp->setForeground(Qt::white);
+    tmp->setBackground(QColor(120, 120, 120));
     tmp->setToolTip(title);
 
     this->insertRow(rows);
@@ -192,11 +192,19 @@ void DetailTable::onAddNoteDetail(const QString& note, const QString& state)
 
     QTableWidgetItem* tmp = new QTableWidgetItem(note);
     tmp->setToolTip(tmp->text());
-    tmp->setTextColor(QColor(80, 80, 80));
-    tmp->setBackgroundColor(QColor(180, 180, 180));
-    if (state == "E") tmp->setTextColor(QColor(0, 0, 0)), tmp->setBackgroundColor(QColor(227, 58, 218));
-    if (state == " " || state.isEmpty()) tmp->setTextColor(QColor(100, 100, 100)), tmp->setBackgroundColor(QColor(235, 235, 235));
-    if (state.isEmpty()) tmp->setTextAlignment(Qt::AlignCenter);
+    tmp->setForeground(QColor(80, 80, 80));
+    tmp->setBackground(QColor(180, 180, 180));
+    if (state == "E") {
+        tmp->setForeground(QColor(0, 0, 0));
+        tmp->setBackground(QColor(227, 58, 218));
+    }
+    if (state == " " || state.isEmpty()) {
+        tmp->setForeground(QColor(100, 100, 100));
+        tmp->setBackground(QColor(235, 235, 235));
+    }
+    if (state.isEmpty()) {
+        tmp->setTextAlignment(Qt::AlignCenter);
+    }
 
     int a = tmp->text().split('\n').count(), b = a == 1 ? this->verticalHeader()->defaultSectionSize() : std::min(a, 4) * QFontMetrics(this->font()).height() + 6;
     this->insertRow(rows);
@@ -253,7 +261,7 @@ void DetailTable::onAddPointDetail(int num, const QString& note, const QString& 
             o.setRgb(255, 187, 0); // TLE
             break;
         }
-    tmp->setBackgroundColor(o);
+    tmp->setBackground(o);
 
     this->insertRow(rows);
     this->setItem(rows, 1, tmp);
@@ -277,7 +285,7 @@ void DetailTable::onAddScoreDetail(int subTaskLen, int score, int sumScore)
     QTableWidgetItem* tmp = new QTableWidgetItem(QString::number(score));
     tmp->setTextAlignment(Qt::AlignCenter);
     tmp->setToolTip(tmp->text());
-    tmp->setBackgroundColor(Global::GetRatioColor(235, 235, 235, 0, 161, 241, score, sumScore));
+    tmp->setBackground(Global::GetRatioColor(235, 235, 235, 0, 161, 241, score, sumScore));
     this->setItem(rows - subTaskLen, 0, tmp);
 }
 
@@ -355,7 +363,7 @@ void DetailTable::onContextMenuEvent(const QPoint& pos)
     const Problem* problem = problem_at[row];
     if (!problem) return;
 
-    if (item->textColor() == Qt::white) // title item
+    if (item->foreground().color() == Qt::white)  // title item
     {
         if (!player)
             inFileByAction = Global::g_contest.data_path + problem->Name() + "/";

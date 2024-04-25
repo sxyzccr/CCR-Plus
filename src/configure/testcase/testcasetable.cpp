@@ -103,7 +103,7 @@ void TestCaseTable::LoadTestCases(const Problem* problem)
                 addItem(rows, 3, point->SubmitFile());
 
             addItem(rows, 0, QString::number(sub->Score()));
-            this->item(rows, 0)->setBackgroundColor(QColor(255, 255, 255));
+            this->item(rows, 0)->setBackground(QColor(255, 255, 255));
 
             len++, rows++;
             score_items.append(this->item(rows - len, 0));

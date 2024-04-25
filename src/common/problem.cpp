@@ -4,6 +4,9 @@
 #include <QCollator>
 #include <QTextStream>
 #include <QDomDocument>
+#include <QRegularExpression>
+
+#include <algorithm>
 
 #include "common/global.h"
 #include "common/problem.h"
@@ -30,7 +33,7 @@ const QMap<QString, QPair<QString, QString>> Problem::BUILTIN_CHECKER_MAP =
     {"fulltext", qMakePair(QString("全文比较"), QString("全文比较(过滤行末空格及文末回车)"))}
 };
 
-const QRegExp Problem::name_reg_exp("[\\\\/:*?\"<>|]");
+const QRegularExpression Problem::name_reg_exp("[\\\\/:*?\"<>|]");
 
 QString Problem::CheckFileNameValid(const QString& name)
 {
@@ -418,13 +421,13 @@ QList<QPair<QString, QString>> Problem::getInAndOutFile()
             }
             for (auto k = F.constBegin(); k != F.constEnd(); k++)
                 if (k.value() == 2) Q[i][j].append(qMakePair(k.key().first + a + k.key().second, k.key().first + b + k.key().second));
-            ma = std::max(ma, Q[i][j].size());
+            ma = std::max((qsizetype)ma, Q[i][j].size());
         }
     for (int i = 0; i < in.size() && !res.size(); i++)
         for (int j = 0; j < out.size() && !res.size(); j++)
             if (ma - Q[i][j].size() <= 3) { res = Q[i][j]; break; }
 
-    qSort(res.begin(), res.end(), [&](const InOutPair& a, const InOutPair& b)
+    std::sort(res.begin(), res.end(), [&](const InOutPair& a, const InOutPair& b)
     {
         QCollator c;
         c.setNumericMode(true);

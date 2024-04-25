@@ -2,9 +2,10 @@
 #define PROBLEM_H
 
 #include "common/const.h"
+#include <QStringList>
 
 class QString;
-class QStringList;
+//class QStringList;
 
 class Compiler
 {
@@ -210,7 +211,7 @@ public:
     }
 
 private:
-    static const QRegExp name_reg_exp;
+    static const QRegularExpression name_reg_exp;
 
     Global::ProblemType type;
     const QString name;

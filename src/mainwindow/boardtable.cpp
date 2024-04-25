@@ -94,7 +94,7 @@ void BoardTable::ResizePlayerLabel()
     for (auto i : Global::g_contest.players)
     {
         QLabel* tmp = i->NameLabel();
-        len = std::max(len, QFontMetrics(tmp->font()).width(tmp->text()) + 30);
+        len = std::max((qreal)len, QFontMetricsF(tmp->font()).horizontalAdvance(tmp->text()) + 30);
     }
     this->horizontalHeader()->resizeSection(0, len);
 }
@@ -296,7 +296,7 @@ void BoardTable::onSortTable(int column)
         i->SetId(Global::GetLogicalRow(k));
         k++;
     }
-    this->sortByColumn(column);
+    this->sortByColumn(column, Qt::SortOrder::DescendingOrder);
     this->verticalScrollBar()->setValue(0);
     //  for (int i=0; i<playerNum; i++) qDebug()<<ui->tableWidget->item(i,c)->data(Qt::DisplayRole);
 
